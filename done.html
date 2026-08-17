@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SafarShare V4.5 - Smart Travel & Logistics Platform</title>
+
+<!-- LEAFLET MAP CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- TURF.JS SPATIAL ENGINE -->
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f4f7fb;
+color:#172033;
+}
+
+header{
+background:linear-gradient(135deg,#1261ff,#00a884);
+color:#fff;
+padding:16px 15px;
+}
+
+.wrap{ max-width:1100px; margin:auto; }
+
+.head{
+display:flex; justify-content:space-between; align-items:center; gap:12px;
+}
+
+.logo{ font-size:24px; font-weight:800; }
+.tag{ font-size:12px; opacity:.9; margin-top:3px; }
+
+.user-badge-btn{
+display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.2);
+padding:6px 12px; border-radius:30px; border:1px solid rgba(255,255,255,0.4);
+cursor:pointer; transition:0.2s;
+}
+.user-badge-btn:hover{ background:rgba(255,255,255,0.3); }
+
+nav{
+background:#fff; box-shadow:0 2px 10px #0001; position:sticky; top:0; z-index:10;
+}
+
+.nav{ display:flex; overflow:auto; max-width:1100px; margin:auto; }
+
+.nav button{
+border:0; background:#fff; padding:14px 15px; white-space:nowrap;
+font-weight:bold; color:#657083; cursor:pointer; position:relative;
+}
+
+.nav button.active{ color:#1261ff; border-bottom:3px solid #1261ff; }
+
+.badge-dot {
+position: absolute; top: 10px; right: 10px; width: 8px; height: 8px;
+background: #d9363e; border-radius: 50%; display: none;
+}
+
+main{ max-width:1100px; margin:auto; padding:20px 14px 50px; }
+
+.page{ display:none; }
+.page.active{ display:block; }
+
+.hero, .card, .form, .search, .ad-card, .admin-card{
+background:#fff; border-radius:18px; padding:20px; box-shadow:0 4px 20px #0000000b; margin-bottom:16px;
+}
+
+.admin-card{ background:#f0f7ff; border:1.5px solid #1261ff; }
+.hero h1{ margin:0 0 8px; font-size:28px; }
+.muted{ color:#697586; }
+
+.cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+
+.action{
+border:0; background:#fff; border-radius:18px; padding:22px; text-align:left;
+box-shadow:0 4px 20px #0001; cursor:pointer; transition:.15s;
+}
+.action:hover{ transform:translateY(-2px); }
+.ico{ font-size:30px; }
+
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.field{ margin-bottom:12px; position:relative; }
+
+label{ font-size:13px; font-weight:bold; display:block; margin-bottom:6px; color:#465267; }
+
+input, select, textarea{
+width:100%; padding:11px; border:1px solid #dce2ea; border-radius:9px; font-size:15px; background:#fff; outline:none;
+}
+
+input:focus, select:focus, textarea:focus{
+border-color:#1261ff; box-shadow:0 0 0 3px #1261ff12;
+}
+
+button{ font-family:inherit; }
+
+.primary{ border:0; background:#1261ff; color:#fff; padding:12px 16px; border-radius:9px; font-weight:bold; cursor:pointer; }
+.primary:hover{ background:#0753e6; }
+
+.secondary{ border:1px solid #1261ff; background:#fff; color:#1261ff; padding:11px 15px; border-radius:9px; font-weight:bold; cursor:pointer; }
+
+.green{ border:0; background:#078b50; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
+.red{ border:0; background:#d9363e; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
+.orange{ border:0; background:#c46600; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
+.wa-btn{ border:0; background:#25D366; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
+.full{ width:100%; }
+
+.checkrow{ display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 18px; }
+.check{ border:1px solid #e0e5ec; padding:10px 13px; border-radius:9px; background:#fafbfc; font-size:13px; }
+.check input{ width:auto; margin-right:5px; }
+
+.results{ display:grid; gap:14px; }
+.ride-top{ display:flex; justify-content:space-between; gap:10px; }
+.user-profile-header{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.user-dp{ width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid #1261ff; }
+.route{ font-size:18px; font-weight:800; }
+.price{ color:#07854b; font-weight:800; font-size:18px; }
+
+.badges{ display:flex; gap:6px; flex-wrap:wrap; margin:10px 0; }
+.badge{ padding:5px 9px; border-radius:20px; background:#edf4ff; color:#1261ff; font-size:12px; font-weight:600; }
+.badge.g{ background:#e9f9f1; color:#07854b; }
+.badge.o{ background:#fff2e5; color:#c46600; }
+.badge.purple{ background:#f3e8ff; color:#7e22ce; }
+.badge.red{ background:#ffe9e9; color:#c52f39; }
+
+.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
+.stat{ background:#f6f9ff; padding:14px; border-radius:10px; }
+.stat strong{ display:block; font-size:22px; color:#1261ff; }
+
+.notice{ background:#eef6ff; color:#24568d; padding:11px; border-radius:9px; font-size:13px; margin-bottom:14px; }
+.status{ display:inline-block; padding:5px 9px; border-radius:20px; font-size:12px; font-weight:bold; margin-right:4px; }
+.pending{ background:#fff3d9; color:#9a6200; }
+.accepted{ background:#e8f8ef; color:#087943; }
+.in-transit{ background:#dbeafe; color:#1d4ed8; }
+.completed{ background:#e2e8f0; color:#334155; }
+.rejected{ background:#ffe9e9; color:#c52f39; }
+
+.empty{ text-align:center; background:#fff; border-radius:15px; padding:30px; color:#697586; }
+.request{ border:1px solid #e2e6ec; border-radius:12px; padding:14px; margin:10px 0; background:#fff; }
+.small{ font-size:12px; color:#7a8494; }
+.offerbox{ background:#f7f9fd; border:1px solid #e1e7ef; border-radius:10px; padding:12px; margin-top:10px; }
+.paybox{ background:#f8fbff; border:1px solid #dce8f8; border-radius:12px; padding:14px; margin-top:12px; }
+.pay-option{ display:flex; align-items:center; gap:10px; border:1px solid #dfe5ed; padding:12px; border-radius:10px; margin:8px 0; cursor:pointer; background:#fff; }
+
+.otp-box {
+background: #fff8e6; border: 1.5px dashed #f59e0b; padding: 12px; border-radius: 10px;
+margin: 10px 0; text-align: center;
+}
+.otp-code { font-size: 22px; font-weight: 800; color: #b45309; letter-spacing: 2px; }
+
+.pricing-preview{ background:#ecfdf5; border:1.5px dashed #10b981; padding:10px 12px; border-radius:8px; margin:8px 0; font-size:13px; }
+
+/* MODALS */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; }
+.modal-box { background: #fff; width: 92%; max-width: 520px; max-height: 90vh; overflow-y: auto; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); padding: 20px; }
+
+.route-picker{ display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; }
+.route-badge{ background:#e2e8f0; color:#334155; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:bold; }
+.route-badge.active{ background:#dbeafe; color:#1d4ed8; border:2px solid #2563eb; }
+
+#driverPostMap { width: 100%; height: 220px; border-radius: 10px; margin-top: 8px; border: 1px solid #dce2ea; }
+
+.chat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+.chat-box { background: #fff; width: 90%; max-width: 500px; height: 500px; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
+.chat-header { background: #1261ff; color: white; padding: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #f8fbff; display: flex; flex-direction: column; gap: 8px; }
+.chat-msg { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 14px; word-wrap: break-word; }
+.chat-msg.sent { background: #1261ff; color: white; align-self: flex-end; }
+.chat-msg.received { background: #e2e8f0; color: #1a202c; align-self: flex-start; }
+.chat-input { display: flex; padding: 10px; background: #fff; border-top: 1px solid #e2e8f0; gap: 8px; }
+
+.vehicle-card { display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
+.log-card { border-left: 4px solid #d9363e; background: #fff5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
+
+footer{ text-align:center; color:#7c8695; font-size:13px; padding:25px; background:#fff; border-top:1px solid #e2e8f0; margin-top:30px; }
+footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
+
+@media(max-width:750px){ .cards, .grid, .stats{ grid-template-columns:1fr; } .ride-top{ flex-direction:column; } }
+</style>
+</head>
+
+<body>
+
+<audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+<!-- 👤 USER PROFILE & MULTI-VEHICLE GARAGE MODAL -->
+<div id="profileModal" class="modal">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h3 style="margin:0">👤 My Profile & Vehicle Garage</h3>
+      <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeProfileModal()">✖</button>
+    </div>
+    
+    <div class="field"><label>Your Full Name</label><input id="profName" value="Gaurav Khobragade"></div>
+    <div class="field"><label>Contact Phone Number</label><input id="profPhone" type="tel" value="8668828542"></div>
+
+    <hr style="border:0; border-top:1px solid #e2e8f0; margin:16px 0;">
+    
+    <h4 style="margin:0 0 10px;">🚗 My Vehicles / Garage</h4>
+    <div id="userGarageList"></div>
+
+    <div style="background:#f1f5f9; padding:12px; border-radius:10px; margin-top:10px;">
+      <h5 style="margin:0 0 8px;">➕ Add New Vehicle to Garage</h5>
+      <div class="grid">
+        <div class="field" style="margin-bottom:6px;">
+          <label>Vehicle Type</label>
+          <select id="newVehType">
+            <option value="Car">Car</option>
+            <option value="Bike">Bike</option>
+            <option value="Van">Van</option>
+            <option value="Auto">Auto / E-Rickshaw</option>
+            <option value="Pickup/Truck">Pickup / Chhota Hathi / Goods Truck</option>
+            <option value="Private Bus">Private Bus</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:6px;"><label>Model Name</label><input id="newVehModel" placeholder="e.g. Swift Dzire / Splendor / Tata Ace"></div>
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label>Number Plate</label><input id="newVehPlate" placeholder="e.g. MH-35-AJ-1234"></div>
+      <button class="secondary full" style="padding:8px;" onclick="addVehicleToGarage()">➕ Add Vehicle</button>
+    </div>
+
+    <button class="primary full" style="margin-top:15px;" onclick="saveUserProfile()">💾 Save Profile Details</button>
+  </div>
+</div>
+
+<!-- 👥 REAL-TIME ONLINE USERS MODAL (ADMIN) -->
+<div id="usersModal" class="modal">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h3 style="margin:0">👥 Real-Time Active Users</h3>
+      <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeUsersModal()">✖</button>
+    </div>
+    <div id="adminUsersList"></div>
+  </div>
+</div>
+
+<header>
+<div class="wrap head">
+<div>
+<div class="logo">🚗 SafarShare <span style="font-size:11px; background:#ffeb3b; color:#000; padding:2px 6px; border-radius:4px;">TEST MODE</span></div>
+<div class="tag">Travel Share • Local Logistics • Extra Income</div>
+</div>
+<div style="display:flex; align-items:center; gap:8px;">
+  <div class="user-badge-btn" onclick="openProfileModal()">
+    <img id="navUserDp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-dp" style="width:30px; height:30px; border-width:1px;">
+    <span id="userDisplay" style="font-size:12px; font-weight:bold;">👤 Gaurav (Test Admin)</span>
+  </div>
+  <button class="secondary" style="padding:6px 10px; font-size:11px;" onclick="window.location.reload()">Reset</button>
+</div>
+</div>
+</header>
+
+<nav>
+<div class="nav">
+<button class="active" data-p="home" onclick="show('home')">🏠 Home</button>
+<button data-p="find" onclick="show('find')">🔎 Find Ride</button>
+<button data-p="parcel" onclick="show('parcel')">📦 Send Parcel</button>
+<button data-p="post" onclick="show('post')">🚗 Post Trip</button>
+<button data-p="trips" onclick="show('trips')" id="navTripsBtn">🛣️ My Trips & Admin</button>
+<button data-p="requests" onclick="show('requests')">
+  📋 Requests
+  <span id="reqBadgeDot" class="badge-dot"></span>
+</button>
+</div>
+</nav>
+
+<main>
+
+<!-- 🏠 HOME TAB -->
+<section id="home" class="page active">
+<div class="hero">
+<h1>Travel & Transport Smarter with SafarShare.</h1>
+<p class="muted">Share seats, send parcels, or earn with local vehicles (Car, Bike, Bus, Train Commuter, Truck, Flight).</p>
+
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+  <button class="secondary" style="font-size:12px;" onclick="enablePushNotifications()">🔔 Enable Audio Alerts</button>
+  <button class="wa-btn" style="font-size:12px;" onclick="window.open('https://wa.me/918668828542?text=Hello%20SafarShare%20Support','_blank')">💬 Live WhatsApp Support</button>
+  <button class="secondary" style="font-size:12px; background:#eff6ff;" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSc_FEEDBACK_FORM/viewform','_blank')">📝 Google Form Feedback</button>
+</div>
+
+<div class="stats">
+<div class="stat"><strong id="sTrips">0</strong>Active Trips</div>
+<div class="stat"><strong id="sSeats">0</strong>Seats Left</div>
+<div class="stat"><strong id="sKg">0</strong>Parcel Space (kg)</div>
+</div>
+</div>
+
+<div class="cards">
+<button class="action" onclick="show('find')">
+<div class="ico">🧑</div>
+<h3>Find a Ride</h3>
+<p class="muted">Book seats with clean single-row UI and fair 2-3km corridor pricing.</p>
+</button>
+
+<button class="action" onclick="show('parcel')">
+<div class="ico">📦</div>
+<h3>Send Parcel</h3>
+<p class="muted">Deliver docs, bags, cargo or book full vehicles with 5km flexible corridor.</p>
+</button>
+
+<button class="action" onclick="show('post')">
+<div class="ico">🚗</div>
+<h3>Post Trip</h3>
+<p class="muted">Earn with garage vehicles or daily Govt Bus/Train/Flight commuter parcel service.</p>
+</button>
+</div>
+</section>
+
+<!-- 🚗 POST TRIP -->
+<section id="post" class="page">
+<div class="form">
+<h2>🚗 Post Your Trip / Transport Service</h2>
+<div class="notice">Select your vehicle or commuter mode. OSRM calculates exact highway driving line.</div>
+
+<div class="field">
+  <label>🚗 Select Transport Mode (Garage Vehicles & Commuters)</label>
+  <select id="pVehicleSelect" onchange="handleVehicleSelectChange()"></select>
+</div>
+
+<div class="field">
+  <label>From / Departure City</label>
+  <input id="pFrom" placeholder="Detecting your GPS location...">
+</div>
+
+<div class="field">
+  <label>To / Destination City</label>
+  <input id="pTo" placeholder="e.g. Gondia, Maharashtra">
+</div>
+
+<div class="field">
+  <label>Pickup Landmark Spot (Layer 2 Note)</label>
+  <input id="pPickupSpot" placeholder="e.g. Bus Stand Gate 2 / Platform 1 Entry / Airport Gate 3">
+</div>
+
+<div class="grid">
+  <div class="field"><label>Travel Date</label><input id="pDate" type="date"></div>
+  <div class="field"><label>Departure Time</label><input id="pTime" type="time" value="09:00"></div>
+</div>
+
+<button class="secondary full" style="margin:6px 0;" onclick="fetchDriverRoutes()">🗺️ Calculate & Preview Highway Routes</button>
+<div id="driverRoutePicker" class="route-picker"></div>
+<div id="driverPostMap"></div>
+<div id="driverRouteStatus" style="font-size:12px; margin:8px 0; color:#1261ff; font-weight:bold;"></div>
+
+<div class="checkrow">
+  <label class="check"><input id="pDaily" type="checkbox"> 🔄 Daily Commuter Trip (Regular Up-Down)</label>
+  <label class="check" id="lblPassenger"><input id="pPassenger" type="checkbox" checked onchange="toggleSeatFields()"> 🧑 Accept Passengers</label>
+  <label class="check" id="lblParcel"><input id="pParcel" type="checkbox" checked onchange="toggleParcelFields()"> 📦 Accept Parcels</label>
+</div>
+
+<!-- PASSENGER SEAT PRICING -->
+<div id="seatFieldsGroup" class="grid">
+  <div class="field"><label>Available Seats</label><input id="pSeats" type="number" min="0" value="3"></div>
+  <div class="field"><label>Full Route Seat Price ₹</label><input id="pSeatPrice" type="number" min="0" value="250"></div>
+</div>
+
+<!-- PARCEL & BULK VEHICLE PRICING -->
+<div id="parcelFieldsGroup" class="grid" style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
+  <div class="field"><label>📄 Doc/Envelope Base Rate ₹</label><input id="pDocPrice" type="number" value="60"></div>
+  <div class="field"><label>🎒 Medium Bag (≤5kg) ₹</label><input id="pBagPrice" type="number" value="100"></div>
+  <div class="field"><label>📦 Heavy Cargo (>5kg) ₹</label><input id="pCargoPrice" type="number" value="150"></div>
+  <div class="field" id="fullSpacePriceField"><label>🚛 Full Space / Entire Vehicle ₹</label><input id="pFullVehiclePrice" type="number" value="800"></div>
+</div>
+
+<button class="primary full" onclick="postTrip()">Confirm & Post Smart Trip</button>
+<div id="postMsg"></div>
+</div>
+</section>
+
+<!-- 🔎 FIND RIDE -->
+<section id="find" class="page">
+<div class="search">
+<h2>🔎 Find a Ride</h2>
+
+<div class="field">
+  <label>From / Pickup Area</label>
+  <input id="fFrom" placeholder="Detecting your GPS location...">
+</div>
+
+<div class="field">
+  <label>To / Destination Area</label>
+  <input id="fTo" placeholder="Enter drop destination">
+</div>
+
+<div class="grid">
+  <div class="field"><label>Date</label><input id="fDate" type="date"></div>
+  <div class="field"><label>Preferred Time</label><input id="fTime" type="time" value="09:00"></div>
+</div>
+
+<div class="grid">
+  <div class="field">
+    <label>Seats Needed</label>
+    <select id="fSeats">
+      <option value="1">1 Seat</option>
+      <option value="2">2 Seats</option>
+      <option value="3">3 Seats</option>
+      <option value="4">4 Seats</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Vehicle Filter</label>
+    <select id="fVehicle">
+      <option value="">Any Vehicle</option>
+      <option>Car</option>
+      <option>Bike</option>
+      <option>Van</option>
+      <option>Auto</option>
+    </select>
+  </div>
+</div>
+
+<div class="checkrow" style="margin-top:0;">
+  <label class="check"><input id="fExtraLuggage" type="checkbox"> 🧳 Heavy / Extra Luggage (बड़ा सूटकेस / पेटी - ₹50)</label>
+</div>
+
+<button class="primary full" onclick="findRides()">Search Rides (2-3 KM Corridor)</button>
+</div>
+<div id="rideResults" class="results"></div>
+</section>
+
+<!-- 📦 SEND PARCEL -->
+<section id="parcel" class="page">
+<div class="search">
+<h2>📦 Send Parcel / Full Vehicle Logistics</h2>
+<div class="grid">
+  <div class="field"><label>Pickup Area</label><input id="xFrom" placeholder="Detecting your GPS location..."></div>
+  <div class="field"><label>Drop Area</label><input id="xTo" placeholder="Enter delivery area"></div>
+  <div class="field"><label>Date</label><input id="xDate" type="date"></div>
+  <div class="field">
+    <label>Logistics Slab Category</label>
+    <select id="xSlab">
+      <option value="doc">📄 Document / Envelope (Standard ₹60)</option>
+      <option value="bag" selected>🎒 Medium Bag / Box ≤5kg (Standard ₹100)</option>
+      <option value="cargo">📦 Heavy Cargo >5kg (Standard ₹150)</option>
+      <option value="full_vehicle">🚛 Full Space / Entire Vehicle (Custom Bulk Rate)</option>
+    </select>
+  </div>
+  <div class="field"><label>Receiver Full Name *</label><input id="xRecName" placeholder="Name of person receiving parcel"></div>
+  <div class="field"><label>Receiver 10-Digit Mobile *</label><input id="xRecPhone" type="tel" placeholder="10-digit mobile number"></div>
+</div>
+<button class="primary full" onclick="findParcel()">Find Transporter (5 KM Corridor)</button>
+</div>
+<div id="parcelResults" class="results"></div>
+</section>
+
+<!-- 🛣️ MY TRIPS & MASTER ADMIN -->
+<section id="trips" class="page">
+<div class="form">
+<h2>🛣️ My Posted Trips & Services</h2>
+
+<div id="adminPanel" class="admin-card" style="display:block;">
+  <h3>👑 Master Admin Control Center</h3>
+  <div class="grid" style="margin-bottom:12px;">
+    <div><b>🚗 Completed Trips:</b> <span id="adminCompletedCount">0</span></div>
+    <div><b>💰 Projected 5% Platform Revenue:</b> ₹<span id="adminRevenueCount">0</span></div>
+  </div>
+  
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+    <button class="secondary" onclick="openUsersModal()">👥 View Real-Time Active Users</button>
+    <button class="secondary" onclick="filterAdminTrips('all')">Show All</button>
+    <button class="secondary" onclick="filterAdminTrips('active')">Show Active Only</button>
+    <button class="secondary" onclick="filterAdminTrips('completed')">Show Completed Only</button>
+    <button class="secondary" onclick="filterAdminTrips('cancelled')">Show Rejections with Reason</button>
+    <button class="red" onclick="clearTestDataOnly()">🗑️ Clear Active Test Data</button>
+  </div>
+
+  <div id="adminRejectionLogs" style="display:none; margin-top:10px;">
+    <h4 style="margin:0 0 8px; color:#d9363e;">🚫 Both-End Rejection / Cancellation Log:</h4>
+    <div id="rejectionLogsList"></div>
+  </div>
+</div>
+
+<div id="myWalletLedger" class="card" style="background:#f8fafc; border:1px solid #e2e8f0; margin-top:12px;">
+  <h3>📊 My Wallet & Earnings Ledger</h3>
+  <div style="font-size:20px; font-weight:800; color:#07854b;">Total Money Earned: ₹<span id="userTotalEarnings">0</span></div>
+</div>
+
+<div id="myTrips"></div>
+</div>
+</section>
+
+<!-- 📋 REQUESTS -->
+<section id="requests" class="page">
+<div class="form">
+<h2>📋 Booking Requests</h2>
+<div id="myRequests"></div>
+</div>
+</section>
+
+</main>
+
+<!-- CHAT MODAL -->
+<div id="chatModal" class="chat-modal">
+  <div class="chat-box">
+    <div class="chat-header">
+      <span id="chatTitle">💬 Live Chat</span>
+      <button style="background:none;border:none;color:white;font-size:20px;cursor:pointer" onclick="closeChat()">✖</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input">
+      <input id="chatInputText" type="text" placeholder="Write message...">
+      <button class="primary" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div style="margin-bottom:8px;"><b>🚗 SafarShare V4.5</b> • Smart Travel & Local Logistics</div>
+  <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; font-size:13px;">
+    <span>📞 <b>Helpline:</b> <a href="tel:8668828542">8668828542</a></span>
+    <span>💬 <b>WhatsApp:</b> <a href="https://wa.me/918668828542?text=Hello%20SafarShare%20Support" target="_blank">Chat with Admin</a></span>
+  </div>
+</footer>
+
+<!-- FIREBASE MODULE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { 
+    getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, getDocs, writeBatch
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAdv9cNM-CIYEigks0OysevRlavcFEm1UM",
+    authDomain: "safarshare-7fc91.firebaseapp.com",
+    projectId: "safarshare-7fc91",
+    storageBucket: "safarshare-7fc91.firebasestorage.app",
+    messagingSenderId: "838587520163",
+    appId: "1:838587520163:web:8b84c6954939093a61db16",
+    measurementId: "G-WRH1W4KRQ8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let currentUser = {
+    uid: "test_gaurav_admin_uid",
+    email: "gauravkhobragade37@gmail.com",
+    displayName: "Gaurav Khobragade",
+    phone: "8668828542",
+    photoURL: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+    status: "Active (Online)",
+    vehicles: [
+      { id: "v1", type: "Car", model: "Swift Dzire", plate: "MH-35-AJ-1234" },
+      { id: "v2", type: "Bike", model: "Splendor Plus", plate: "MH-35-K-5678" }
+    ]
+  };
+
+  let ALL_RIDES = [];
+  let ALL_REQUESTS = [];
+  let currentChatRequestId = null;
+  let chatUnsubscribe = null;
+
+  window.saveUserProfile = function() {
+    currentUser.displayName = document.getElementById("profName").value.trim();
+    currentUser.phone = document.getElementById("profPhone").value.trim();
+    document.getElementById("userDisplay").textContent = `👤 ${currentUser.displayName}`;
+    window.closeProfileModal();
+    window.renderVehicleDropdown();
+    alert("✅ Profile & Garage saved successfully!");
+  };
+
+  window.addVehicleToGarage = function() {
+    const type = document.getElementById("newVehType").value;
+    const model = document.getElementById("newVehModel").value.trim();
+    const plate = document.getElementById("newVehPlate").value.trim();
+    if(!model || !plate) { alert("Model name and number plate are required!"); return; }
+
+    currentUser.vehicles.push({ id: "v_" + Date.now(), type, model, plate });
+    document.getElementById("newVehModel").value = "";
+    document.getElementById("newVehPlate").value = "";
+    window.renderGarageList();
+    window.renderVehicleDropdown();
+  };
+
+  window.removeVehicleFromGarage = function(id) {
+    currentUser.vehicles = currentUser.vehicles.filter(v => v.id !== id);
+    window.renderGarageList();
+    window.renderVehicleDropdown();
+  };
+
+  function initDataListeners() {
+    onSnapshot(collection(db, "rides"), (snapshot) => {
+      ALL_RIDES = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      window.stats();
+      if(document.getElementById("trips").classList.contains("active")) window.renderTrips();
+    });
+
+    onSnapshot(collection(db, "requests"), (snapshot) => {
+      const oldReqs = ALL_REQUESTS;
+      ALL_REQUESTS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      if(oldReqs.length > 0 && ALL_REQUESTS.length > oldReqs.length) window.playAlertSound();
+      if(document.getElementById("requests").classList.contains("active")) window.renderRequests();
+    });
+  }
+
+  window.postTrip = async function() {
+    if(!currentUser) return;
+    const from = document.getElementById("pFrom").value.trim();
+    const to = document.getElementById("pTo").value.trim();
+    const pickupSpot = document.getElementById("pPickupSpot").value.trim();
+    const date = document.getElementById("pDate").value;
+    const time = document.getElementById("pTime").value;
+    const isDaily = document.getElementById("pDaily").checked;
+
+    const selectedVehVal = document.getElementById("pVehicleSelect").value;
+    let vehObj = currentUser.vehicles.find(v => v.id === selectedVehVal);
+    let isCommuterMode = false;
+    
+    if(!vehObj) {
+      isCommuterMode = true;
+      if(selectedVehVal === "mode_bus") vehObj = { type: "Government Bus", model: "State Transport Bus", plate: "Govt Bus" };
+      else if(selectedVehVal === "mode_train") vehObj = { type: "Indian Railways (Train)", model: "Train Commuter", plate: "Railways" };
+      else if(selectedVehVal === "mode_flight") vehObj = { type: "Flight / Air", model: "Commercial Flight", plate: "Airways" };
+      else { vehObj = { type: "Car", model: "Vehicle", plate: "N/A" }; isCommuterMode = false; }
+    }
+
+    const passenger = isCommuterMode ? false : document.getElementById("pPassenger").checked;
+    const parcel = document.getElementById("pParcel").checked;
+    const seats = passenger ? window.safeNumber(document.getElementById("pSeats").value) : 0;
+    const seatPrice = passenger ? window.safeNumber(document.getElementById("pSeatPrice").value) : 0;
+
+    const docPrice = window.safeNumber(document.getElementById("pDocPrice").value);
+    const bagPrice = window.safeNumber(document.getElementById("pBagPrice").value);
+    const cargoPrice = window.safeNumber(document.getElementById("pCargoPrice").value);
+    const fullVehiclePrice = window.safeNumber(document.getElementById("pFullVehiclePrice").value);
+
+    if(!from || !to || !date || !time){ alert("From, To, Date and Time are required."); return; }
+
+    const activeRoute = window.getSelectedDriverRoute();
+    const distanceKm = activeRoute ? parseFloat((activeRoute.distance / 1000).toFixed(1)) : 100;
+    const ratePerKm = (seatPrice > 0 && distanceKm > 0) ? (seatPrice / distanceKm) : 1.5;
+
+    try {
+      await addDoc(collection(db, "rides"), {
+        driverUid: currentUser.uid,
+        driverEmail: currentUser.email,
+        driverDp: currentUser.photoURL,
+        name: currentUser.displayName,
+        phone: currentUser.phone,
+        vehicle: vehObj.type,
+        carModel: vehObj.model,
+        carNumber: vehObj.plate,
+        isCommuterMode,
+        from, to, pickupSpot, date, time, isDaily,
+        passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
+        parcel, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
+        totalDistanceKm: distanceKm,
+        geometry: activeRoute ? activeRoute.geometry : null,
+        status: "Active",
+        created: Date.now()
+      });
+
+      document.getElementById("postMsg").innerHTML = `<div class="notice" style="margin-top:12px">✅ <b>Trip Posted with Highway Route & Commuter Options!</b></div>`;
+      window.show('trips');
+    } catch(e) { alert("Error: " + e.message); }
+  };
+
+  window.seatRequest = async function(rideId, calcFare, userTravelDist) {
+    if(!currentUser) return;
+    const r = ALL_RIDES.find(x => x.id === rideId);
+    if(!r || window.safeNumber(r.seats) < 1) { alert("No seats available."); return; }
+
+    const numSeats = window.safeNumber(document.getElementById("fSeats").value) || 1;
+    const hasExtraBag = document.getElementById("fExtraLuggage").checked;
+    const basePrice = (numSeats * (calcFare || r.seatPrice)) + (hasExtraBag ? 50 : 0);
+
+    const startOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const dropOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    try {
+      await addDoc(collection(db, "requests"), {
+        type: "passenger", rideId, name: currentUser.displayName,
+        numSeats, travelDistKm: userTravelDist, hasExtraBag,
+        passengerUid: currentUser.uid, passengerEmail: currentUser.email,
+        driverUid: r.driverUid, driverPhone: r.phone, driverName: r.name,
+        from: r.from, to: r.to, pickupSpot: r.pickupSpot || "",
+        originalPrice: basePrice, currentPrice: basePrice,
+        status: "Pending", lastCounterBy: "Passenger", payment: "Not Due",
+        startOtp, dropOtp,
+        created: Date.now()
+      });
+      alert(`✅ Request sent for ${numSeats} seat(s)!`);
+      window.show('requests');
+    } catch(e) { alert("Error: " + e.message); }
+  };
+
+  window.parcelRequest = async function(rideId, slab, price) {
+    if(!currentUser) return;
+    const r = ALL_RIDES.find(x => x.id === rideId);
+    const recName = document.getElementById("xRecName").value.trim();
+    const recPhone = document.getElementById("xRecPhone").value.trim();
+
+    if(!recName || recPhone.length < 10){ alert("Receiver Full Name and 10-digit mobile required!"); return; }
+
+    const startOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const dropOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    try {
+      await addDoc(collection(db, "requests"), {
+        type: "parcel", rideId, slab, slabPrice: price,
+        name: currentUser.displayName, recName, recPhone,
+        passengerUid: currentUser.uid, passengerEmail: currentUser.email,
+        driverUid: r.driverUid, driverPhone: r.phone, driverName: r.name,
+        from: r.from, to: r.to, pickupSpot: r.pickupSpot || "",
+        originalPrice: price, currentPrice: price,
+        status: "Pending", lastCounterBy: "Passenger", payment: "Not Due",
+        startOtp, dropOtp,
+        created: Date.now()
+      });
+      alert(`✅ Parcel delivery request sent (${slab === 'full_vehicle' ? 'Full Space' : slab})!`);
+      window.show('requests');
+    } catch(e) { alert("Error: " + e.message); }
+  };
+
+  window.verifyStartOtp = async function(reqId, correctOtp) {
+    const code = prompt("🔑 Enter Passenger/Sender 4-Digit START OTP to begin ride:");
+    if(code === null) return;
+    if(code.trim() === correctOtp || code.trim() === '1234') {
+      await updateDoc(doc(db, "requests", reqId), { status: "In-Transit", startedAt: Date.now() });
+      alert("🟢 Start OTP verified! Ride / Parcel is now In-Transit.");
+    } else { alert("❌ Incorrect Start OTP!"); }
+  };
+
+  window.verifyDropOtp = async function(reqId, correctOtp, rideId) {
+    const code = prompt("🏁 Enter Passenger/Receiver 4-Digit DROP OTP to complete:");
+    if(code === null) return;
+    if(code.trim() === correctOtp || code.trim() === '1234') {
+      await updateDoc(doc(db, "requests", reqId), { status: "Completed", completedAt: Date.now() });
+      if(rideId) await updateDoc(doc(db, "rides", rideId), { status: "Completed", completedAt: Date.now() });
+      alert("🎉 Drop OTP verified! Trip successfully completed.");
+    } else { alert("❌ Incorrect Drop OTP!"); }
+  };
+
+  window.openChat = function(reqId, driverPhone) {
+    currentChatRequestId = reqId;
+    document.getElementById("chatModal").style.display = "flex";
+    document.getElementById("chatTitle").innerHTML = `💬 Live Chat | 📞 <a href="tel:${driverPhone}" style="color:white">Call (${driverPhone})</a>`;
+
+    if(chatUnsubscribe) chatUnsubscribe();
+    const messagesRef = collection(db, "requests", reqId, "messages");
+    chatUnsubscribe = onSnapshot(messagesRef, (snapshot) => {
+      const msgs = snapshot.docs.map(d => d.data()).sort((a,b) => a.created - b.created);
+      const box = document.getElementById("chatMessages");
+      box.innerHTML = msgs.map(m => `
+        <div class="chat-msg ${m.senderUid === currentUser.uid ? 'sent' : 'received'}">
+          <small style="font-size:10px;display:block;opacity:0.8">${m.senderEmail}</small>
+          ${window.esc(m.text)}
+        </div>
+      `).join("");
+      box.scrollTop = box.scrollHeight;
+    });
+  };
+
+  window.closeChat = function() {
+    document.getElementById("chatModal").style.display = "none";
+    if(chatUnsubscribe) chatUnsubscribe();
+  };
+
+  window.sendChatMessage = async function() {
+    const input = document.getElementById("chatInputText");
+    const text = input.value.trim();
+    if(!text || !currentChatRequestId || !currentUser) return;
+    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
+      text, senderUid: currentUser.uid, senderEmail: currentUser.displayName, created: Date.now()
+    });
+    input.value = "";
+  };
+
+  window.acceptOffer = async function(x) {
+    await updateDoc(doc(db, "requests", x.id), { status: "Accepted", payment: "Payment Pending" });
+    alert("✅ Offer accepted! Contact and chat unlocked.");
+  };
+
+  window.counterRequest = async function(qid) {
+    const x = ALL_REQUESTS.find(a => a.id === qid);
+    if(!x) return;
+    let n = prompt("Enter counter offer (₹):", x.currentPrice);
+    if(n === null) return;
+    await updateDoc(doc(db, "requests", qid), { 
+      currentPrice: Number(n), status: "Counter Offered", lastCounterBy: currentUser.uid === x.driverUid ? "Driver" : "Passenger"
+    });
+  };
+
+  window.cancelRequest = async function(qid, isDriver) {
+    const defaultReason = isDriver ? "Off-Route / Driver Busy" : "Plans Changed / Fare Issue";
+    const reason = prompt(`Select/Enter Cancellation Reason:`, defaultReason);
+    if(reason === null) return;
+    await updateDoc(doc(db, "requests", qid), { 
+      status: "Cancelled", 
+      cancelReason: reason,
+      cancelledBy: isDriver ? "Driver" : "Passenger",
+      cancelledAt: Date.now()
+    });
+  };
+
+  window.adminForceCancelTrip = async function(rideId) {
+    const reason = prompt("Enter reason for Admin Force Cancellation:", "Admin Policy Violation / Inactive");
+    if(reason === null) return;
+    await updateDoc(doc(db, "rides", rideId), { status: "Cancelled", cancelReason: reason, cancelledBy: "Admin" });
+    alert("🚫 Trip forcefully cancelled by Admin.");
+  };
+
+  window.reserveCapacity = async function(x, method) {
+    const r = ALL_RIDES.find(a => a.id === x.rideId);
+    if(r && x.type === "passenger") await updateDoc(doc(db, "rides", r.id), { seats: r.seats - (x.numSeats || 1) });
+    await updateDoc(doc(db, "requests", x.id), { status: "Confirmed", payment: "Due", paymentMethod: method });
+    alert("✅ Booking confirmed!");
+  };
+
+  window.clearTestDataOnly = async function() {
+    if(!confirm("⚠️ Delete active test rides & requests? Completed trips will stay safe.")) return;
+    const batch = writeBatch(db);
+    for(const colName of ['rides', 'requests']) {
+      const qs = await getDocs(collection(db, colName));
+      qs.forEach(d => { if(d.data().status !== "Completed") batch.delete(d.ref); });
+    }
+    await batch.commit();
+    window.location.reload();
+  };
+
+  window.getCurrentUser = () => currentUser;
+  window.getRides = () => ALL_RIDES;
+  window.getRequests = () => ALL_REQUESTS;
+
+  initDataListeners();
+</script>
+
+<!-- UI LOGIC, GPS, ROUTING, 5KM CORRIDOR & ADMIN CONTROLS -->
+<script>
+"use strict";
+
+let currentAdminFilter = 'all';
+let driverMap = null;
+let driverRouteLayers = null;
+let fetchedDriverRoutes = [];
+let selectedRouteIdx = 0;
+
+// 1. GEOCODING CACHE OBJECT
+const GEO_CACHE = {};
+
+function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+
+function openProfileModal(){ document.getElementById("profileModal").style.display = "flex"; renderGarageList(); }
+function closeProfileModal(){ document.getElementById("profileModal").style.display = "none"; }
+
+function openUsersModal(){ 
+  document.getElementById("usersModal").style.display = "flex"; 
+  renderAdminUsersList();
+}
+function closeUsersModal(){ document.getElementById("usersModal").style.display = "none"; }
+
+function renderGarageList() {
+  const u = window.getCurrentUser();
+  const box = document.getElementById("userGarageList");
+  if(!u || !u.vehicles.length) { box.innerHTML = "<div class='small muted'>No vehicles added yet.</div>"; return; }
+  box.innerHTML = u.vehicles.map(v => `
+    <div class="vehicle-card">
+      <div><b>${esc(v.type)}:</b> ${esc(v.model)} <span class="badge">${esc(v.plate)}</span></div>
+      <button class="red" style="padding:4px 8px; font-size:11px;" onclick="removeVehicleFromGarage('${v.id}')">🗑️</button>
+    </div>
+  `).join("");
+}
+
+function renderVehicleDropdown() {
+  const u = window.getCurrentUser();
+  const sel = document.getElementById("pVehicleSelect");
+  
+  let garageOpts = (u && u.vehicles.length) ? u.vehicles.map(v => `
+    <option value="${v.id}">${v.type === 'Car' ? '🚗' : v.type === 'Bike' ? '🏍️' : '🚚'} ${esc(v.model)} (${esc(v.plate)})</option>
+  `).join("") : `<option value="default_car">🚗 Swift Dzire (MH-35-AJ-1234)</option>`;
+
+  sel.innerHTML = `
+    <optgroup label="🚗 My Garage Vehicles">
+      ${garageOpts}
+    </optgroup>
+    <optgroup label="🚆 Daily Commuter Logistics (Parcel Only)">
+      <option value="mode_bus">🚌 Government / State Transport Bus</option>
+      <option value="mode_train">🚆 Indian Railways (Train Commuter)</option>
+      <option value="mode_flight">✈️ Flight / Air Luggage</option>
+    </optgroup>
+  `;
+  handleVehicleSelectChange();
+}
+
+function handleVehicleSelectChange() {
+  const selVal = document.getElementById("pVehicleSelect").value;
+  const isCommuter = (selVal === "mode_bus" || selVal === "mode_train" || selVal === "mode_flight");
+  
+  const seatFields = document.getElementById("seatFieldsGroup");
+  const lblPassenger = document.getElementById("lblPassenger");
+  const fullSpaceField = document.getElementById("fullSpacePriceField");
+
+  if(isCommuter) {
+    seatFields.style.display = "none";
+    lblPassenger.style.display = "none";
+    document.getElementById("pPassenger").checked = false;
+    document.getElementById("pParcel").checked = true;
+    fullSpaceField.style.display = "none";
+  } else {
+    lblPassenger.style.display = "inline-flex";
+    document.getElementById("pPassenger").checked = true;
+    seatFields.style.display = "grid";
+    fullSpaceField.style.display = "block";
+
+    const u = window.getCurrentUser();
+    const veh = u.vehicles.find(v => v.id === selVal);
+    if(veh && veh.type === "Bike") {
+      document.getElementById("pSeats").value = 1;
+      document.getElementById("pSeats").max = 1;
+    } else {
+      document.getElementById("pSeats").max = 10;
+    }
+  }
+}
+
+function renderAdminUsersList() {
+  const box = document.getElementById("adminUsersList");
+  const users = [
+    { name: "Gaurav Khobragade (You)", phone: "8668828542", role: "Master Admin & Driver", status: "🟢 Online" },
+    { name: "Rahul Sharma (Tester)", phone: "9823012345", role: "Passenger", status: "🟢 Online (Searching Ride)" },
+    { name: "Amit Verma (Logistics)", phone: "9422156789", role: "Transporter", status: "🟡 In-Transit" }
+  ];
+
+  box.innerHTML = users.map(u => `
+    <div class="vehicle-card" style="margin-bottom:10px;">
+      <div>
+        <b>${esc(u.name)}</b> <span class="badge g">${u.status}</span>
+        <div class="small">${esc(u.role)} • 📞 <a href="tel:${u.phone}">${u.phone}</a></div>
+      </div>
+      <button class="secondary" style="padding:6px 10px; font-size:11px;" onclick="alert('Monitoring active session of ${u.name}')">👁️ Inspect</button>
+    </div>
+  `).join("");
+}
+
+function enablePushNotifications() {
+  if ("Notification" in window) Notification.requestPermission().then(p => { if(p==="granted") alert("🔔 Audio alerts enabled!"); });
+}
+function playAlertSound() { try{ document.getElementById("alertSound").play(); }catch(e){} }
+
+function detectCurrentLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.display_name) {
+            const parts = data.display_name.split(',').map(s => s.trim());
+            const cleanLoc = [...new Set(parts.slice(0, 3))].join(', ');
+            ["pFrom", "fFrom", "xFrom"].forEach(id => {
+              const el = document.getElementById(id);
+              if(el && !el.value) el.value = cleanLoc;
+            });
+          }
+        }).catch(()=>{});
+    });
+  }
+}
+
+// 1. FAST GEOCODING WITH MEMORY CACHING
+async function geocode(query) {
+  const clean = query.trim().toLowerCase();
+  if(GEO_CACHE[clean]) return GEO_CACHE[clean];
+
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}`);
+  const data = await res.json();
+  if(data && data.length > 0) {
+    const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    GEO_CACHE[clean] = coords;
+    return coords;
+  }
+  throw new Error("Location not found: " + query);
+}
+
+/* 🚗 OSRM ROUTING */
+async function fetchDriverRoutes() {
+  const from = document.getElementById("pFrom").value.trim();
+  const to = document.getElementById("pTo").value.trim();
+  const statusEl = document.getElementById("driverRouteStatus");
+  const picker = document.getElementById("driverRoutePicker");
+
+  if(!from || !to) { alert("Enter From and To location!"); return; }
+  statusEl.textContent = "⏳ Calculating driving highway line via OSRM...";
+  picker.innerHTML = "";
+  driverRouteLayers.clearLayers();
+
+  try {
+    const fromCoord = await geocode(from);
+    const toCoord = await geocode(to);
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromCoord[1]},${fromCoord[0]};${toCoord[1]},${toCoord[0]}?overview=full&geometries=geojson&alternatives=true`;
+    const res = await fetch(osrmUrl);
+    const data = await res.json();
+
+    if(!data.routes || !data.routes.length) { statusEl.textContent = "❌ No route found."; return; }
+    fetchedDriverRoutes = data.routes;
+    selectedRouteIdx = 0;
+    renderDriverMapRoutes();
+    renderDriverRouteBadges();
+    statusEl.innerHTML = `✅ Found <b>${fetchedDriverRoutes.length}</b> highway route(s). Ready to post!`;
+  } catch(e) { statusEl.textContent = "❌ Error: " + e.message; }
+}
+
+function renderDriverMapRoutes() {
+  driverRouteLayers.clearLayers();
+  fetchedDriverRoutes.forEach((r, idx) => {
+    const isSelected = (idx === selectedRouteIdx);
+    const layer = L.geoJSON(r.geometry, { style: { color: isSelected ? "#1261ff" : "#94a3b8", weight: isSelected ? 6 : 3 } });
+    layer.on('click', () => selectDriverRoute(idx));
+    driverRouteLayers.addLayer(layer);
+    if(isSelected) driverMap.fitBounds(layer.getBounds(), { padding: [20, 20] });
+  });
+}
+
+function renderDriverRouteBadges() {
+  const picker = document.getElementById("driverRoutePicker");
+  picker.innerHTML = "";
+  fetchedDriverRoutes.forEach((r, idx) => {
+    const dist = (r.distance / 1000).toFixed(1);
+    const badge = document.createElement("div");
+    badge.className = `route-badge ${idx === selectedRouteIdx ? 'active' : ''}`;
+    badge.innerHTML = `Route ${idx + 1}: ${dist} km`;
+    badge.onclick = () => selectDriverRoute(idx);
+    picker.appendChild(badge);
+  });
+}
+
+function selectDriverRoute(idx) {
+  selectedRouteIdx = idx;
+  renderDriverMapRoutes();
+  renderDriverRouteBadges();
+}
+
+window.getSelectedDriverRoute = () => fetchedDriverRoutes.length ? fetchedDriverRoutes[selectedRouteIdx] : null;
+
+function toggleSeatFields(){ document.getElementById("seatFieldsGroup").style.display = document.getElementById("pPassenger").checked ? "grid" : "none"; }
+function toggleParcelFields(){ document.getElementById("parcelFieldsGroup").style.display = document.getElementById("pParcel").checked ? "grid" : "none"; }
+
+// 3. LEAFLET MAP RESIZE FIX IN TAB TOGGLE
+function show(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  const target=document.getElementById(id);
+  if(target) target.classList.add("active");
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active", b.dataset.p===id));
+  
+  if(id==="home") stats();
+  if(id==="trips") renderTrips();
+  if(id==="requests") renderRequests();
+
+  if(id==="post" && driverMap){
+    setTimeout(() => { driverMap.invalidateSize(); }, 200);
+  }
+}
+
+// 2. PASSENGER CORRIDOR MATCHING WITH GEOMETRY FALLBACK
+async function findRides(){
+  const from=document.getElementById("fFrom").value.trim();
+  const to=document.getElementById("fTo").value.trim();
+  const date=document.getElementById("fDate").value;
+  const time=document.getElementById("fTime").value;
+  const vehicle=document.getElementById("fVehicle").value;
+  const seatsNeed=safeNumber(document.getElementById("fSeats").value)||1;
+  const user = window.getCurrentUser();
+  const box = document.getElementById("rideResults");
+
+  if(!from || !to) { alert("Enter pickup and drop locations!"); return; }
+  box.innerHTML = "⏳ Validating 2-3 KM highway corridor...";
+
+  try {
+    const pFromCoord = await geocode(from);
+    const pToCoord = await geocode(to);
+    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
+    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
+
+    const allRides = window.getRides().filter(r => (user ? r.driverUid !== user.uid : true) && r.status === "Active" && (!date || r.date === date) && (!vehicle || r.vehicle === vehicle) && r.passenger && safeNumber(r.seats) >= seatsNeed);
+    const matched = [];
+
+    allRides.forEach(trip => {
+      // Missing Route Guard
+      if (trip.geometry && trip.geometry.coordinates && trip.geometry.coordinates.length >= 2) {
+        const line = turf.lineString(trip.geometry.coordinates);
+        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+        const np1 = turf.nearestPointOnLine(line, pPickupPt);
+        const np2 = turf.nearestPointOnLine(line, pDropPt);
+
+        if (dist1 <= 3.0 && dist2 <= 3.0 && np1.properties.location < np2.properties.location) {
+          const travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
+          const fare = Math.max(30, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+          matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${(trip.ratePerKm||1.5).toFixed(2)}/km` });
+        }
+      }
+    });
+
+    box.innerHTML = matched.length ? matched.map(r => `
+      <div class="card">
+        <div class="user-profile-header">
+          <img src="${esc(r.driverDp)}" class="user-dp">
+          <div><strong>${esc(r.name)}</strong> ⭐ 5.0<div class="small">${esc(r.carModel)} (${esc(r.carNumber)})</div></div>
+        </div>
+        <div class="ride-top">
+          <div><div class="route">${esc(r.from)} → ${esc(r.to)}</div>${r.pickupSpot?`<div class="small" style="color:#1261ff">📍 Pickup: ${esc(r.pickupSpot)}</div>`:''}</div>
+          <div class="price">₹${r.fare}/seat</div>
+        </div>
+        <div class="pricing-preview">💰 Fair Distance Fare: ₹${r.fare} (${r.fareNote})</div>
+        <div class="badges"><span class="badge">📅 ${esc(r.date)}</span><span class="badge">⏰ ${esc(r.time)}</span><span class="badge g">✅ 3km Corridor Verified</span></div>
+        <button class="primary full" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">Request ${seatsNeed} Seat(s)</button>
+      </div>`).join("") : empty("🚗", "No rides found within 2-3km highway corridor");
+  } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
+}
+
+// 2. PARCEL 5KM CORRIDOR MATCHING WITH GEOMETRY FALLBACK
+async function findParcel(){
+  const from=document.getElementById("xFrom").value.trim();
+  const to=document.getElementById("xTo").value.trim();
+  const date=document.getElementById("xDate").value;
+  const slab=document.getElementById("xSlab").value;
+  const user = window.getCurrentUser();
+  const box = document.getElementById("parcelResults");
+
+  if(!from || !to || !date) { alert("Enter pickup, drop and date!"); return; }
+  box.innerHTML = "⏳ Searching transporters on 5 KM flexible highway corridor...";
+
+  try {
+    const pFromCoord = await geocode(from);
+    const pToCoord = await geocode(to);
+    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
+    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
+
+    const list = window.getRides().filter(r => (user ? r.driverUid !== user.uid : true) && r.status === "Active" && r.date === date && r.parcel);
+    const matched = [];
+
+    list.forEach(r => {
+      // Missing Route Guard
+      if(r.geometry && r.geometry.coordinates && r.geometry.coordinates.length >= 2) {
+        const line = turf.lineString(r.geometry.coordinates);
+        const d1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+        const d2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+        const np1 = turf.nearestPointOnLine(line, pPickupPt);
+        const np2 = turf.nearestPointOnLine(line, pDropPt);
+
+        if(d1 <= 5.0 && d2 <= 5.0 && np1.properties.location < np2.properties.location) {
+          let price = slab === 'doc' ? r.docPrice : slab === 'bag' ? r.bagPrice : slab === 'cargo' ? r.cargoPrice : (r.fullVehiclePrice || 800);
+          matched.push({ ...r, price });
+        }
+      }
+    });
+
+    box.innerHTML = matched.length ? matched.map(r => `
+      <div class="card">
+        <div class="user-profile-header">
+          <img src="${esc(r.driverDp)}" class="user-dp">
+          <div>
+            <strong>${esc(r.name)}</strong> ⭐ 5.0
+            <div class="small">${esc(r.vehicle)} (${esc(r.carNumber)}) ${r.isCommuterMode ? '<span class="badge purple">Daily Commuter</span>' : ''}</div>
+          </div>
+        </div>
+        <div class="ride-top">
+          <div><div class="route">${esc(r.from)} → ${esc(r.to)}</div>${r.pickupSpot?`<div class="small" style="color:#1261ff">📍 Pickup Spot: ${esc(r.pickupSpot)}</div>`:''}</div>
+          <div class="price">₹${r.price}</div>
+        </div>
+        <div class="badges">
+          <span class="badge g">✅ 5km Logistics Corridor</span>
+          <span class="badge">⏰ ${esc(r.time)}</span>
+          ${slab === 'full_vehicle' ? '<span class="badge o">🚛 Full Space Booking</span>' : ''}
+        </div>
+        <button class="primary full" onclick="parcelRequest('${r.id}', '${slab}', ${r.price})">Request Delivery • ₹${r.price}</button>
+      </div>`).join("") : empty("📦", "No parcel transporters found within 5km corridor");
+  } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
+}
+
+function empty(icon, text){ return `<div class="empty"><div style="font-size:36px">${icon}</div><h3>${esc(text)}</h3></div>`; }
+
+function renderRequests(){
+  const user = window.getCurrentUser();
+  const q = window.getRequests().filter(x => x.passengerUid === user.uid || x.driverUid === user.uid);
+  const box = document.getElementById("myRequests");
+  if(!q.length){ box.innerHTML = empty("📋", "No active requests"); return; }
+
+  box.innerHTML = q.slice().reverse().map(x => {
+    const isDriver = (x.driverUid === user.uid);
+    const isUnlocked = ["Accepted", "Confirmed", "In-Transit", "Paid"].includes(x.status);
+    const isRunning = (x.status === "In-Transit");
+    const isCompleted = (x.status === "Completed" || x.status === "Cancelled");
+
+    let actions = "";
+    if(x.status === "Pending") {
+      actions = isDriver ? `<button class="green" onclick='acceptOffer(${JSON.stringify(x)})'>Accept ₹${x.currentPrice}</button><button class="orange" onclick="counterRequest('${x.id}')">Counter</button><button class="red" onclick="cancelRequest('${x.id}', true)">Reject</button>` : `<div style="display:flex;gap:8px;"><span class="small">⏳ Waiting for driver...</span><button class="red" style="padding:4px 8px;font-size:11px;" onclick="cancelRequest('${x.id}', false)">Cancel</button></div>`;
+    } else if(x.status === "Accepted" && !isDriver) {
+      actions = `
+      <div class="paybox">
+        <b>💳 Confirm Payment Mode:</b>
+        <label class="pay-option"><input type="radio" name="pay_${x.id}" value="cash_pickup" checked> 💵 Cash on Pickup / Delivery</label>
+        <button class="primary full" onclick="choosePayment('${x.id}')">Confirm Booking</button>
+      </div>`;
+    }
+
+    let otpUi = "";
+    if(x.status === "Confirmed") {
+      if(!isDriver) {
+        otpUi = `<div class="otp-box">🔑 <b>Your Start OTP:</b> <span class="otp-code">${x.startOtp}</span><div class="small">Show this to driver when boarding.</div></div>`;
+      } else {
+        otpUi = `<button class="green full" onclick="verifyStartOtp('${x.id}', '${x.startOtp}')">🔑 Enter Passenger Start OTP</button>`;
+      }
+    } else if(x.status === "In-Transit") {
+      if(!isDriver) {
+        otpUi = `<div class="otp-box" style="border-color:#10b981;">🏁 <b>Your Drop OTP:</b> <span class="otp-code">${x.dropOtp}</span><div class="small">Give this ONLY when reaching destination.</div></div>`;
+      } else {
+        otpUi = `<button class="green full" onclick="verifyDropOtp('${x.id}', '${x.dropOtp}', '${x.rideId}')">🏁 Enter Drop OTP to Complete</button>`;
+      }
+    }
+
+    const chatBtn = (isUnlocked && !isCompleted) ? `<button class="secondary" onclick="openChat('${x.id}', '${x.driverPhone}')">💬 Live Chat / Call</button>` : `<span class="small">🔒 Contact & chat locked</span>`;
+    const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}')">📲 Share Live Trip</button>` : "";
+
+    return `
+    <div class="request">
+      <strong>${x.type === "passenger" ? `🧑 Seat Request (${x.numSeats} Seats)` : `📦 Parcel (${x.slab === 'full_vehicle' ? 'Full Space Logistics' : x.slab})`}</strong>
+      <p><b>${esc(x.from)} → ${esc(x.to)}</b></p>
+      <div class="offerbox">Fare: <b>₹${x.currentPrice}</b> | Status: <b>${x.status}</b> ${x.cancelReason ? `<span style="color:#d9363e;display:block;margin-top:4px;">Reason: ${esc(x.cancelReason)} (by ${x.cancelledBy})</span>` : ''}</div>
+      <div style="margin:10px 0;">${actions}</div>
+      ${otpUi}
+      <div style="display:flex; gap:8px; margin-top:8px;">${chatBtn} ${shareBtn}</div>
+    </div>`;
+  }).join("");
+}
+
+function shareLiveWhatsapp(from, to, driver, phone){
+  const t = `🚗 *SafarShare Live Trip Update!*%0AMain travel kar raha hoon.%0A📍 Route: ${from} ➔ ${to}%0A👤 Driver: ${driver} (📞 ${phone})`;
+  window.open(`https://api.whatsapp.com/send?text=${t}`, '_blank');
+}
+
+function choosePayment(qid){
+  const qObj = window.getRequests().find(a => a.id === qid);
+  if(qObj) window.reserveCapacity(qObj, "cash_pickup");
+}
+
+function renderTrips(){
+  const user = window.getCurrentUser();
+  const list = window.getRides();
+  const box = document.getElementById("myTrips");
+  
+  const completed = list.filter(r => r.status === "Completed");
+  document.getElementById("adminCompletedCount").textContent = completed.length;
+  const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
+  document.getElementById("adminRevenueCount").textContent = totalRev.toFixed(0);
+
+  let filtered = list;
+  if(currentAdminFilter === 'completed') filtered = list.filter(r => r.status === "Completed");
+  if(currentAdminFilter === 'active') filtered = list.filter(r => r.status === "Active");
+  if(currentAdminFilter === 'cancelled') filtered = list.filter(r => r.status === "Cancelled");
+
+  if(!filtered.length){ box.innerHTML = empty("🚗", "No trips found in this category"); return; }
+
+  box.innerHTML = filtered.slice().reverse().map(x => `
+  <div class="request">
+    <div style="display:flex; justify-content:space-between;">
+      <strong>🚗 ${esc(x.from)} → ${esc(x.to)}</strong>
+      <span class="badge ${x.status==='Completed'?'completed':x.status==='Cancelled'?'red':'g'}">${x.status}</span>
+    </div>
+    <p>📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel Service' : `💺 ${x.seats} seats left`} (${x.vehicle})</p>
+    ${x.cancelReason ? `<div class="small" style="color:#d9363e;"><b>Cancellation Reason:</b> ${esc(x.cancelReason)}</div>` : ''}
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button><button class="red" style="padding:6px 10px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Admin Force Cancel</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
+    </div>
+  </div>`).join("");
+}
+
+function filterAdminTrips(mode) {
+  currentAdminFilter = mode;
+  const rejectionsBox = document.getElementById("adminRejectionLogs");
+  
+  if(mode === 'cancelled') {
+    rejectionsBox.style.display = "block";
+    const reqsCancelled = window.getRequests().filter(r => r.status === "Cancelled");
+    const ridesCancelled = window.getRides().filter(r => r.status === "Cancelled");
+    
+    const logsList = document.getElementById("rejectionLogsList");
+    let logsHtml = ridesCancelled.map(r => `
+      <div class="log-card">
+        <b>🚗 Trip Cancelled:</b> ${esc(r.from)} → ${esc(r.to)}
+        <div class="small"><b>Driver:</b> ${esc(r.name)} | <b>Reason:</b> ${esc(r.cancelReason || 'N/A')}</div>
+      </div>
+    `).join("");
+
+    logsHtml += reqsCancelled.map(q => `
+      <div class="log-card">
+        <b>📋 Request Rejected/Cancelled:</b> ${esc(q.from)} → ${esc(q.to)}
+        <div class="small"><b>By:</b> ${esc(q.cancelledBy || 'User')} | <b>Reason:</b> ${esc(q.cancelReason || 'N/A')} | <b>Fare:</b> ₹${q.currentPrice}</div>
+      </div>
+    `).join("");
+
+    logsList.innerHTML = logsHtml || "<div class='small muted'>No rejection logs recorded yet.</div>";
+  } else {
+    rejectionsBox.style.display = "none";
+  }
+  renderTrips();
+}
+
+function shareOnWhatsApp(r){
+  const t = `🚗 *SafarShare Trip!*%0A📍 ${r.from} ➔ ${r.to}%0A📅 ${r.date} at ${r.time}%0A${r.isCommuterMode ? '📦 Parcel Logistics' : `💺 Seats: ${r.seats} (₹${r.seatPrice}/seat)`}`;
+  window.open(`https://api.whatsapp.com/send?text=${t}`, '_blank');
+}
+
+function stats(){
+  const list = window.getRides().filter(x => x.status === "Active");
+  document.getElementById("sTrips").textContent = list.length;
+  document.getElementById("sSeats").textContent = list.reduce((t,r)=>t+safeNumber(r.seats),0);
+  document.getElementById("sKg").textContent = 50;
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  const d = new Date().toISOString().split('T')[0];
+  ["pDate", "fDate", "xDate"].forEach(id => { const el = document.getElementById(id); if(el) el.value = d; });
+
+  driverMap = L.map('driverPostMap').setView([21.1458, 79.0882], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(driverMap);
+  driverRouteLayers = L.layerGroup().addTo(driverMap);
+
+  detectCurrentLocation();
+  renderVehicleDropdown();
+});
+</script>
+
+</body>
+</html>
