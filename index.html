@@ -1,114 +1,459 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SafarShare V4.5 - Smart Travel & Logistics Platform</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafarShare - Smart Ride & Logistics</title>
+  
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
-<!-- LEAFLET MAP CSS & JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- TURF.JS SPATIAL ENGINE -->
-<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <style>
+    /* Safar AI Floating Widget Styles */
+    #safar-ai-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 99999;
+    }
+    #safar-ai-btn {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    #safar-ai-btn:hover { transform: scale(1.05); }
+    #safar-ai-box {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      height: 430px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      z-index: 99999;
+    }
+    #safar-ai-box.hidden { display: none; }
+    .ai-header {
+      background: #1e40af;
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+    .ai-messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ai-msg { padding: 8px 12px; border-radius: 12px; max-width: 85%; line-height: 1.4; }
+    .ai-msg.bot { background: #f1f5f9; color: #1e293b; align-self: flex-start; }
+    .ai-msg.user { background: #2563eb; color: #fff; align-self: flex-end; }
+    .ai-input-bar { display: flex; border-top: 1px solid #e2e8f0; background: #fff; }
+    .ai-input-bar input { flex: 1; border: none; padding: 12px; font-size: 13px; outline: none; }
+    .ai-input-bar button { background: #2563eb; color: #fff; border: none; padding: 0 16px; font-weight: bold; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased pb-24">
 
-<style>
-*{box-sizing:border-box}
+  <!-- TOP HEADER -->
+  <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-car text-xl"></i>
+        <span class="text-xl font-bold tracking-tight">SafarShare</span>
+      </div>
+      <div id="auth-container" class="flex items-center space-x-2">
+        <button id="login-btn" onclick="loginWithGoogle()" class="bg-white text-blue-600 text-xs px-3 py-1.5 rounded-lg font-bold shadow hover:bg-gray-100 flex items-center gap-1.5">
+          <i class="fa-brands fa-google"></i> Login
+        </button>
+        <div id="user-profile" class="hidden flex items-center space-x-2">
+          <span id="user-name" class="text-xs bg-blue-700 px-2.5 py-1 rounded-md font-semibold border border-blue-400 truncate max-w-[120px]">User</span>
+          <button onclick="logoutUser()" class="text-xs text-blue-200 hover:text-white underline"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#f4f7fb;
-color:#172033;
-}
+  <!-- NAVIGATION TABS -->
+  <div class="max-w-4xl mx-auto px-4 mt-3">
+    <div class="flex bg-white rounded-xl shadow-sm p-1 border border-gray-200 text-sm font-medium">
+      <button onclick="switchTab('find')" id="tab-find" class="flex-1 py-2 rounded-lg text-center bg-blue-600 text-white shadow transition-all">
+        <i class="fa-solid fa-magnifying-glass mr-1"></i> Find Ride
+      </button>
+      <button onclick="switchTab('post')" id="tab-post" class="flex-1 py-2 rounded-lg text-center text-gray-600 hover:text-blue-600 transition-all">
+        <i class="fa-solid fa-plus-circle mr-1"></i> Post Trip
+      </button>
+      <button onclick="switchTab('my')" id="tab-my" class="flex-1 py-2 rounded-lg text-center text-gray-600 hover:text-blue-600 transition-all">
+        <i class="fa-solid fa-list-check mr-1"></i> My Trips
+      </button>
+    </div>
+  </div>
 
-header{
-background:linear-gradient(135deg,#1261ff,#00a884);
-color:#fff;
-padding:16px 15px;
-}
+  <main class="max-w-4xl mx-auto px-4 mt-4">
 
-.wrap{ max-width:1100px; margin:auto; }
+    <!-- FIND RIDE SECTION -->
+    <section id="section-find" class="space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="font-bold text-gray-700 mb-3 flex items-center"><i class="fa-solid fa-filter text-blue-500 mr-2"></i> Search Available Rides</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold text-gray-500">From</label>
+            <input type="text" id="find-from" placeholder="e.g. Balaghat" class="w-full mt-1 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-500">To</label>
+            <input type="text" id="find-to" placeholder="e.g. Nagpur" class="w-full mt-1 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+        <button onclick="searchRides()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition">
+          Search Rides
+        </button>
+      </div>
 
-.head{
-display:flex; justify-content:space-between; align-items:center; gap:12px;
-}
+      <!-- RIDES RESULTS CONTAINER -->
+      <div id="rides-list" class="space-y-3">
+        <!-- Dynamic Cards Load Here -->
+      </div>
+    </section>
 
-.logo{ font-size:24px; font-weight:800; }
-.tag{ font-size:12px; opacity:.9; margin-top:3px; }
+    <!-- POST TRIP SECTION -->
+    <section id="section-post" class="hidden space-y-4">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="font-bold text-gray-700 mb-4 flex items-center"><i class="fa-solid fa-route text-blue-500 mr-2"></i> Create a New Route</h3>
+        
+        <form id="post-trip-form" onsubmit="handlePostTrip(event)" class="space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-gray-500">Origin (From) *</label>
+              <input type="text" id="post-from" required placeholder="Balaghat" class="w-full mt-1 border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-500">Destination (To) *</label>
+              <input type="text" id="post-to" required placeholder="Nagpur" class="w-full mt-1 border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
 
-.user-badge-btn{
-display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.2);
-padding:6px 12px; border-radius:30px; border:1px solid rgba(255,255,255,0.4);
-cursor:pointer; transition:0.2s;
-}
-.user-badge-btn:hover{ background:rgba(255,255,255,0.3); }
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-gray-500">Travel Date *</label>
+              <input type="date" id="post-date" required class="w-full mt-1 border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-500">Available Seats *</label>
+              <input type="number" id="post-seats" min="1" max="50" value="3" required class="w-full mt-1 border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <label class="text-xs font-semibold text-gray-500">Fare per Seat (₹) *</label>
+              <input type="number" id="post-fare" min="0" placeholder="250" required class="w-full mt-1 border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
 
-nav{
-background:#fff; box-shadow:0 2px 10px #0001; position:sticky; top:0; z-index:10;
-}
+          <div>
+            <label class="text-xs font-semibold text-gray-500">Vehicle Type</label>
+            <select id="post-vehicle" class="w-full mt-1 border rounded-lg p-2 text-sm outline-none bg-white">
+              <option value="Car">Car</option>
+              <option value="Bike">Bike</option>
+              <option value="Bus">Bus</option>
+              <option value="Auto">Auto/Cab</option>
+            </select>
+          </div>
 
-.nav{ display:flex; overflow:auto; max-width:1100px; margin:auto; }
+          <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow mt-2 transition">
+            Confirm & Post Trip
+          </button>
+        </form>
+      </div>
+    </section>
 
-.nav button{
-border:0; background:#fff; padding:14px 15px; white-space:nowrap;
-font-weight:bold; color:#657083; cursor:pointer; position:relative;
-}
+    <!-- MY TRIPS SECTION -->
+    <section id="section-my" class="hidden space-y-4">
+      <div id="my-trips-list" class="space-y-3">
+        <!-- Dynamic Cards for User's Trips Load Here -->
+      </div>
+    </section>
 
-.nav button.active{ color:#1261ff; border-bottom:3px solid #1261ff; }
+  </main>
 
-.badge-dot {
-position: absolute; top: 10px; right: 10px; width: 8px; height: 8px;
-background: #d9363e; border-radius: 50%; display: none;
-}
+  <!-- FLOATING AI CHAT WIDGET -->
+  <div id="safar-ai-widget">
+    <button id="safar-ai-btn" onclick="toggleAIChat()">
+      <i class="fa-solid fa-robot text-lg"></i>
+      <span>Chat with Safar AI</span>
+    </button>
 
-main{ max-width:1100px; margin:auto; padding:20px 14px 50px; }
+    <div id="safar-ai-box" class="hidden">
+      <div class="ai-header">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-robot"></i>
+          <span>Safar AI Support</span>
+        </div>
+        <button onclick="toggleAIChat()" class="text-white hover:text-gray-200 text-base">✕</button>
+      </div>
+      <div id="ai-chat-messages" class="ai-messages">
+        <div class="ai-msg bot">नमस्ते! मैं SafarShare AI हूँ। राइड बुक करने, ट्रिप पोस्ट करने या किसी भी सहायता के लिए मुझसे पूछें।</div>
+      </div>
+      <div class="ai-input-bar">
+        <input type="text" id="ai-user-input" placeholder="Type your query..." onkeypress="if(event.key==='Enter') sendAIMessage()">
+        <button onclick="sendAIMessage()">Send</button>
+      </div>
+    </div>
+  </div>
 
-.page{ display:none; }
-.page.active{ display:block; }
+  <script>
+    // --- FIREBASE CONFIGURATION ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDexampleOnlyKeyReplaceIfNeed",
+      authDomain: "safarshare-7fc91.firebaseapp.com",
+      projectId: "safarshare-7fc91",
+      storageBucket: "safarshare-7fc91.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef"
+    };
 
-.hero, .card, .form, .search, .ad-card, .admin-card{
-background:#fff; border-radius:18px; padding:20px; box-shadow:0 4px 20px #0000000b; margin-bottom:16px;
-}
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-.admin-card{ background:#f0f7ff; border:1.5px solid #1261ff; }
-.hero h1{ margin:0 0 8px; font-size:28px; }
-.muted{ color:#697586; }
+    const MASTER_ADMIN_EMAIL = "gauravkhobragade37@gmail.com";
+    let currentUser = null;
 
-.cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    // --- AUTHENTICATION STATE OBSERVER ---
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = {
+          uid: user.uid,
+          name: user.displayName || "User",
+          email: user.email,
+          isAdmin: user.email === MASTER_ADMIN_EMAIL
+        };
+        document.getElementById("login-btn").classList.add("hidden");
+        document.getElementById("user-profile").classList.remove("hidden");
+        document.getElementById("user-name").textContent = currentUser.isAdmin ? "Master Admin" : currentUser.name.split(" ")[0];
+      } else {
+        currentUser = null;
+        document.getElementById("login-btn").classList.remove("hidden");
+        document.getElementById("user-profile").classList.add("hidden");
+      }
+      searchRides();
+      loadMyTrips();
+    });
 
-.action{
-border:0; background:#fff; border-radius:18px; padding:22px; text-align:left;
-box-shadow:0 4px 20px #0001; cursor:pointer; transition:.15s;
-}
-.action:hover{ transform:translateY(-2px); }
-.ico{ font-size:30px; }
+    function loginWithGoogle() {
+      auth.signInWithPopup(provider).catch(err => alert("Login Failed: " + err.message));
+    }
 
-.grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.field{ margin-bottom:12px; position:relative; }
+    function logoutUser() {
+      auth.signOut();
+    }
 
-label{ font-size:13px; font-weight:bold; display:block; margin-bottom:6px; color:#465267; }
+    // --- TABS CONTROLLER ---
+    function switchTab(tab) {
+      ['find', 'post', 'my'].forEach(t => {
+        document.getElementById(`section-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).className = 'flex-1 py-2 rounded-lg text-center text-gray-600 hover:text-blue-600 transition-all';
+      });
+      document.getElementById(`section-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).className = 'flex-1 py-2 rounded-lg text-center bg-blue-600 text-white shadow transition-all';
 
-input, select, textarea{
-width:100%; padding:11px; border:1px solid #dce2ea; border-radius:9px; font-size:15px; background:#fff; outline:none;
-}
+      if (tab === 'my') loadMyTrips();
+    }
 
-input:focus, select:focus, textarea:focus{
-border-color:#1261ff; box-shadow:0 0 0 3px #1261ff12;
-}
+    // --- REALTIME FIRESTORE LISTENER & SEARCH ---
+    function searchRides() {
+      const fromQuery = document.getElementById("find-from").value.trim().toLowerCase();
+      const toQuery = document.getElementById("find-to").value.trim().toLowerCase();
+      const list = document.getElementById("rides-list");
 
-button{ font-family:inherit; }
+      db.collection("trips").where("status", "==", "Active").onSnapshot(snapshot => {
+        list.innerHTML = "";
+        let trips = [];
+        snapshot.forEach(doc => trips.push({ id: doc.id, ...doc.data() }));
 
-.primary{ border:0; background:#1261ff; color:#fff; padding:12px 16px; border-radius:9px; font-weight:bold; cursor:pointer; }
-.primary:hover{ background:#0753e6; }
+        const filtered = trips.filter(t => {
+          const matchFrom = fromQuery ? t.from.toLowerCase().includes(fromQuery) : true;
+          const matchTo = toQuery ? t.to.toLowerCase().includes(toQuery) : true;
+          return matchFrom && matchTo;
+        });
 
-.secondary{ border:1px solid #1261ff; background:#fff; color:#1261ff; padding:11px 15px; border-radius:9px; font-weight:bold; cursor:pointer; }
+        if (filtered.length === 0) {
+          list.innerHTML = `<div class="bg-white p-6 rounded-xl border text-center text-gray-500 font-medium">No rides found. Try changing routes or post a trip!</div>`;
+          return;
+        }
 
-.green{ border:0; background:#078b50; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
-.red{ border:0; background:#d9363e; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
-.orange{ border:0; background:#c46600; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
-.wa-btn{ border:0; background:#25D366; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
-.full{ width:100%; }
+        filtered.forEach(trip => {
+          const isOwner = currentUser && trip.driverUid === currentUser.uid;
+          list.innerHTML += `
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-base text-gray-800">${trip.from} ➔ ${trip.to}</span>
+                  <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">${trip.vehicle}</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1 space-x-3">
+                  <span><i class="fa-regular fa-calendar"></i> ${trip.date}</span>
+                  <span><i class="fa-solid fa-chair"></i> ${trip.seats} Seats left</span>
+                  <span><i class="fa-solid fa-user"></i> ${trip.driverName}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                <span class="text-lg font-bold text-green-600">₹${trip.fare}</span>
+                <button onclick="shareTripOnWhatsApp('${trip.id}', '${trip.from}', '${trip.to}', '${trip.date}', ${trip.seats}, ${trip.fare})" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1 shadow">
+                  <i class="fa-brands fa-whatsapp text-sm"></i> Share
+                </button>
+                ${!isOwner ? `
+                  <button onclick="bookRide('${trip.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow">
+                    Book Seat
+                  </button>
+                ` : `<span class="text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg font-semibold">Your Trip</span>`}
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
 
+    // --- POST TRIP FUNCTION ---
+    function handlePostTrip(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("Please login first to post a trip.");
+        loginWithGoogle();
+        return;
+      }
+
+      const newTrip = {
+        from: document.getElementById("post-from").value.trim(),
+        to: document.getElementById("post-to").value.trim(),
+        date: document.getElementById("post-date").value,
+        seats: parseInt(document.getElementById("post-seats").value),
+        fare: parseInt(document.getElementById("post-fare").value),
+        vehicle: document.getElementById("post-vehicle").value,
+        driverUid: currentUser.uid,
+        driverName: currentUser.name,
+        driverEmail: currentUser.email,
+        status: "Active",
+        createdAt: new Date().toISOString()
+      };
+
+      db.collection("trips").add(newTrip).then(() => {
+        alert("Trip posted successfully!");
+        document.getElementById("post-trip-form").reset();
+        switchTab("my");
+      }).catch(err => alert("Error: " + err.message));
+    }
+
+    // --- LOAD MY TRIPS ---
+    function loadMyTrips() {
+      const container = document.getElementById("my-trips-list");
+      if (!currentUser) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-xl border text-center text-gray-500">Please login to view your trips.</div>`;
+        return;
+      }
+
+      db.collection("trips").where("driverUid", "==", currentUser.uid).onSnapshot(snapshot => {
+        container.innerHTML = "";
+        if (snapshot.empty) {
+          container.innerHTML = `<div class="bg-white p-6 rounded-xl border text-center text-gray-500">You haven't posted any trips yet.</div>`;
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const trip = doc.data();
+          container.innerHTML += `
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
+              <div>
+                <h4 class="font-bold text-gray-800">${trip.from} ➔ ${trip.to}</h4>
+                <p class="text-xs text-gray-500 mt-1">${trip.date} • ${trip.seats} Seats • ₹${trip.fare}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="shareTripOnWhatsApp('${doc.id}', '${trip.from}', '${trip.to}', '${trip.date}', ${trip.seats}, ${trip.fare})" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 shadow">
+                  <i class="fa-brands fa-whatsapp"></i> Share
+                </button>
+                <button onclick="cancelTrip('${doc.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs px-3 py-1.5 rounded-lg font-bold border border-red-200">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+
+    // --- BOOK RIDE ---
+    function bookRide(tripId) {
+      if (!currentUser) {
+        alert("Please login first to book a seat.");
+        loginWithGoogle();
+        return;
+      }
+      alert("Booking Request Sent to Driver! They will contact you shortly.");
+    }
+
+    // --- CANCEL TRIP ---
+    function cancelTrip(tripId) {
+      if (confirm("Are you sure you want to cancel this trip?")) {
+        db.collection("trips").doc(tripId).update({ status: "Cancelled" });
+      }
+    }
+
+    // --- WHATSAPP SMART SHARE (DEEP-LINKING) ---
+    function shareTripOnWhatsApp(tripId, from, to, date, seats, fare) {
+      const currentUrl = window.location.origin + window.location.pathname;
+      const tripBookingUrl = `${currentUrl}?tripId=${tripId}`;
+      
+      const message = `🚗 *SafarShare Trip Update!*\n📍 *Route:* ${from} ➔ ${to}\n📅 *Date:* ${date}\n💺 *Available Seats:* ${seats}\n💰 *Fare:* ₹${fare}\n\n👉 *Book Seat Directly Here:* \n${tripBookingUrl}`;
+      
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+    }
+
+    // --- CHECK DIRECT LINK FROM WHATSAPP ON LOAD ---
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const directTripId = params.get("tripId");
+      if (directTripId) {
+        db.collection("trips").doc(directTripId).get().then(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            document.getElementById("find-from").value = data.from;
+            document.getElementById("find-to").value = data.to;
+            searchRides();
+          }
+        });
+      }
+    });
+
+    // --- IN-APP AI SUPPORT CHAT LOGIC ---
+    function toggleAICha
 .checkrow{ display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 18px; }
 .check{ border:1px solid #e0e5ec; padding:10px 13px; border-radius:9px; background:#fafbfc; font-size:13px; }
 .check input{ width:auto; margin-right:5px; }
