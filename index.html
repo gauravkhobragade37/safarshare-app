@@ -247,7 +247,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div style="display:flex; align-items:center; gap:8px;">
   <div class="user-badge-btn" onclick="openProfileModal()">
     <img id="navUserDp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-dp" style="width:30px; height:30px; border-width:1px;">
-    <span id="userDisplay" style="font-size:12px; font-weight:bold;">👤 Gaurav (Test Admin)</span>
+    <span id="userDisplay" style="font-size:12px; font-weight:bold;">👤 Gaurav (Master Admin)</span>
   </div>
   <button class="secondary" style="padding:6px 10px; font-size:11px;" onclick="window.location.reload()">Reset</button>
 </div>
@@ -452,7 +452,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div class="form">
 <h2>🛣️ My Posted Trips & Services</h2>
 
-<div id="adminPanel" class="admin-card" style="display:block;">
+<div id="adminPanel" class="admin-card" style="display:none;">
   <h3>👑 Master Admin Control Center</h3>
   <div class="grid" style="margin-bottom:12px;">
     <div><b>🚗 Completed Trips:</b> <span id="adminCompletedCount">0</span></div>
@@ -536,6 +536,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  const ADMIN_EMAIL = "gauravkhobragade37@gmail.com";
+
   let currentUser = {
     uid: "test_gaurav_admin_uid",
     email: "gauravkhobragade37@gmail.com",
@@ -597,6 +599,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     });
   }
 
+  // 🚗 POST TRIP FIX (STRINGIFY NESTED GEOMETRY)
   window.postTrip = async function() {
     if(!currentUser) return;
     const from = document.getElementById("pFrom").value.trim();
@@ -649,7 +652,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
         parcel, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
         totalDistanceKm: distanceKm,
-        geometry: activeRoute ? activeRoute.geometry : null,
+        geometry: activeRoute ? JSON.stringify(activeRoute.geometry) : null,
         status: "Active",
         created: Date.now()
       });
@@ -797,7 +800,9 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     });
   };
 
+  // 👑 ADMIN ONLY CANCEL
   window.adminForceCancelTrip = async function(rideId) {
+    if(currentUser.email !== ADMIN_EMAIL) { alert("⛔ Only Master Admin can perform this action!"); return; }
     const reason = prompt("Enter reason for Admin Force Cancellation:", "Admin Policy Violation / Inactive");
     if(reason === null) return;
     await updateDoc(doc(db, "rides", rideId), { status: "Cancelled", cancelReason: reason, cancelledBy: "Admin" });
@@ -811,7 +816,9 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     alert("✅ Booking confirmed!");
   };
 
+  // 👑 ADMIN ONLY CLEAR DATA
   window.clearTestDataOnly = async function() {
+    if(currentUser.email !== ADMIN_EMAIL) { alert("⛔ Only Master Admin can delete test data!"); return; }
     if(!confirm("⚠️ Delete active test rides & requests? Completed trips will stay safe.")) return;
     const batch = writeBatch(db);
     for(const colName of ['rides', 'requests']) {
@@ -825,6 +832,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   window.getCurrentUser = () => currentUser;
   window.getRides = () => ALL_RIDES;
   window.getRequests = () => ALL_REQUESTS;
+  window.getAdminEmail = () => ADMIN_EMAIL;
 
   initDataListeners();
 </script>
@@ -838,8 +846,6 @@ let driverMap = null;
 let driverRouteLayers = null;
 let fetchedDriverRoutes = [];
 let selectedRouteIdx = 0;
-
-// 1. GEOCODING CACHE OBJECT
 const GEO_CACHE = {};
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -963,7 +969,6 @@ function detectCurrentLocation() {
   }
 }
 
-// 1. FAST GEOCODING WITH MEMORY CACHING
 async function geocode(query) {
   const clean = query.trim().toLowerCase();
   if(GEO_CACHE[clean]) return GEO_CACHE[clean];
@@ -1041,7 +1046,6 @@ window.getSelectedDriverRoute = () => fetchedDriverRoutes.length ? fetchedDriver
 function toggleSeatFields(){ document.getElementById("seatFieldsGroup").style.display = document.getElementById("pPassenger").checked ? "grid" : "none"; }
 function toggleParcelFields(){ document.getElementById("parcelFieldsGroup").style.display = document.getElementById("pParcel").checked ? "grid" : "none"; }
 
-// 3. LEAFLET MAP RESIZE FIX IN TAB TOGGLE
 function show(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   const target=document.getElementById(id);
@@ -1057,7 +1061,7 @@ function show(id){
   }
 }
 
-// 2. PASSENGER CORRIDOR MATCHING WITH GEOMETRY FALLBACK
+/* 🔎 PARSE GEOMETRY SAFELY ON SEARCH (PASSENGER) */
 async function findRides(){
   const from=document.getElementById("fFrom").value.trim();
   const to=document.getElementById("fTo").value.trim();
@@ -1081,9 +1085,13 @@ async function findRides(){
     const matched = [];
 
     allRides.forEach(trip => {
-      // Missing Route Guard
-      if (trip.geometry && trip.geometry.coordinates && trip.geometry.coordinates.length >= 2) {
-        const line = turf.lineString(trip.geometry.coordinates);
+      let geom = trip.geometry;
+      if(typeof geom === "string") {
+        try { geom = JSON.parse(geom); } catch(e) { geom = null; }
+      }
+
+      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const line = turf.lineString(geom.coordinates);
         const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
         const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
         const np1 = turf.nearestPointOnLine(line, pPickupPt);
@@ -1114,7 +1122,7 @@ async function findRides(){
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
 
-// 2. PARCEL 5KM CORRIDOR MATCHING WITH GEOMETRY FALLBACK
+/* 📦 PARSE GEOMETRY SAFELY ON SEARCH (PARCEL) */
 async function findParcel(){
   const from=document.getElementById("xFrom").value.trim();
   const to=document.getElementById("xTo").value.trim();
@@ -1136,9 +1144,13 @@ async function findParcel(){
     const matched = [];
 
     list.forEach(r => {
-      // Missing Route Guard
-      if(r.geometry && r.geometry.coordinates && r.geometry.coordinates.length >= 2) {
-        const line = turf.lineString(r.geometry.coordinates);
+      let geom = r.geometry;
+      if(typeof geom === "string") {
+        try { geom = JSON.parse(geom); } catch(e) { geom = null; }
+      }
+
+      if(geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const line = turf.lineString(geom.coordinates);
         const d1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
         const d2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
         const np1 = turf.nearestPointOnLine(line, pPickupPt);
@@ -1244,16 +1256,24 @@ function renderTrips(){
   const user = window.getCurrentUser();
   const list = window.getRides();
   const box = document.getElementById("myTrips");
-  
-  const completed = list.filter(r => r.status === "Completed");
-  document.getElementById("adminCompletedCount").textContent = completed.length;
-  const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
-  document.getElementById("adminRevenueCount").textContent = totalRev.toFixed(0);
+  const adminCard = document.getElementById("adminPanel");
+  const adminEmail = window.getAdminEmail();
 
-  let filtered = list;
-  if(currentAdminFilter === 'completed') filtered = list.filter(r => r.status === "Completed");
-  if(currentAdminFilter === 'active') filtered = list.filter(r => r.status === "Active");
-  if(currentAdminFilter === 'cancelled') filtered = list.filter(r => r.status === "Cancelled");
+  // 👑 ADMIN EMAIL LOCK CHECK
+  if (user && user.email === adminEmail) {
+    adminCard.style.display = "block";
+    const completed = list.filter(r => r.status === "Completed");
+    document.getElementById("adminCompletedCount").textContent = completed.length;
+    const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
+    document.getElementById("adminRevenueCount").textContent = totalRev.toFixed(0);
+  } else {
+    adminCard.style.display = "none";
+  }
+
+  let filtered = (user && user.email === adminEmail) ? list : list.filter(r => r.driverUid === user.uid);
+  if(currentAdminFilter === 'completed') filtered = filtered.filter(r => r.status === "Completed");
+  if(currentAdminFilter === 'active') filtered = filtered.filter(r => r.status === "Active");
+  if(currentAdminFilter === 'cancelled') filtered = filtered.filter(r => r.status === "Cancelled");
 
   if(!filtered.length){ box.innerHTML = empty("🚗", "No trips found in this category"); return; }
 
@@ -1266,7 +1286,8 @@ function renderTrips(){
     <p>📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel Service' : `💺 ${x.seats} seats left`} (${x.vehicle})</p>
     ${x.cancelReason ? `<div class="small" style="color:#d9363e;"><b>Cancellation Reason:</b> ${esc(x.cancelReason)}</div>` : ''}
     <div style="display:flex; gap:8px; margin-top:8px;">
-      ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button><button class="red" style="padding:6px 10px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Admin Force Cancel</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
+      ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
+      ${(user && user.email === adminEmail && x.status === 'Active') ? `<button class="red" style="padding:6px 10px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Admin Force Cancel</button>` : ''}
     </div>
   </div>`).join("");
 }
