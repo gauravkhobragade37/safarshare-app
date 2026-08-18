@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SafarShare V4.5 - Smart Travel & Logistics Platform</title>
 
+<!-- PWA MANIFEST & THEME -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1261ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <!-- LEAFLET MAP CSS & JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -126,6 +132,7 @@ button{ font-family:inherit; }
 .badge.o{ background:#fff2e5; color:#c46600; }
 .badge.purple{ background:#f3e8ff; color:#7e22ce; }
 .badge.red{ background:#ffe9e9; color:#c52f39; }
+.badge.pink{ background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; }
 
 .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
 .stat{ background:#f6f9ff; padding:14px; border-radius:10px; }
@@ -162,6 +169,7 @@ margin: 10px 0; text-align: center;
 .route-badge{ background:#e2e8f0; color:#334155; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:bold; }
 .route-badge.active{ background:#dbeafe; color:#1d4ed8; border:2px solid #2563eb; }
 
+#driverMapWrapper { transition: 0.3s; }
 #driverPostMap { width: 100%; height: 220px; border-radius: 10px; margin-top: 8px; border: 1px solid #dce2ea; }
 
 .chat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
@@ -176,16 +184,34 @@ margin: 10px 0; text-align: center;
 .vehicle-card { display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
 .log-card { border-left: 4px solid #d9363e; background: #fff5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
 
-/* 🤖 FLOATING SAFAR AI WIDGET STYLES */
-#safar-ai-widget { position: fixed; bottom: 20px; right: 20px; z-index: 99999; }
+/* CORRIDOR SCOPE SWITCHER BAR */
+.corridor-bar {
+  background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:10px 15px;
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+  box-shadow:0 2px 8px #00000008;
+}
+.corridor-btn {
+  border:0; padding:7px 14px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;
+}
+.corridor-btn.active-blue { background:#1261ff; color:#fff; }
+.corridor-btn.active-green { background:#00a884; color:#fff; }
+.corridor-btn.inactive { background:#f1f5f9; color:#64748b; }
+
+/* 🤖 DRAGGABLE SAFAR AI BOT STYLES */
+#safar-ai-widget {
+  position: fixed; bottom: 25px; right: 25px; z-index: 99999;
+  touch-action: none; user-select: none;
+}
 #safar-ai-btn {
   background: linear-gradient(135deg, #1261ff, #00a884);
   color: white; border: none; padding: 12px 18px; border-radius: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.25); cursor: pointer; display: flex;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: grab; display: flex;
   align-items: center; gap: 8px; font-weight: bold; font-size: 14px;
 }
+#safar-ai-btn:active { cursor: grabbing; }
+
 #safar-ai-box {
-  position: fixed; bottom: 80px; right: 20px; width: 320px; height: 420px;
+  position: fixed; bottom: 85px; right: 25px; width: 320px; height: 420px;
   background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e2e8f0; z-index: 99999;
 }
@@ -233,15 +259,15 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         <div class="field" style="margin-bottom:6px;">
           <label>Vehicle Type</label>
           <select id="newVehType">
-            <option value="Car">Car</option>
-            <option value="Bike">Bike</option>
-            <option value="Van">Van</option>
-            <option value="Auto">Auto / E-Rickshaw</option>
+            <option value="Car">Car (Sedan / Hatchback / SUV)</option>
+            <option value="Bike">Bike / Motorcycle / Scooter</option>
+            <option value="Auto">Auto / E-Rickshaw (3-Wheeler)</option>
             <option value="Pickup/Truck">Pickup / Chhota Hathi / Goods Truck</option>
-            <option value="Private Bus">Private Bus</option>
+            <option value="Van">Van / Omni / Eeco</option>
+            <option value="Private Bus">Private Bus / Traveller</option>
           </select>
         </div>
-        <div class="field" style="margin-bottom:6px;"><label>Model Name</label><input id="newVehModel" placeholder="e.g. Swift Dzire / Splendor / Tata Ace"></div>
+        <div class="field" style="margin-bottom:6px;"><label>Model Name</label><input id="newVehModel" placeholder="e.g. Bajaj Auto / Mayuri E-Rickshaw / Swift"></div>
       </div>
       <div class="field" style="margin-bottom:8px;"><label>Number Plate</label><input id="newVehPlate" placeholder="e.g. MH-35-AJ-1234"></div>
       <button class="secondary full" style="padding:8px;" onclick="addVehicleToGarage()">➕ Add Vehicle</button>
@@ -262,6 +288,41 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   </div>
 </div>
 
+<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL -->
+<div id="adminAdsModal" class="modal">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h3 style="margin:0">📢 Local Sponsored Ads Engine</h3>
+      <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeAdsModal()">✖</button>
+    </div>
+
+    <div style="background:#fff8e6; border:1px solid #fde68a; padding:12px; border-radius:10px; margin-bottom:12px;">
+      <h4 style="margin:0 0 8px; color:#b45309;">➕ Add Highway Dhaba / Hotel Ad</h4>
+      <div class="field"><label>Business / Dhaba Name</label><input id="adBizName" placeholder="e.g. Sharma Dhaba & Family Restaurant"></div>
+      <div class="grid">
+        <div class="field">
+          <label>Category</label>
+          <select id="adBizCat">
+            <option value="Dhaba / Restaurant">🍲 Highway Dhaba</option>
+            <option value="Hotel / Stay">🏨 Hotel / Lodge</option>
+            <option value="Auto Garage / Puncture">🔧 Mechanic / Tyre Repair</option>
+            <option value="Local Taxi Stand">🚕 Local Taxi Stand</option>
+          </select>
+        </div>
+        <div class="field"><label>Route Tag</label><input id="adRouteTag" placeholder="e.g. Balaghat - Gondia Highway KM 25"></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label>Contact Phone</label><input id="adBizPhone" type="tel" placeholder="10-digit mobile number"></div>
+        <div class="field"><label>Google Map Link</label><input id="adBizMap" placeholder="https://maps.google.com/..."></div>
+      </div>
+      <button class="primary full" onclick="publishSponsoredAd()">🚀 Publish Sponsored Ad</button>
+    </div>
+
+    <h4 style="margin:0 0 8px;">Active Sponsored Partners:</h4>
+    <div id="adminAdsList"></div>
+  </div>
+</div>
+
 <header>
 <div class="wrap head">
 <div>
@@ -269,6 +330,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div class="tag">Travel Share • Local Logistics • Extra Income</div>
 </div>
 <div style="display:flex; align-items:center; gap:8px;">
+  <button id="headerAudioBtn" class="user-badge-btn" style="background:#078b50; border-color:#25D366; font-size:11px;" onclick="toggleAudioAlert()">🔔 Audio: ON</button>
   <button id="navLoginBtn" class="primary" style="background:#fff; color:#1261ff; padding:6px 12px; font-size:12px;" onclick="googleLogin()">🔐 Login with Google</button>
   <div id="navUserBadge" class="user-badge-btn" style="display:none;" onclick="openProfileModal()">
     <img id="navUserDp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-dp" style="width:30px; height:30px; border-width:1px;">
@@ -295,14 +357,25 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
 <main>
 
+<!-- 🌐 GLOBAL 2 KM VS 10 KM CORRIDOR RADAR TOGGLE -->
+<div class="corridor-bar">
+  <div style="font-size:13px; font-weight:bold; color:#334155;">
+    Active Radar Mode: <span id="activeRadarLabel" style="color:#1261ff;">🚗 Highway Corridor (10 KM)</span>
+  </div>
+  <div style="display:flex; gap:6px;">
+    <button id="radarBtnIntercity" class="corridor-btn active-blue" onclick="setCorridorRadar('intercity')">🚗 Intercity (10 KM)</button>
+    <button id="radarBtnLocal" class="corridor-btn inactive" onclick="setCorridorRadar('local')">🛵 City Local (2 KM)</button>
+  </div>
+</div>
+
 <!-- 🏠 HOME TAB -->
 <section id="home" class="page active">
 <div class="hero">
 <h1>Travel & Transport Smarter with SafarShare.</h1>
-<p class="muted">Share seats, send parcels, or earn with local vehicles (Car, Bike, Bus, Train Commuter, Truck, Flight).</p>
+<p class="muted">Share seats, send parcels, or earn with local vehicles (Car, Bike, Auto, E-Rickshaw, Pickup, Bus, Train, Flight).</p>
 
 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-  <button class="secondary" style="font-size:12px;" onclick="enablePushNotifications()">🔔 Enable Audio Alerts</button>
+  <button id="homeAudioAlertBtn" class="green" style="font-size:12px;" onclick="toggleAudioAlert()">🔔 Audio Alerts: ON</button>
   <button class="wa-btn" style="font-size:12px;" onclick="window.open('https://wa.me/918668828542?text=Hello%20SafarShare%20Support','_blank')">💬 Live WhatsApp Support</button>
   <button class="secondary" style="font-size:12px; background:#eff6ff;" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSc_FEEDBACK_FORM/viewform','_blank')">📝 Google Form Feedback</button>
 </div>
@@ -310,7 +383,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div class="stats">
 <div class="stat"><strong id="sTrips">0</strong>Active Trips</div>
 <div class="stat"><strong id="sSeats">0</strong>Seats Left</div>
-<div class="stat"><strong id="sKg">0</strong>Parcel Space (kg)</div>
+<div class="stat"><strong id="sKg">0 Kg</strong>Live Parcel Capacity</div>
 </div>
 </div>
 
@@ -318,19 +391,19 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <button class="action" onclick="show('find')">
 <div class="ico">🧑</div>
 <h3>Find a Ride</h3>
-<p class="muted">Book seats with clean single-row UI and fair 2-3km corridor pricing.</p>
+<p class="muted">Book seats with clean single-row UI and fair 2-3km / 10km corridor pricing.</p>
 </button>
 
 <button class="action" onclick="show('parcel')">
 <div class="ico">📦</div>
 <h3>Send Parcel</h3>
-<p class="muted">Deliver docs, bags, cargo or book full vehicles with 5km flexible corridor.</p>
+<p class="muted">Deliver docs, bags, cargo with flexible COD (Sender / Receiver Payment).</p>
 </button>
 
 <button class="action" onclick="show('post')">
 <div class="ico">🚗</div>
 <h3>Post Trip</h3>
-<p class="muted">Earn with garage vehicles or daily Govt Bus/Train/Flight commuter parcel service.</p>
+<p class="muted">Earn with garage vehicles (Auto/Car/Bike) or daily Govt Bus/Train/Flight commuter parcel service.</p>
 </button>
 </div>
 </section>
@@ -339,7 +412,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <section id="post" class="page">
 <div class="form">
 <h2>🚗 Post Your Trip / Transport Service</h2>
-<div class="notice">Select your vehicle or commuter mode. OSRM calculates exact highway driving line.</div>
+<div class="notice">Select your vehicle, Auto, E-Rickshaw or commuter mode. OSRM calculates exact highway/city driving line.</div>
 
 <div class="field">
   <label>🚗 Select Transport Mode (Garage Vehicles & Commuters)</label>
@@ -347,18 +420,18 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 </div>
 
 <div class="field">
-  <label>From / Departure City</label>
+  <label>From / Departure City or Local Landmark</label>
   <input id="pFrom" placeholder="Detecting your GPS location...">
 </div>
 
 <div class="field">
-  <label>To / Destination City</label>
-  <input id="pTo" placeholder="e.g. Gondia, Maharashtra">
+  <label>To / Destination Area</label>
+  <input id="pTo" placeholder="e.g. Gondia, Maharashtra / Local Railway Station">
 </div>
 
 <div class="field">
   <label>Pickup Landmark Spot (Layer 2 Note)</label>
-  <input id="pPickupSpot" placeholder="e.g. Bus Stand Gate 2 / Platform 1 Entry / Airport Gate 3">
+  <input id="pPickupSpot" placeholder="e.g. Bus Stand Gate 2 / Chowk Entry / College Gate">
 </div>
 
 <div class="grid">
@@ -366,20 +439,26 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   <div class="field"><label>Departure Time</label><input id="pTime" type="time" value="09:00"></div>
 </div>
 
-<button class="secondary full" style="margin:6px 0;" onclick="fetchDriverRoutes()">🗺️ Calculate & Preview Highway Routes</button>
-<div id="driverRoutePicker" class="route-picker"></div>
-<div id="driverPostMap"></div>
-<div id="driverRouteStatus" style="font-size:12px; margin:8px 0; color:#1261ff; font-weight:bold;"></div>
+<div id="driverMapWrapper">
+  <button class="secondary full" style="margin:6px 0;" onclick="fetchDriverRoutes()">🗺️ Calculate & Preview Highway/City Routes</button>
+  <div id="driverRoutePicker" class="route-picker"></div>
+  <div id="driverPostMap"></div>
+  <div id="driverRouteStatus" style="font-size:12px; margin:8px 0; color:#1261ff; font-weight:bold;"></div>
+</div>
 
 <div class="checkrow">
   <label class="check"><input id="pDaily" type="checkbox"> 🔄 Daily Commuter Trip (Regular Up-Down)</label>
-  <label class="check" id="lblPassenger"><input id="pPassenger" type="checkbox" checked onchange="toggleSeatFields()"> 🧑 Accept Passengers</label>
+  <label class="check" id="lblPassenger"><input id="pPassenger" type="checkbox" checked onchange="toggleSeatFields()"> <span id="passengerLabelText">🧑 Accept Passengers</span></label>
   <label class="check" id="lblParcel"><input id="pParcel" type="checkbox" checked onchange="toggleParcelFields()"> 📦 Accept Parcels</label>
+  <label class="check"><input id="pLadiesOnly" type="checkbox"> 👩 Ladies-Only Trip</label>
 </div>
 
 <!-- PASSENGER SEAT PRICING -->
 <div id="seatFieldsGroup" class="grid">
-  <div class="field"><label>Available Seats</label><input id="pSeats" type="number" min="0" value="3"></div>
+  <div class="field">
+    <label id="seatsFieldLabel">Available Seats</label>
+    <input id="pSeats" type="number" min="0" value="3">
+  </div>
   <div class="field"><label>Full Route Seat Price ₹</label><input id="pSeatPrice" type="number" min="0" value="250"></div>
 </div>
 
@@ -391,7 +470,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   <div class="field" id="fullSpacePriceField"><label>🚛 Full Space / Entire Vehicle ₹</label><input id="pFullVehiclePrice" type="number" value="800"></div>
 </div>
 
-<button class="primary full" onclick="postTrip()">Confirm & Post Smart Trip</button>
+<button class="primary full" onclick="postTrip()">Confirm & Post Smart Trip (0% Commission)</button>
 <div id="postMsg"></div>
 </div>
 </section>
@@ -399,7 +478,12 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <!-- 🔎 FIND RIDE -->
 <section id="find" class="page">
 <div class="search">
-<h2>🔎 Find a Ride</h2>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+  <h2 style="margin:0">🔎 Find a Ride</h2>
+  <label class="check" style="border-color:#fbcfe8; background:#fdf2f8; color:#db2777; font-weight:bold;">
+    <input id="fLadiesOnly" type="checkbox"> 👩 Ladies Only Filter
+  </label>
+</div>
 
 <div class="field">
   <label>From / Pickup Area</label>
@@ -430,10 +514,11 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     <label>Vehicle Filter</label>
     <select id="fVehicle">
       <option value="">Any Vehicle</option>
-      <option>Car</option>
-      <option>Bike</option>
-      <option>Van</option>
-      <option>Auto</option>
+      <option value="Car">Car</option>
+      <option value="Bike">Bike</option>
+      <option value="Auto">🛺 Auto / E-Rickshaw</option>
+      <option value="Pickup/Truck">Pickup / Chhota Hathi</option>
+      <option value="Van">Van</option>
     </select>
   </div>
 </div>
@@ -442,7 +527,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   <label class="check"><input id="fExtraLuggage" type="checkbox"> 🧳 Heavy / Extra Luggage (बड़ा सूटकेस / पेटी - ₹50)</label>
 </div>
 
-<button class="primary full" onclick="findRides()">Search Rides (2-3 KM Corridor)</button>
+<button class="primary full" onclick="findRides()">Search Rides (<span id="findCorridorLabel">10 KM Highway Corridor</span>)</button>
 </div>
 <div id="rideResults" class="results"></div>
 </section>
@@ -467,7 +552,16 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   <div class="field"><label>Receiver Full Name *</label><input id="xRecName" placeholder="Name of person receiving parcel"></div>
   <div class="field"><label>Receiver 10-Digit Mobile *</label><input id="xRecPhone" type="tel" placeholder="10-digit mobile number"></div>
 </div>
-<button class="primary full" onclick="findParcel()">Find Transporter (5 KM Corridor)</button>
+
+<div class="field">
+  <label>Parcel Payment Mode</label>
+  <select id="xParcelPayMode" style="font-weight:bold; color:#1261ff;">
+    <option value="sender_paid">📦 Paid by Sender (At Pickup to Driver)</option>
+    <option value="receiver_cod">🚚 COD - Pay on Delivery (Receiver Pays to Driver)</option>
+  </select>
+</div>
+
+<button class="primary full" onclick="findParcel()">Find Transporter (<span id="parcelCorridorLabel">10 KM Highway Corridor</span>)</button>
 </div>
 <div id="parcelResults" class="results"></div>
 </section>
@@ -486,6 +580,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   
   <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
     <button class="secondary" onclick="openUsersModal()">👥 View Real-Time Active Users</button>
+    <button class="orange" onclick="openAdsModal()">📢 Manage Local Sponsored Ads</button>
     <button class="secondary" onclick="filterAdminTrips('all')">Show All</button>
     <button class="secondary" onclick="filterAdminTrips('active')">Show Active Only</button>
     <button class="secondary" onclick="filterAdminTrips('completed')">Show Completed Only</button>
@@ -502,6 +597,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div id="myWalletLedger" class="card" style="background:#f8fafc; border:1px solid #e2e8f0; margin-top:12px;">
   <h3>📊 My Wallet & Earnings Ledger</h3>
   <div style="font-size:20px; font-weight:800; color:#07854b;">Total Money Earned: ₹<span id="userTotalEarnings">0</span></div>
+  <p class="small muted" style="margin:4px 0 0;">Direct passenger settlement via Cash & Driver Personal QR Code.</p>
 </div>
 
 <div id="myTrips"></div>
@@ -533,9 +629,9 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   </div>
 </div>
 
-<!-- 🤖 FLOATING SAFAR AI SUPPORT WIDGET -->
+<!-- 🤖 DRAGGABLE FLOATING SAFAR AI SUPPORT WIDGET -->
 <div id="safar-ai-widget">
-  <button id="safar-ai-btn" onclick="toggleAIChat()">
+  <button id="safar-ai-btn">
     🤖 <span>Chat with Safar AI</span>
   </button>
 
@@ -569,7 +665,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
-    getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, getDocs, writeBatch, getDoc
+    getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, getDocs, writeBatch, getDoc, deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -601,10 +697,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         phone: user.phoneNumber || "8668828542",
         photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
         status: "Active (Online)",
-        vehicles: [
-          { id: "v1", type: "Car", model: "Swift Dzire", plate: "MH-35-AJ-1234" },
-          { id: "v2", type: "Bike", model: "Splendor Plus", plate: "MH-35-K-5678" }
-        ]
+        vehicles: []
       };
 
       document.getElementById("navLoginBtn").style.display = "none";
@@ -619,6 +712,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       document.getElementById("navLogoutBtn").style.display = "none";
     }
     window.stats();
+    window.renderVehicleDropdown();
     if(document.getElementById("trips").classList.contains("active")) window.renderTrips();
   });
 
@@ -632,6 +726,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
   let ALL_RIDES = [];
   let ALL_REQUESTS = [];
+  let ALL_ADS = [];
   let currentChatRequestId = null;
   let chatUnsubscribe = null;
 
@@ -652,6 +747,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     const plate = document.getElementById("newVehPlate").value.trim();
     if(!model || !plate) { alert("Model name and number plate are required!"); return; }
 
+    if(!currentUser.vehicles) currentUser.vehicles = [];
     currentUser.vehicles.push({ id: "v_" + Date.now(), type, model, plate });
     document.getElementById("newVehModel").value = "";
     document.getElementById("newVehPlate").value = "";
@@ -660,7 +756,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   };
 
   window.removeVehicleFromGarage = function(id) {
-    if(!currentUser) return;
+    if(!currentUser || !currentUser.vehicles) return;
     currentUser.vehicles = currentUser.vehicles.filter(v => v.id !== id);
     window.renderGarageList();
     window.renderVehicleDropdown();
@@ -679,9 +775,44 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       if(oldReqs.length > 0 && ALL_REQUESTS.length > oldReqs.length) window.playAlertSound();
       if(document.getElementById("requests").classList.contains("active")) window.renderRequests();
     });
+
+    onSnapshot(collection(db, "sponsored_ads"), (snapshot) => {
+      ALL_ADS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      window.renderAdminAdsList();
+    });
   }
 
-  // 🚗 POST TRIP (WITH DEEP LINK SUPPORT)
+  // 📢 MASTER ADMIN PUBLISH LOCAL SPONSORED AD
+  window.publishSponsoredAd = async function() {
+    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { alert("Only Master Admin can publish ads!"); return; }
+    const name = document.getElementById("adBizName").value.trim();
+    const category = document.getElementById("adBizCat").value;
+    const locationTag = document.getElementById("adRouteTag").value.trim();
+    const phone = document.getElementById("adBizPhone").value.trim();
+    const mapUrl = document.getElementById("adBizMap").value.trim() || `https://maps.google.com/?q=${encodeURIComponent(locationTag)}`;
+
+    if(!name || !locationTag || !phone) { alert("Business Name, Location Tag and Phone are required!"); return; }
+
+    try {
+      await addDoc(collection(db, "sponsored_ads"), {
+        name, category, locationTag, phone, mapUrl, created: Date.now()
+      });
+      alert("✅ Sponsored Partner Ad Published Successfully!");
+      document.getElementById("adBizName").value = "";
+      document.getElementById("adRouteTag").value = "";
+      document.getElementById("adBizPhone").value = "";
+      document.getElementById("adBizMap").value = "";
+    } catch(e) { alert("Error: " + e.message); }
+  };
+
+  window.deleteSponsoredAd = async function(adId) {
+    if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+    if(confirm("Delete this sponsored ad?")) {
+      await deleteDoc(doc(db, "sponsored_ads", adId));
+    }
+  };
+
+  // 🚗 POST TRIP (WITH CABIN SUPPORT & PARCEL RATES)
   window.postTrip = async function() {
     if(!currentUser) { alert("Please login with Google to post a trip."); window.googleLogin(); return; }
     const from = document.getElementById("pFrom").value.trim();
@@ -690,17 +821,23 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     const date = document.getElementById("pDate").value;
     const time = document.getElementById("pTime").value;
     const isDaily = document.getElementById("pDaily").checked;
+    const isLadiesOnly = document.getElementById("pLadiesOnly").checked;
 
     const selectedVehVal = document.getElementById("pVehicleSelect").value;
-    let vehObj = currentUser.vehicles ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
+    let vehObj = (currentUser.vehicles && currentUser.vehicles.length) ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
     let isCommuterMode = false;
     
     if(!vehObj) {
-      isCommuterMode = true;
-      if(selectedVehVal === "mode_bus") vehObj = { type: "Government Bus", model: "State Transport Bus", plate: "Govt Bus" };
-      else if(selectedVehVal === "mode_train") vehObj = { type: "Indian Railways (Train)", model: "Train Commuter", plate: "Railways" };
-      else if(selectedVehVal === "mode_flight") vehObj = { type: "Flight / Air", model: "Commercial Flight", plate: "Airways" };
-      else { vehObj = { type: "Car", model: "Vehicle", plate: "N/A" }; isCommuterMode = false; }
+      if(selectedVehVal === "mode_bus") { vehObj = { type: "Government Bus", model: "State Transport Bus", plate: "Govt Bus" }; isCommuterMode = true; }
+      else if(selectedVehVal === "mode_train") { vehObj = { type: "Indian Railways (Train)", model: "Train Commuter", plate: "Railways" }; isCommuterMode = true; }
+      else if(selectedVehVal === "mode_flight") { vehObj = { type: "Flight / Air", model: "Commercial Flight", plate: "Airways" }; isCommuterMode = true; }
+      else if(selectedVehVal === "def_car") vehObj = { type: "Car", model: "Car (Sedan/SUV)", plate: "General Car" };
+      else if(selectedVehVal === "def_bike") vehObj = { type: "Bike", model: "Bike / Motorcycle", plate: "General Bike" };
+      else if(selectedVehVal === "def_auto") vehObj = { type: "Auto", model: "Auto / E-Rickshaw", plate: "City Auto" };
+      else if(selectedVehVal === "def_pickup") vehObj = { type: "Pickup/Truck", model: "Pickup / Chhota Hathi", plate: "Goods Carrier" };
+      else if(selectedVehVal === "def_van") vehObj = { type: "Van", model: "Van (Omni/Eeco)", plate: "Passenger Van" };
+      else if(selectedVehVal === "def_bus") vehObj = { type: "Private Bus", model: "Private Bus / Traveller", plate: "Tour Bus" };
+      else { vehObj = { type: "Car", model: "Vehicle", plate: "General" }; }
     }
 
     const passenger = isCommuterMode ? false : document.getElementById("pPassenger").checked;
@@ -715,8 +852,21 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
     if(!from || !to || !date || !time){ alert("From, To, Date and Time are required."); return; }
 
-    const activeRoute = window.getSelectedDriverRoute();
-    const distanceKm = activeRoute ? parseFloat((activeRoute.distance / 1000).toFixed(1)) : 100;
+    let activeRoute = window.getSelectedDriverRoute();
+    let distanceKm = 100;
+    let geomData = null;
+
+    if(isCommuterMode && (selectedVehVal === "mode_train" || selectedVehVal === "mode_flight")) {
+      try {
+        const c1 = await window.geocode(from);
+        const c2 = await window.geocode(to);
+        geomData = JSON.stringify({ type: "LineString", coordinates: [[c1[1], c1[0]], [c2[1], c2[0]]] });
+      } catch(e){}
+    } else if(activeRoute) {
+      distanceKm = parseFloat((activeRoute.distance / 1000).toFixed(1));
+      geomData = JSON.stringify(activeRoute.geometry);
+    }
+
     const ratePerKm = (seatPrice > 0 && distanceKm > 0) ? (seatPrice / distanceKm) : 1.5;
 
     try {
@@ -730,11 +880,13 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         carModel: vehObj.model,
         carNumber: vehObj.plate,
         isCommuterMode,
-        from, to, pickupSpot, date, time, isDaily,
+        tripScope: window.getActiveCorridorMode(),
+        from, to, pickupSpot, date, time, isDaily, isLadiesOnly,
         passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
         parcel, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
+        parcelCapacityKg: parcel ? (vehObj.type === "Pickup/Truck" ? 250 : vehObj.type === "Auto" ? 40 : 25) : 0,
         totalDistanceKm: distanceKm,
-        geometry: activeRoute ? JSON.stringify(activeRoute.geometry) : null,
+        geometry: geomData,
         status: "Active",
         created: Date.now()
       });
@@ -760,6 +912,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       await addDoc(collection(db, "requests"), {
         type: "passenger", rideId, name: currentUser.displayName,
         numSeats, travelDistKm: userTravelDist, hasExtraBag,
+        bookingScope: r.tripScope || "intercity",
         passengerUid: currentUser.uid, passengerEmail: currentUser.email,
         driverUid: r.driverUid, driverPhone: r.phone, driverName: r.name,
         from: r.from, to: r.to, pickupSpot: r.pickupSpot || "",
@@ -778,6 +931,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     const r = ALL_RIDES.find(x => x.id === rideId);
     const recName = document.getElementById("xRecName").value.trim();
     const recPhone = document.getElementById("xRecPhone").value.trim();
+    const payMode = document.getElementById("xParcelPayMode").value;
 
     if(!recName || recPhone.length < 10){ alert("Receiver Full Name and 10-digit mobile required!"); return; }
 
@@ -788,6 +942,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       await addDoc(collection(db, "requests"), {
         type: "parcel", rideId, slab, slabPrice: price,
         name: currentUser.displayName, recName, recPhone,
+        paymentSettlement: payMode,
+        bookingScope: r.tripScope || "intercity",
         passengerUid: currentUser.uid, passengerEmail: currentUser.email,
         driverUid: r.driverUid, driverPhone: r.phone, driverName: r.name,
         from: r.from, to: r.to, pickupSpot: r.pickupSpot || "",
@@ -796,7 +952,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         startOtp, dropOtp,
         created: Date.now()
       });
-      alert(`✅ Parcel delivery request sent (${slab === 'full_vehicle' ? 'Full Space' : slab})!`);
+      alert(`✅ Parcel delivery request sent (${slab === 'full_vehicle' ? 'Full Space' : slab})! Mode: ${payMode === 'receiver_cod' ? 'COD Receiver' : 'Sender Paid'}`);
       window.show('requests');
     } catch(e) { alert("Error: " + e.message); }
   };
@@ -882,7 +1038,6 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     });
   };
 
-  // 👑 ADMIN ONLY CANCEL
   window.adminForceCancelTrip = async function(rideId) {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { alert("⛔ Only Master Admin can perform this action!"); return; }
     const reason = prompt("Enter reason for Admin Force Cancellation:", "Admin Policy Violation / Inactive");
@@ -898,7 +1053,6 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     alert("✅ Booking confirmed!");
   };
 
-  // 👑 ADMIN ONLY CLEAR DATA
   window.clearTestDataOnly = async function() {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { alert("⛔ Only Master Admin can delete test data!"); return; }
     if(!confirm("⚠️ Delete active test rides & requests? Completed trips will stay safe.")) return;
@@ -931,12 +1085,13 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   window.getCurrentUser = () => currentUser;
   window.getRides = () => ALL_RIDES;
   window.getRequests = () => ALL_REQUESTS;
+  window.getAds = () => ALL_ADS;
   window.getAdminEmail = () => ADMIN_EMAIL;
 
   initDataListeners();
 </script>
 
-<!-- UI LOGIC, GPS, ROUTING, 5KM CORRIDOR & AI CHAT -->
+<!-- UI LOGIC, GPS, ROUTING, 2KM/10KM CORRIDOR, DRAGGABLE AI & FULL GARAGE DROPDOWN -->
 <script>
 "use strict";
 
@@ -945,10 +1100,91 @@ let driverMap = null;
 let driverRouteLayers = null;
 let fetchedDriverRoutes = [];
 let selectedRouteIdx = 0;
+let activeCorridorMode = 'intercity';
+let isAudioEnabled = true;
 const GEO_CACHE = {};
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+window.getActiveCorridorMode = () => activeCorridorMode;
+
+function openAdsModal(){ document.getElementById("adminAdsModal").style.display = "flex"; renderAdminAdsList(); }
+function closeAdsModal(){ document.getElementById("adminAdsModal").style.display = "none"; }
+
+function renderAdminAdsList() {
+  const box = document.getElementById("adminAdsList");
+  if(!box) return;
+  const ads = window.getAds ? window.getAds() : [];
+  if(!ads.length) { box.innerHTML = "<div class='small muted'>No sponsored ads active yet.</div>"; return; }
+  box.innerHTML = ads.map(a => `
+    <div class="vehicle-card" style="margin-bottom:8px;">
+      <div>
+        <b>${esc(a.name)}</b> <span class="badge o">${esc(a.category)}</span>
+        <div class="small">📍 ${esc(a.locationTag)} • 📞 ${esc(a.phone)}</div>
+      </div>
+      <button class="red" style="padding:4px 8px; font-size:11px;" onclick="deleteSponsoredAd('${a.id}')">🗑️ Delete</button>
+    </div>
+  `).join("");
+}
+
+function toggleAudioAlert() {
+  isAudioEnabled = !isAudioEnabled;
+  const headerBtn = document.getElementById("headerAudioBtn");
+  const homeBtn = document.getElementById("homeAudioAlertBtn");
+
+  if (isAudioEnabled) {
+    if(headerBtn) {
+      headerBtn.textContent = "🔔 Audio: ON";
+      headerBtn.style.background = "#078b50";
+      headerBtn.style.borderColor = "#25D366";
+    }
+    if(homeBtn) {
+      homeBtn.textContent = "🔔 Audio Alerts: ON";
+      homeBtn.className = "green";
+    }
+    playAlertSound();
+  } else {
+    if(headerBtn) {
+      headerBtn.textContent = "🔕 Audio: OFF";
+      headerBtn.style.background = "#d9363e";
+      headerBtn.style.borderColor = "#ff8585";
+    }
+    if(homeBtn) {
+      homeBtn.textContent = "🔕 Audio Alerts: OFF";
+      homeBtn.className = "red";
+    }
+  }
+}
+
+function playAlertSound() { 
+  if(!isAudioEnabled) return;
+  try{ document.getElementById("alertSound").play(); }catch(e){} 
+}
+
+function setCorridorRadar(mode) {
+  activeCorridorMode = mode;
+  const bInt = document.getElementById('radarBtnIntercity');
+  const bLoc = document.getElementById('radarBtnLocal');
+  const lbl = document.getElementById('activeRadarLabel');
+  const findLbl = document.getElementById('findCorridorLabel');
+  const parcelLbl = document.getElementById('parcelCorridorLabel');
+
+  if (mode === 'local') {
+    bLoc.className = "corridor-btn active-green";
+    bInt.className = "corridor-btn inactive";
+    lbl.textContent = "🛵 City Local Area (2 KM Radius)";
+    lbl.style.color = "#00a884";
+    findLbl.textContent = "2 KM Local Radius";
+    parcelLbl.textContent = "2 KM Local Radius";
+  } else {
+    bInt.className = "corridor-btn active-blue";
+    bLoc.className = "corridor-btn inactive";
+    lbl.textContent = "🚗 Highway Corridor (10 KM)";
+    lbl.style.color = "#1261ff";
+    findLbl.textContent = "10 KM Highway Corridor";
+    parcelLbl.textContent = "10 KM Highway Corridor";
+  }
+}
 
 function openProfileModal(){ document.getElementById("profileModal").style.display = "flex"; renderGarageList(); }
 function closeProfileModal(){ document.getElementById("profileModal").style.display = "none"; }
@@ -962,7 +1198,7 @@ function closeUsersModal(){ document.getElementById("usersModal").style.display 
 function renderGarageList() {
   const u = window.getCurrentUser();
   const box = document.getElementById("userGarageList");
-  if(!u || !u.vehicles || !u.vehicles.length) { box.innerHTML = "<div class='small muted'>No vehicles added yet.</div>"; return; }
+  if(!u || !u.vehicles || !u.vehicles.length) { box.innerHTML = "<div class='small muted'>No vehicles added yet in your garage. Add a vehicle below!</div>"; return; }
   box.innerHTML = u.vehicles.map(v => `
     <div class="vehicle-card">
       <div><b>${esc(v.type)}:</b> ${esc(v.model)} <span class="badge">${esc(v.plate)}</span></div>
@@ -971,16 +1207,31 @@ function renderGarageList() {
   `).join("");
 }
 
+// 🚗 DYNAMIC VEHICLE DROPDOWN (ALL CATEGORIES CLEARLY SHOWN)
 function renderVehicleDropdown() {
   const u = window.getCurrentUser();
   const sel = document.getElementById("pVehicleSelect");
+  if(!sel) return;
   
-  let garageOpts = (u && u.vehicles && u.vehicles.length) ? u.vehicles.map(v => `
-    <option value="${v.id}">${v.type === 'Car' ? '🚗' : v.type === 'Bike' ? '🏍️' : '🚚'} ${esc(v.model)} (${esc(v.plate)})</option>
-  `).join("") : `<option value="default_car">🚗 Swift Dzire (MH-35-AJ-1234)</option>`;
+  let garageOpts = "";
+  
+  if (u && u.vehicles && u.vehicles.length > 0) {
+    garageOpts = u.vehicles.map(v => `
+      <option value="${v.id}">${v.type === 'Car' ? '🚗' : v.type === 'Bike' ? '🏍️' : v.type === 'Auto' ? '🛺' : v.type === 'Pickup/Truck' ? '🛻' : '🚐'} ${esc(v.model)} (${esc(v.plate)})</option>
+    `).join("");
+  } else {
+    garageOpts = `
+      <option value="def_car">🚗 Car (Sedan / Hatchback / SUV)</option>
+      <option value="def_bike">🏍️ Bike / Motorcycle / Scooter</option>
+      <option value="def_auto">🛺 Auto / E-Rickshaw (3-Wheeler)</option>
+      <option value="def_pickup">🛻 Pickup / Chhota Hathi / Goods Truck</option>
+      <option value="def_van">🚐 Van / Omni / Eeco</option>
+      <option value="def_bus">🚌 Private Bus / Traveller</option>
+    `;
+  }
 
   sel.innerHTML = `
-    <optgroup label="🚗 My Garage Vehicles">
+    <optgroup label="🚗 Vehicles & Logistics Fleet">
       ${garageOpts}
     </optgroup>
     <optgroup label="🚆 Daily Commuter Logistics (Parcel Only)">
@@ -995,10 +1246,20 @@ function renderVehicleDropdown() {
 function handleVehicleSelectChange() {
   const selVal = document.getElementById("pVehicleSelect").value;
   const isCommuter = (selVal === "mode_bus" || selVal === "mode_train" || selVal === "mode_flight");
+  const isTrainFlight = (selVal === "mode_train" || selVal === "mode_flight");
   
   const seatFields = document.getElementById("seatFieldsGroup");
   const lblPassenger = document.getElementById("lblPassenger");
+  const passengerLabelText = document.getElementById("passengerLabelText");
+  const seatsFieldLabel = document.getElementById("seatsFieldLabel");
   const fullSpaceField = document.getElementById("fullSpacePriceField");
+  const mapWrapper = document.getElementById("driverMapWrapper");
+
+  if(isTrainFlight) {
+    if(mapWrapper) mapWrapper.style.display = "none";
+  } else {
+    if(mapWrapper) mapWrapper.style.display = "block";
+  }
 
   if(isCommuter) {
     seatFields.style.display = "none";
@@ -1014,10 +1275,27 @@ function handleVehicleSelectChange() {
 
     const u = window.getCurrentUser();
     const veh = (u && u.vehicles) ? u.vehicles.find(v => v.id === selVal) : null;
-    if(veh && veh.type === "Bike") {
+    const vType = veh ? veh.type : selVal;
+    
+    if(vType === "Bike" || vType === "def_bike") {
+      passengerLabelText.textContent = "🧑 Accept Pillion Rider";
+      seatsFieldLabel.textContent = "Available Seat";
       document.getElementById("pSeats").value = 1;
       document.getElementById("pSeats").max = 1;
+    } else if(vType === "Auto" || vType === "def_auto") {
+      passengerLabelText.textContent = "🛺 Accept Auto/E-Rickshaw Passengers";
+      seatsFieldLabel.textContent = "Available Seats (Max 3–4)";
+      document.getElementById("pSeats").value = 3;
+      document.getElementById("pSeats").max = 4;
+    } else if(vType === "Pickup/Truck" || vType === "def_pickup") {
+      passengerLabelText.textContent = "🛻 Accept Cabin Passenger (Front Seat)";
+      seatsFieldLabel.textContent = "Available Cabin Seats (1–2)";
+      document.getElementById("pSeats").value = 2;
+      document.getElementById("pSeats").max = 2;
     } else {
+      passengerLabelText.textContent = "🧑 Accept Passengers";
+      seatsFieldLabel.textContent = "Available Seats";
+      document.getElementById("pSeats").value = 3;
       document.getElementById("pSeats").max = 10;
     }
   }
@@ -1045,7 +1323,6 @@ function renderAdminUsersList() {
 function enablePushNotifications() {
   if ("Notification" in window) Notification.requestPermission().then(p => { if(p==="granted") alert("🔔 Audio alerts enabled!"); });
 }
-function playAlertSound() { try{ document.getElementById("alertSound").play(); }catch(e){} }
 
 function detectCurrentLocation() {
   if (navigator.geolocation) {
@@ -1081,6 +1358,7 @@ async function geocode(query) {
   }
   throw new Error("Location not found: " + query);
 }
+window.geocode = geocode;
 
 /* 🚗 OSRM ROUTING */
 async function fetchDriverRoutes() {
@@ -1160,7 +1438,7 @@ function show(id){
   }
 }
 
-/* 🔎 FIND RIDES (2-3 KM CORRIDOR) */
+/* 🔎 FIND RIDES (WITH ADS MERGE & 2KM/10KM RADAR) */
 async function findRides(){
   const from=document.getElementById("fFrom").value.trim();
   const to=document.getElementById("fTo").value.trim();
@@ -1168,11 +1446,14 @@ async function findRides(){
   const time=document.getElementById("fTime").value;
   const vehicle=document.getElementById("fVehicle").value;
   const seatsNeed=safeNumber(document.getElementById("fSeats").value)||1;
+  const ladiesOnly=document.getElementById("fLadiesOnly").checked;
   const user = window.getCurrentUser();
   const box = document.getElementById("rideResults");
 
+  const maxCorridorKm = (activeCorridorMode === 'local') ? 2.0 : 10.0;
+
   if(!from || !to) { alert("Enter pickup and drop locations!"); return; }
-  box.innerHTML = "⏳ Validating 2-3 KM highway corridor...";
+  box.innerHTML = `⏳ Validating ${maxCorridorKm} KM corridor radar...`;
 
   try {
     const pFromCoord = await geocode(from);
@@ -1180,7 +1461,7 @@ async function findRides(){
     const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
     const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
 
-    const allRides = window.getRides().filter(r => (user ? r.driverUid !== user.uid : true) && r.status === "Active" && (!date || r.date === date) && (!vehicle || r.vehicle === vehicle) && r.passenger && safeNumber(r.seats) >= seatsNeed);
+    const allRides = window.getRides().filter(r => (user ? r.driverUid !== user.uid : true) && r.status === "Active" && (!date || r.date === date) && (!vehicle || r.vehicle === vehicle) && (!ladiesOnly || r.isLadiesOnly) && r.passenger && safeNumber(r.seats) >= seatsNeed);
     const matched = [];
 
     allRides.forEach(trip => {
@@ -1196,15 +1477,35 @@ async function findRides(){
         const np1 = turf.nearestPointOnLine(line, pPickupPt);
         const np2 = turf.nearestPointOnLine(line, pDropPt);
 
-        if (dist1 <= 3.0 && dist2 <= 3.0 && np1.properties.location < np2.properties.location) {
+        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location < np2.properties.location) {
           const travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-          const fare = Math.max(30, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+          const fare = Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
           matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${(trip.ratePerKm||1.5).toFixed(2)}/km` });
         }
       }
     });
 
-    box.innerHTML = matched.length ? matched.map(r => `
+    let adsHtml = "";
+    const activeAds = window.getAds ? window.getAds() : [];
+    if(activeAds.length > 0) {
+      const topAd = activeAds[0];
+      adsHtml = `
+        <div class="ad-card" style="background:#fffbeb; border:1.5px dashed #f59e0b; border-radius:14px; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge o" style="font-size:10px;">⭐ SPONSORED PARTNER</span>
+            <span class="small muted">${esc(topAd.category)}</span>
+          </div>
+          <h4 style="margin:6px 0 2px;">🏨 ${esc(topAd.name)}</h4>
+          <p class="small muted" style="margin:0 0 8px;">📍 ${esc(topAd.locationTag)}</p>
+          <div style="display:flex; gap:8px;">
+            <a href="tel:${esc(topAd.phone)}" class="green" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📞 Call Direct</a>
+            <a href="${esc(topAd.mapUrl)}" target="_blank" class="secondary" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:6px;">📍 Open Map</a>
+          </div>
+        </div>
+      `;
+    }
+
+    box.innerHTML = matched.length ? (adsHtml + matched.map(r => `
       <div class="card">
         <div class="user-profile-header">
           <img src="${esc(r.driverDp)}" class="user-dp">
@@ -1215,13 +1516,20 @@ async function findRides(){
           <div class="price">₹${r.fare}/seat</div>
         </div>
         <div class="pricing-preview">💰 Fair Distance Fare: ₹${r.fare} (${r.fareNote})</div>
-        <div class="badges"><span class="badge">📅 ${esc(r.date)}</span><span class="badge">⏰ ${esc(r.time)}</span><span class="badge g">✅ 3km Corridor Verified</span></div>
+        <div class="badges">
+          <span class="badge">📅 ${esc(r.date)}</span>
+          <span class="badge">⏰ ${esc(r.time)}</span>
+          <span class="badge g">✅ ${maxCorridorKm}km Radar Verified</span>
+          ${r.isLadiesOnly ? '<span class="badge pink">👩 Ladies Only</span>' : ''}
+          ${r.vehicle === 'Auto' ? '<span class="badge o">🛺 Auto / E-Rickshaw</span>' : ''}
+          ${r.vehicle === 'Pickup/Truck' ? '<span class="badge o">🛻 Front Cabin Seat</span>' : ''}
+        </div>
         <button class="primary full" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">Request ${seatsNeed} Seat(s)</button>
-      </div>`).join("") : empty("🚗", "No rides found within 2-3km highway corridor");
+      </div>`).join("")) : (adsHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
 
-/* 📦 FIND PARCEL (5 KM CORRIDOR) */
+/* 📦 FIND PARCEL (WITH ADS MERGE & 2KM/10KM RADAR) */
 async function findParcel(){
   const from=document.getElementById("xFrom").value.trim();
   const to=document.getElementById("xTo").value.trim();
@@ -1230,8 +1538,10 @@ async function findParcel(){
   const user = window.getCurrentUser();
   const box = document.getElementById("parcelResults");
 
+  const maxCorridorKm = (activeCorridorMode === 'local') ? 2.0 : 10.0;
+
   if(!from || !to || !date) { alert("Enter pickup, drop and date!"); return; }
-  box.innerHTML = "⏳ Searching transporters on 5 KM flexible highway corridor...";
+  box.innerHTML = `⏳ Searching transporters on ${maxCorridorKm} KM corridor...`;
 
   try {
     const pFromCoord = await geocode(from);
@@ -1255,14 +1565,34 @@ async function findParcel(){
         const np1 = turf.nearestPointOnLine(line, pPickupPt);
         const np2 = turf.nearestPointOnLine(line, pDropPt);
 
-        if(d1 <= 5.0 && d2 <= 5.0 && np1.properties.location < np2.properties.location) {
+        if(d1 <= maxCorridorKm && d2 <= maxCorridorKm && np1.properties.location < np2.properties.location) {
           let price = slab === 'doc' ? r.docPrice : slab === 'bag' ? r.bagPrice : slab === 'cargo' ? r.cargoPrice : (r.fullVehiclePrice || 800);
           matched.push({ ...r, price });
         }
       }
     });
 
-    box.innerHTML = matched.length ? matched.map(r => `
+    let adsHtml = "";
+    const activeAds = window.getAds ? window.getAds() : [];
+    if(activeAds.length > 0) {
+      const topAd = activeAds[0];
+      adsHtml = `
+        <div class="ad-card" style="background:#fffbeb; border:1.5px dashed #f59e0b; border-radius:14px; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge o" style="font-size:10px;">⭐ SPONSORED LOGISTICS / DHABA</span>
+            <span class="small muted">${esc(topAd.category)}</span>
+          </div>
+          <h4 style="margin:6px 0 2px;">🏨 ${esc(topAd.name)}</h4>
+          <p class="small muted" style="margin:0 0 8px;">📍 ${esc(topAd.locationTag)}</p>
+          <div style="display:flex; gap:8px;">
+            <a href="tel:${esc(topAd.phone)}" class="green" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📞 Call Direct</a>
+            <a href="${esc(topAd.mapUrl)}" target="_blank" class="secondary" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:6px;">📍 Open Map</a>
+          </div>
+        </div>
+      `;
+    }
+
+    box.innerHTML = matched.length ? (adsHtml + matched.map(r => `
       <div class="card">
         <div class="user-profile-header">
           <img src="${esc(r.driverDp)}" class="user-dp">
@@ -1276,12 +1606,12 @@ async function findParcel(){
           <div class="price">₹${r.price}</div>
         </div>
         <div class="badges">
-          <span class="badge g">✅ 5km Logistics Corridor</span>
+          <span class="badge g">✅ ${maxCorridorKm}km Logistics Corridor</span>
           <span class="badge">⏰ ${esc(r.time)}</span>
           ${slab === 'full_vehicle' ? '<span class="badge o">🚛 Full Space Booking</span>' : ''}
         </div>
         <button class="primary full" onclick="parcelRequest('${r.id}', '${slab}', ${r.price})">Request Delivery • ₹${r.price}</button>
-      </div>`).join("") : empty("📦", "No parcel transporters found within 5km corridor");
+      </div>`).join("")) : (adsHtml + empty("📦", `No parcel transporters found within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
 
@@ -1306,9 +1636,10 @@ function renderRequests(){
     } else if(x.status === "Accepted" && !isDriver) {
       actions = `
       <div class="paybox">
-        <b>💳 Confirm Payment Mode:</b>
+        <b>💳 Confirm Direct Payment Method:</b>
         <label class="pay-option"><input type="radio" name="pay_${x.id}" value="cash_pickup" checked> 💵 Cash on Pickup / Delivery</label>
-        <button class="primary full" onclick="choosePayment('${x.id}')">Confirm Booking</button>
+        <label class="pay-option"><input type="radio" name="pay_${x.id}" value="driver_qr"> 📲 Scan Driver Personal QR (UPI)</label>
+        <button class="primary full" onclick="choosePayment('${x.id}')">Confirm Booking (0% Commission)</button>
       </div>`;
     }
 
@@ -1332,7 +1663,7 @@ function renderRequests(){
 
     return `
     <div class="request">
-      <strong>${x.type === "passenger" ? `🧑 Seat Request (${x.numSeats} Seats)` : `📦 Parcel (${x.slab === 'full_vehicle' ? 'Full Space Logistics' : x.slab})`}</strong>
+      <strong>${x.type === "passenger" ? `🧑 Seat Request (${x.numSeats} Seats)` : `📦 Parcel (${x.slab === 'full_vehicle' ? 'Full Space Logistics' : x.slab}) ${x.paymentSettlement === 'receiver_cod' ? '<span class="badge o">🚚 COD Receiver</span>' : '<span class="badge g">📦 Sender Paid</span>'}`}</strong>
       <p><b>${esc(x.from)} → ${esc(x.to)}</b></p>
       <div class="offerbox">Fare: <b>₹${x.currentPrice}</b> | Status: <b>${x.status}</b> ${x.cancelReason ? `<span style="color:#d9363e;display:block;margin-top:4px;">Reason: ${esc(x.cancelReason)} (by ${x.cancelledBy})</span>` : ''}</div>
       <div style="margin:10px 0;">${actions}</div>
@@ -1349,7 +1680,8 @@ function shareLiveWhatsapp(from, to, driver, phone){
 
 function choosePayment(qid){
   const qObj = window.getRequests().find(a => a.id === qid);
-  if(qObj) window.reserveCapacity(qObj, "cash_pickup");
+  const selectedMode = document.querySelector(`input[name="pay_${qid}"]:checked`).value;
+  if(qObj) window.reserveCapacity(qObj, selectedMode);
 }
 
 function renderTrips(){
@@ -1359,7 +1691,6 @@ function renderTrips(){
   const adminCard = document.getElementById("adminPanel");
   const adminEmail = window.getAdminEmail();
 
-  // 👑 ADMIN EMAIL LOCK CHECK
   if (user && user.email === adminEmail) {
     adminCard.style.display = "block";
     const completed = list.filter(r => r.status === "Completed");
@@ -1385,7 +1716,7 @@ function renderTrips(){
       <strong>🚗 ${esc(x.from)} → ${esc(x.to)}</strong>
       <span class="badge ${x.status==='Completed'?'completed':x.status==='Cancelled'?'red':'g'}">${x.status}</span>
     </div>
-    <p>📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel Service' : `💺 ${x.seats} seats left`} (${x.vehicle})</p>
+    <p>📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel Service' : `💺 ${x.seats} seats left`} (${x.vehicle}) ${x.isLadiesOnly ? '<span class="badge pink">👩 Ladies Only</span>' : ''}</p>
     ${x.cancelReason ? `<div class="small" style="color:#d9363e;"><b>Cancellation Reason:</b> ${esc(x.cancelReason)}</div>` : ''}
     <div style="display:flex; gap:8px; margin-top:8px;">
       ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
@@ -1425,27 +1756,107 @@ function filterAdminTrips(mode) {
   renderTrips();
 }
 
-// 📲 SMART WHATSAPP SHARE WITH DIRECT LINK
 function shareOnWhatsApp(r){
   const currentUrl = window.location.origin + window.location.pathname;
   const tripBookingUrl = `${currentUrl}?tripId=${r.id}`;
   
-  const textMessage = 
-`🚗 *SafarShare Trip Update!*
-📍 *Route:* ${r.from} ➔ ${r.to}
-📅 *Date:* ${r.date} at ${r.time}
-${r.isCommuterMode ? '📦 *Mode:* Commuter Parcel Service' : `💺 *Available Seats:* ${r.seats} (₹${r.seatPrice}/seat)`}
+  let detailsText = "";
 
-👉 *Book seat / parcel directly here:*
+  if (r.passenger && r.seats > 0) {
+    detailsText += `💺 *Available Seats:* ${r.seats} (₹${r.seatPrice}/seat)\n`;
+  }
+
+  if (r.parcel) {
+    detailsText += `📦 *Parcel Space Available:*\n`;
+    detailsText += `   • 📄 Doc/Envelope: ₹${r.docPrice || 60}\n`;
+    detailsText += `   • 🎒 Bag (≤5kg): ₹${r.bagPrice || 100}\n`;
+    detailsText += `   • 📦 Cargo (>5kg): ₹${r.cargoPrice || 150}\n`;
+    if (r.fullVehiclePrice) {
+      detailsText += `   • 🚛 Full Space: ₹${r.fullVehiclePrice}\n`;
+    }
+  }
+
+  const textMessage = 
+`🚗 *SafarShare Trip & Logistics Update!*
+📍 *Route:* ${r.from} ➔ ${r.to}
+${r.pickupSpot ? `📌 *Pickup Spot:* ${r.pickupSpot}\n` : ''}📅 *Date:* ${r.date} at ${r.time}
+🚘 *Vehicle:* ${r.carModel || r.vehicle} (${r.carNumber || ''})
+${r.isLadiesOnly ? '👩 *Note:* Ladies Only Trip\n' : ''}
+${detailsText}
+👉 *Book Seat or Send Parcel directly here:*
 ${tripBookingUrl}`;
 
   const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
   window.open(waUrl, "_blank");
 }
 
-// 🤖 SAFAR AI CHAT WIDGET CONTROLLER
 function toggleAIChat() {
   document.getElementById("safar-ai-box").classList.toggle("hidden");
+}
+
+function initDraggableAI() {
+  const widget = document.getElementById("safar-ai-widget");
+  const btn = document.getElementById("safar-ai-btn");
+  let isDragging = false;
+  let hasMoved = false;
+  let startX, startY, initialLeft, initialTop;
+
+  function onPointerDown(e) {
+    isDragging = true;
+    hasMoved = false;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const rect = widget.getBoundingClientRect();
+    startX = clientX;
+    startY = clientY;
+    initialLeft = rect.left;
+    initialTop = rect.top;
+
+    widget.style.bottom = "auto";
+    widget.style.right = "auto";
+    widget.style.left = `${initialLeft}px`;
+    widget.style.top = `${initialTop}px`;
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      hasMoved = true;
+    }
+
+    const newLeft = Math.max(10, Math.min(window.innerWidth - widget.offsetWidth - 10, initialLeft + dx));
+    const newTop = Math.max(10, Math.min(window.innerHeight - widget.offsetHeight - 10, initialTop + dy));
+
+    widget.style.left = `${newLeft}px`;
+    widget.style.top = `${newTop}px`;
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+  }
+
+  btn.addEventListener("mousedown", onPointerDown);
+  window.addEventListener("mousemove", onPointerMove);
+  window.addEventListener("mouseup", onPointerUp);
+
+  btn.addEventListener("touchstart", onPointerDown, { passive: true });
+  window.addEventListener("touchmove", onPointerMove, { passive: true });
+  window.addEventListener("touchend", onPointerUp);
+
+  btn.addEventListener("click", (e) => {
+    if (hasMoved) {
+      e.stopImmediatePropagation();
+      return;
+    }
+    toggleAIChat();
+  });
 }
 
 function sendAIMessage() {
@@ -1464,8 +1875,10 @@ function sendAIMessage() {
 
     if (q.includes("book") || q.includes("सर्च") || q.includes("ride")) {
       botReply = "राइड बुक करने के लिए 'Find Ride' टैब में जाएँ, पिकअप व ड्रॉप डालें और 'Request Seat' पर क्लिक करें।";
+    } else if (q.includes("auto") || q.includes("rickshaw") || q.includes("ऑटो")) {
+      botReply = "लोकल शहर (2 KM) में ऑटो या ई-रिक्शा राइड बुक करने के लिए 'Find Ride' में व्हीकल फ़िल्टर 'Auto / E-Rickshaw' चुनें।";
     } else if (q.includes("parcel") || q.includes("पार्सल") || q.includes("सामान")) {
-      botReply = "'Send Parcel' टैब में जाकर आप 5KM कॉरिडोर के अंदर पार्सल डिलीवरी बुक कर सकते हैं।";
+      botReply = "'Send Parcel' टैब में जाकर आप 2KM/10KM कॉरिडोर के अंदर पार्सल डिलीवरी बुक कर सकते हैं।";
     } else if (q.includes("post") || q.includes("driver") || q.includes("गाड़ी")) {
       botReply = "'Post Trip' सेक्शन में जाएँ, अपनी गाड़ी और रूट चुनें और ट्रिप पब्लिश करें।";
     } else if (q.includes("admin") || q.includes("help") || q.includes("support")) {
@@ -1481,7 +1894,21 @@ function stats(){
   const list = window.getRides().filter(x => x.status === "Active");
   document.getElementById("sTrips").textContent = list.length;
   document.getElementById("sSeats").textContent = list.reduce((t,r)=>t+safeNumber(r.seats),0);
-  document.getElementById("sKg").textContent = 50;
+  
+  let totalParcelKg = list.reduce((t,r) => {
+    if(r.parcel) {
+      return t + safeNumber(r.parcelCapacityKg || (r.vehicle === "Pickup/Truck" ? 250 : r.vehicle === "Auto" ? 40 : 25));
+    }
+    return t;
+  }, 0);
+
+  document.getElementById("sKg").textContent = `${totalParcelKg} Kg`;
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
 }
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -1494,6 +1921,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   detectCurrentLocation();
   renderVehicleDropdown();
+  initDraggableAI();
 });
 </script>
 
