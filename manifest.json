@@ -1,7 +1,7 @@
 {
   "name": "SafarShare - Carpooling & Logistics",
   "short_name": "SafarShare",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#2563eb",
