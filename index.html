@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SafarShare V4.8 - Smart Travel & Logistics Platform</title>
+<title>SafarShare V4.9 - Smart Travel & Logistics Platform</title>
 
 <!-- PWA MANIFEST & THEME -->
 <link rel="manifest" href="./manifest.json">
@@ -733,7 +733,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 </div>
 
 <footer>
-  <div style="margin-bottom:8px;"><b>🚗 SafarShare V4.8</b> • Smart Travel & Local Logistics</div>
+  <div style="margin-bottom:8px;"><b>🚗 SafarShare V4.9</b> • Smart Travel & Local Logistics</div>
   <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; font-size:13px;">
     <span>📞 <b>Helpline:</b> <a href="tel:8668828542">8668828542</a></span>
     <span>💬 <b>WhatsApp:</b> <a href="https://wa.me/918668828542?text=Hello%20SafarShare%20Support" target="_blank">Chat with Admin</a></span>
@@ -747,7 +747,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
-    getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, getDocs, writeBatch, getDoc, deleteDoc
+    getFirestore, collection, addDoc, onSnapshot, doc, setDoc, updateDoc, getDocs, writeBatch, getDoc, deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -771,6 +771,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   let ALL_RIDES = [];
   let ALL_REQUESTS = [];
   let ALL_ADS = [];
+  let ALL_USERS = [];
   let currentChatRequestId = null;
   let chatUnsubscribe = null;
 
@@ -790,8 +791,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   window.isValidIndianMobile = isValidIndianMobile;
   window.isValidIndianNumberPlate = isValidIndianNumberPlate;
 
-  // 🔐 GOOGLE AUTH OBSERVER
-  onAuthStateChanged(auth, (user) => {
+  // 🔐 GOOGLE AUTH & REAL-TIME USER FIRESTORE SYNC
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = {
         uid: user.uid,
@@ -800,9 +801,23 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         phone: user.phoneNumber ? user.phoneNumber.replace('+91','') : "8668828542",
         gender: "Male",
         photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-        status: "Active (Online)",
+        status: "🟢 Online",
         vehicles: []
       };
+
+      // 💾 Automatically create/update active user in 'users' collection
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name: currentUser.displayName,
+          email: currentUser.email,
+          phone: currentUser.phone,
+          photoURL: currentUser.photoURL,
+          gender: currentUser.gender,
+          status: "🟢 Online",
+          lastActive: Date.now()
+        }, { merge: true });
+      } catch(e){}
 
       document.getElementById("navLoginBtn").style.display = "none";
       document.getElementById("navUserBadge").style.display = "flex";
@@ -829,7 +844,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     window.showToast("Logged out successfully.");
   };
 
-  window.saveUserProfile = function() {
+  window.saveUserProfile = async function() {
     if(!currentUser) return;
     const name = document.getElementById("profName").value.trim();
     const phone = document.getElementById("profPhone").value.trim();
@@ -841,6 +856,15 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     currentUser.displayName = name;
     currentUser.phone = phone.replace(/[\s-+]/g, '').replace(/^91/, '');
     currentUser.gender = gender;
+
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        name: currentUser.displayName,
+        phone: currentUser.phone,
+        gender: currentUser.gender,
+        lastActive: Date.now()
+      });
+    } catch(e){}
 
     document.getElementById("userDisplay").textContent = `👤 ${currentUser.displayName}`;
     window.closeProfileModal();
@@ -990,6 +1014,12 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       ALL_ADS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       window.renderAdminAdsList();
     });
+
+    // 👥 LIVE SYNC ACTIVE USERS
+    onSnapshot(collection(db, "users"), (snapshot) => {
+      ALL_USERS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      window.renderAdminUsersList();
+    });
   }
 
   // 📢 PUBLISH SPONSORED AD (PHOTO BANNER + INSTAGRAM + MAP + CALL)
@@ -1044,7 +1074,6 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
     let vehObj = (currentUser.vehicles && currentUser.vehicles.length) ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
     
-    // GARAGE GUARD: Private vehicles MUST be saved in garage
     if(!isCommuterMode && !vehObj) {
       window.showToast("⚠️ कृपया पहले My Garage में अपनी गाड़ी और नंबर प्लेट जोड़ें!");
       window.openProfileModal();
@@ -1315,6 +1344,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   window.getRides = () => ALL_RIDES;
   window.getRequests = () => ALL_REQUESTS;
   window.getAds = () => ALL_ADS;
+  window.getUsers = () => ALL_USERS;
   window.getAdminEmail = () => ADMIN_EMAIL;
 
   initDataListeners();
@@ -1561,24 +1591,31 @@ function handleVehicleSelectChange() {
   }
 }
 
+// 👥 DYNAMIC REAL-TIME FIRESTORE ACTIVE USERS LIST
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
-  const users = [
-    { name: "Gaurav Khobragade (Master Admin)", phone: "8668828542", role: "Master Admin & Driver", status: "🟢 Online" },
-    { name: "SafarShare Live Passenger", phone: "9823012345", role: "Passenger", status: "🟢 Online (Searching Ride)" },
-    { name: "Logistics Partner", phone: "9422156789", role: "Transporter", status: "🟡 In-Transit" }
-  ];
+  if (!box) return;
+  const users = window.getUsers ? window.getUsers() : [];
+
+  if (!users.length) {
+    box.innerHTML = "<div class='small muted' style='text-align:center; padding:15px;'>No active users recorded yet in database.</div>";
+    return;
+  }
 
   box.innerHTML = users.map(u => `
     <div class="vehicle-card" style="margin-bottom:10px;">
-      <div>
-        <b>${esc(u.name)}</b> <span class="badge g">${u.status}</span>
-        <div class="small">${esc(u.role)} • 📞 <a href="tel:${u.phone}">${u.phone}</a></div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="${esc(u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
+        <div>
+          <b>${esc(u.name || u.displayName)}</b> <span class="badge g">${esc(u.status || '🟢 Online')}</span>
+          <div class="small">${esc(u.email)} • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a></div>
+        </div>
       </div>
-      <button class="secondary" style="padding:6px 10px; font-size:11px;" onclick="alert('Monitoring active session of ${u.name}')">👁️ Inspect</button>
+      <button class="wa-btn" style="padding:6px 10px; font-size:11px;" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}', '_blank')">💬 WhatsApp</button>
     </div>
   `).join("");
 }
+window.renderAdminUsersList = renderAdminUsersList;
 
 function detectCurrentLocation() {
   if (navigator.geolocation) {
@@ -1942,7 +1979,6 @@ function renderRequests(){
     let otpUi = "";
     let navControls = "";
 
-    // 🚗 Confirmed & In-Transit Controls
     if(x.status === "Confirmed") {
       if(!isDriver) {
         otpUi = `<div class="otp-box">🔑 <b>Your Start OTP:</b> <span class="otp-code">${x.startOtp}</span><div class="small">Show this to driver when boarding.</div></div>`;
@@ -2020,7 +2056,6 @@ function renderTrips(){
   if(!filtered.length){ box.innerHTML = empty("🚗", "No trips found in this category"); return; }
 
   box.innerHTML = filtered.slice().reverse().map(x => {
-    // 🚫 BOOKING CONFIRMATION GUARD: Check if any booking is confirmed or in-transit
     const hasActiveBooking = allReqs.some(q => q.rideId === x.id && ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
     const showEditBtn = (x.status === 'Active' && !hasActiveBooking);
 
