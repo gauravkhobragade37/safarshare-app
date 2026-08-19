@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SafarShare V5.0 - Smart Travel & Logistics Platform</title>
+<title>SafarShare V5.2 - Smart Travel & Logistics Platform</title>
 
 <!-- PWA MANIFEST & THEME -->
 <link rel="manifest" href="./manifest.json">
@@ -354,7 +354,18 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   </div>
 </div>
 
-<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL (WITH SPECIFIC TARGET ROUTE) -->
+<!-- 🔍 USER FULL INSPECTION MODAL -->
+<div id="userInspectModal" class="modal">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="margin:0">🔍 Live User Inspection</h3>
+      <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeInspectModal()">✖</button>
+    </div>
+    <div id="userInspectDetails"></div>
+  </div>
+</div>
+
+<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL -->
 <div id="adminAdsModal" class="modal">
   <div class="modal-box">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -436,7 +447,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
 <main>
 
-<!-- 🌐 SCOPED 2 KM VS 10 KM RADAR (ONLY ON POST, FIND, PARCEL) -->
+<!-- 🌐 SCOPED 2 KM VS 10 KM RADAR -->
 <div id="corridorBarScoped" class="corridor-bar">
   <div style="font-size:13px; font-weight:bold; color:#334155;">
     Mode: <span id="activeRadarLabel" style="color:#1261ff;">🚗 Intercity Mode (10 KM)</span>
@@ -666,7 +677,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     <button class="secondary" onclick="filterAdminTrips('active')">Show Active Only</button>
     <button class="secondary" onclick="filterAdminTrips('completed')">Show Completed Only</button>
     <button class="secondary" onclick="filterAdminTrips('cancelled')">Show Rejections with Reason</button>
-    <button class="red" onclick="clearTestDataOnly()">🗑️ Clear ALL Test Data</button>
+    <button class="red" onclick="clearTestDataOnly()">🗑️ Clear Test Data (Completed Safe)</button>
   </div>
 
   <div id="adminRejectionLogs" style="display:none; margin-top:10px;">
@@ -740,7 +751,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 </div>
 
 <footer>
-  <div style="margin-bottom:8px;"><b>🚗 SafarShare V5.0</b> • Smart Travel & Local Logistics</div>
+  <div style="margin-bottom:8px;"><b>🚗 SafarShare V5.2</b> • Smart Travel & Local Logistics</div>
   <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; font-size:13px;">
     <span>📞 <b>Helpline:</b> <a href="tel:8668828542">8668828542</a></span>
     <span>💬 <b>WhatsApp:</b> <a href="https://wa.me/918668828542?text=Hello%20SafarShare%20Support" target="_blank">Chat with Admin</a></span>
@@ -801,6 +812,14 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   // 🔐 GOOGLE AUTH & REAL-TIME USER FIRESTORE SYNC
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      let initialStatus = "Active";
+      try {
+        const uDoc = await getDoc(doc(db, "users", user.uid));
+        if(uDoc.exists()) {
+          initialStatus = uDoc.data().accountStatus || "Active";
+        }
+      } catch(e){}
+
       currentUser = {
         uid: user.uid,
         email: user.email,
@@ -808,7 +827,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         phone: user.phoneNumber ? user.phoneNumber.replace('+91','') : "8668828542",
         gender: "Male",
         photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-        status: "🟢 Online",
+        status: initialStatus === "Blocked" ? "🔴 Blocked" : "🟢 Online",
+        accountStatus: initialStatus,
         vehicles: []
       };
 
@@ -820,7 +840,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
           phone: currentUser.phone,
           photoURL: currentUser.photoURL,
           gender: currentUser.gender,
-          status: "🟢 Online",
+          accountStatus: currentUser.accountStatus,
+          status: currentUser.status,
           lastActive: Date.now()
         }, { merge: true });
       } catch(e){}
@@ -1027,7 +1048,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     });
   }
 
-  // 📢 PUBLISH SPONSORED AD (WITH TARGET ROUTE + PHOTO BANNER)
+  // 📢 PUBLISH SPONSORED AD
   window.publishSponsoredAd = async function() {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("Only Master Admin can publish ads!"); return; }
     const name = document.getElementById("adBizName").value.trim();
@@ -1065,10 +1086,32 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     }
   };
 
-  // 🚗 POST TRIP WITH GARAGE GUARD & COMMUTER CHECKS
+  // 👑 ADMIN 1-CLICK BLOCK / UNBLOCK
+  window.toggleUserBlockStatus = async function(userId, currentStatus) {
+    if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+    const newStatus = (currentStatus === "Blocked") ? "Active" : "Blocked";
+    const actionText = newStatus === "Blocked" ? "ब्लॉक (Block)" : "अनब्लॉक (Unblock)";
+    
+    if(!confirm(`क्या आप इस यूज़र को ${actionText} करना चाहते हैं?`)) return;
+
+    try {
+      await updateDoc(doc(db, "users", userId), {
+        accountStatus: newStatus,
+        status: newStatus === "Blocked" ? "🔴 Blocked" : "🟢 Online"
+      });
+      window.showToast(`✅ यूज़र सफलतापूर्वक ${actionText} हो गया।`);
+    } catch(e) { window.showToast("Error: " + e.message); }
+  };
+
+  // 🚗 POST TRIP WITH BLOCKED GUARD
   window.postTrip = async function() {
     if(!currentUser) { window.showToast("Please login with Google to post a trip."); window.googleLogin(); return; }
     
+    if(currentUser.accountStatus === "Blocked") {
+      window.showToast("⛔ आपका खाता एडमिन द्वारा ब्लॉक किया गया है।");
+      return;
+    }
+
     const from = document.getElementById("pFrom").value.trim();
     const to = document.getElementById("pTo").value.trim();
     const pickupSpot = document.getElementById("pPickupSpot").value.trim();
@@ -1158,6 +1201,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
   window.seatRequest = async function(rideId, calcFare, userTravelDist) {
     if(!currentUser) { window.showToast("Please login with Google to book a seat."); window.googleLogin(); return; }
+    if(currentUser.accountStatus === "Blocked") { window.showToast("⛔ आपका खाता ब्लॉक है।"); return; }
+
     const r = ALL_RIDES.find(x => x.id === rideId);
     if(!r || window.safeNumber(r.seats) < 1) { window.showToast("No seats available."); return; }
 
@@ -1188,6 +1233,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
   window.parcelRequest = async function(rideId, slab, price) {
     if(!currentUser) { window.showToast("Please login with Google to send a parcel."); window.googleLogin(); return; }
+    if(currentUser.accountStatus === "Blocked") { window.showToast("⛔ आपका खाता ब्लॉक है।"); return; }
+
     const r = ALL_RIDES.find(x => x.id === rideId);
     const recName = document.getElementById("xRecName").value.trim();
     const recPhone = document.getElementById("xRecPhone").value.trim();
@@ -1279,15 +1326,29 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     window.showToast("✅ Offer accepted! Contact and chat unlocked.");
   };
 
+  // 🛡️ STRICT PRICE CAP: CANNOT EXCEED ORIGINAL BASE PRICE
   window.counterRequest = async function(qid) {
     const x = ALL_REQUESTS.find(a => a.id === qid);
     if(!x) return;
-    let n = prompt("Enter counter offer (₹):", x.currentPrice);
+    
+    let n = prompt(`Enter counter offer ₹ (Max Base Fare Limit: ₹${x.originalPrice}):`, x.currentPrice);
     if(n === null) return;
+    
+    const newPrice = Number(n);
+    if(isNaN(newPrice) || newPrice <= 0) {
+      window.showToast("❌ कृपया मान्य किराया दर्ज करें!");
+      return;
+    }
+
+    if(newPrice > x.originalPrice) {
+      window.showToast(`⛔ सख्त रोक: काउंटर ऑफर ओरिजिनल बेस किराये (₹${x.originalPrice}) से अधिक नहीं हो सकता!`);
+      return;
+    }
+
     await updateDoc(doc(db, "requests", qid), { 
-      currentPrice: Number(n), status: "Counter Offered", lastCounterBy: currentUser.uid === x.driverUid ? "Driver" : "Passenger"
+      currentPrice: newPrice, status: "Counter Offered", lastCounterBy: currentUser.uid === x.driverUid ? "Driver" : "Passenger"
     });
-    window.showToast("Counter offer sent: ₹" + n);
+    window.showToast("Counter offer sent: ₹" + newPrice);
   };
 
   window.cancelRequest = async function(qid, isDriver) {
@@ -1318,16 +1379,29 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     window.showToast("✅ Booking confirmed!");
   };
 
+  // 🛡️ SAFE DATA CLEARING: Completed trips are NEVER deleted
   window.clearTestDataOnly = async function() {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can delete test data!"); return; }
-    if(!confirm("⚠️ Delete ALL test rides & requests (Pending, Active & Completed)?")) return;
+    if(!confirm("⚠️ केवल टेस्ट डेटा (Pending/Active/Cancelled) हटाया जाएगा। Completed ट्रिप्स सुरक्षित रहेंगी। सहमत हैं?")) return;
+    
     const batch = writeBatch(db);
-    for(const colName of ['rides', 'requests']) {
-      const qs = await getDocs(collection(db, colName));
-      qs.forEach(d => { batch.delete(d.ref); });
-    }
+
+    const ridesSnap = await getDocs(collection(db, "rides"));
+    ridesSnap.forEach(d => {
+      if(d.data().status !== "Completed") {
+        batch.delete(d.ref);
+      }
+    });
+
+    const reqsSnap = await getDocs(collection(db, "requests"));
+    reqsSnap.forEach(d => {
+      if(d.data().status !== "Completed") {
+        batch.delete(d.ref);
+      }
+    });
+
     await batch.commit();
-    window.showToast("✅ All test data cleared!");
+    window.showToast("✅ टेस्ट डेटा साफ़ कर दिया गया (Completed ट्रिप्स सुरक्षित हैं)!");
     window.location.reload();
   };
 
@@ -1597,29 +1671,117 @@ function handleVehicleSelectChange() {
   }
 }
 
-// 👥 DYNAMIC REAL-TIME FIRESTORE ACTIVE USERS LIST
+// 🔍 LIVE USER INSPECTION MODAL ENGINE
+function closeInspectModal() {
+  document.getElementById("userInspectModal").style.display = "none";
+}
+window.closeInspectModal = closeInspectModal;
+
+window.inspectUser = function(userId) {
+  const users = window.getUsers ? window.getUsers() : [];
+  const rides = window.getRides ? window.getRides() : [];
+  const reqs = window.getRequests ? window.getRequests() : [];
+
+  const u = users.find(x => x.id === userId || x.uid === userId);
+  if (!u) {
+    window.showToast("User record not found!");
+    return;
+  }
+
+  const userRides = rides.filter(r => r.driverUid === u.uid);
+  const activeRides = userRides.filter(r => r.status === "Active");
+
+  const userBookings = reqs.filter(q => q.passengerUid === u.uid);
+  const activeBookings = userBookings.filter(q => ["Pending", "Accepted", "Confirmed", "In-Transit"].includes(q.status));
+  const inTransitService = reqs.find(q => (q.passengerUid === u.uid || q.driverUid === u.uid) && q.status === "In-Transit");
+
+  let currentActionBadge = `<span class="badge" style="background:#e2e8f0; color:#334155;">📱 Browsing App</span>`;
+  if (inTransitService) {
+    currentActionBadge = `<span class="badge" style="background:#dbeafe; color:#1d4ed8; font-weight:bold;">🚗 In-Transit (${inTransitService.type === 'passenger' ? 'Passenger Ride' : 'Parcel Delivery'})</span>`;
+  } else if (activeRides.length > 0) {
+    currentActionBadge = `<span class="badge g">🚗 Driving Active Route (${esc(activeRides[0].from)} ➔ ${esc(activeRides[0].to)})</span>`;
+  } else if (activeBookings.length > 0) {
+    currentActionBadge = `<span class="badge o">⏳ Active Booking (${esc(activeBookings[0].status)})</span>`;
+  }
+
+  const box = document.getElementById("userInspectDetails");
+  box.innerHTML = `
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #e2e8f0;">
+      <img src="${esc(u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #1261ff;">
+      <div>
+        <div style="font-size:16px; font-weight:bold;">${esc(u.name || u.displayName)}</div>
+        <div class="small muted">${esc(u.email)}</div>
+        <div class="small">📞 <b>Phone:</b> <a href="tel:${esc(u.phone)}">${esc(u.phone || 'N/A')}</a> | <b>Gender:</b> ${esc(u.gender || 'Male')}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <b>Current Live Activity:</b> ${currentActionBadge}
+    </div>
+
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px 12px; border-radius:10px; margin-bottom:10px;">
+      <h5 style="margin:0 0 6px; color:#15803d;">🚗 Driver Service Activity</h5>
+      <div class="small"><b>Total Trips Posted:</b> ${userRides.length}</div>
+      <div class="small"><b>Active Trips Right Now:</b> ${activeRides.length}</div>
+      ${activeRides.length ? `<div class="small" style="color:#166534; margin-top:4px;">📍 <b>Route:</b> ${esc(activeRides[0].from)} ➔ ${esc(activeRides[0].to)} (${esc(activeRides[0].vehicle)})</div>` : ''}
+    </div>
+
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:10px 12px; border-radius:10px; margin-bottom:12px;">
+      <h5 style="margin:0 0 6px; color:#1d4ed8;">📦 Passenger & Logistics Activity</h5>
+      <div class="small"><b>Total Bookings / Deliveries:</b> ${userBookings.length}</div>
+      <div class="small"><b>Live Ongoing Requests:</b> ${activeBookings.length}</div>
+      ${activeBookings.map(b => `
+        <div style="margin-top:6px; background:#fff; padding:6px 8px; border-radius:6px; font-size:11px; border:1px solid #dbeafe;">
+          <b>${b.type === 'passenger' ? '🧑 Seat' : '📦 Parcel'}:</b> ${esc(b.from)} ➔ ${esc(b.to)} | <b>Status:</b> ${esc(b.status)} | <b>Fare:</b> ₹${b.currentPrice}
+        </div>
+      `).join("")}
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button class="wa-btn full" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}%20from%20SafarShare%20Support', '_blank')">💬 Direct WhatsApp Chat</button>
+      <button class="secondary full" onclick="closeInspectModal()">Close</button>
+    </div>
+  `;
+
+  document.getElementById("userInspectModal").style.display = "flex";
+};
+
+// 👥 DYNAMIC REAL-TIME FIRESTORE ACTIVE USERS LIST (WITH BLOCK/UNBLOCK & INSPECT)
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
   const users = window.getUsers ? window.getUsers() : [];
+  const rides = window.getRides ? window.getRides() : [];
+  const reqs = window.getRequests ? window.getRequests() : [];
 
   if (!users.length) {
     box.innerHTML = "<div class='small muted' style='text-align:center; padding:15px;'>No active users recorded yet in database.</div>";
     return;
   }
 
-  box.innerHTML = users.map(u => `
-    <div class="vehicle-card" style="margin-bottom:10px;">
+  box.innerHTML = users.map(u => {
+    const isBlocked = (u.accountStatus === "Blocked");
+    const postedCount = rides.filter(r => r.driverUid === u.uid).length;
+    const bookingCount = reqs.filter(q => q.passengerUid === u.uid).length;
+
+    return `
+    <div class="vehicle-card" style="margin-bottom:10px; border-left: 4px solid ${isBlocked ? '#d9363e' : '#078b50'};">
       <div style="display:flex; align-items:center; gap:10px;">
-        <img src="${esc(u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
+        <img src="${esc(u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
         <div>
-          <b>${esc(u.name || u.displayName)}</b> <span class="badge g">${esc(u.status || '🟢 Online')}</span>
-          <div class="small">${esc(u.email)} • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a></div>
+          <b>${esc(u.name || u.displayName)}</b> 
+          <span class="badge ${isBlocked ? 'red' : 'g'}">${isBlocked ? '🔴 Blocked' : esc(u.status || '🟢 Online')}</span>
+          <div class="small">🚗 ${postedCount} Trips • 📦 ${bookingCount} Bookings • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a></div>
         </div>
       </div>
-      <button class="wa-btn" style="padding:6px 10px; font-size:11px;" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}', '_blank')">💬 WhatsApp</button>
-    </div>
-  `).join("");
+      <div style="display:flex; gap:6px;">
+        <button class="secondary" style="padding:6px 9px; font-size:11px; background:#eff6ff;" onclick="inspectUser('${u.id || u.uid}')">🔍 Inspect</button>
+        <button class="${isBlocked ? 'green' : 'red'}" style="padding:6px 9px; font-size:11px;" onclick="toggleUserBlockStatus('${u.id || u.uid}', '${u.accountStatus || 'Active'}')">
+          ${isBlocked ? '🔓 Unblock' : '🚫 Block'}
+        </button>
+      </div>
+    </div>`;
+  }).join("");
 }
 window.renderAdminUsersList = renderAdminUsersList;
 
@@ -2262,7 +2424,7 @@ function initDraggableAI() {
   });
 }
 
-/* 🎙️ SAFAR AI VOICE RECOGNITION (Web Speech API) */
+/* 🎙️ SAFAR AI VOICE RECOGNITION */
 function startAIVoiceRecognition() {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     window.showToast("Voice recognition not supported in this browser.");
