@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SafarShare V4.5 - Smart Travel & Logistics Platform</title>
+<title>SafarShare V4.7 - Smart Travel & Logistics Platform</title>
 
 <!-- PWA MANIFEST & THEME -->
 <link rel="manifest" href="./manifest.json">
@@ -113,11 +113,12 @@ button{ font-family:inherit; }
 .red{ border:0; background:#d9363e; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
 .orange{ border:0; background:#c46600; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
 .wa-btn{ border:0; background:#25D366; color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
+.insta-btn{ border:0; background:linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); color:#fff; padding:9px 13px; border-radius:8px; font-weight:bold; cursor:pointer; }
 .full{ width:100%; }
 
 .checkrow{ display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 18px; }
-.check{ border:1px solid #e0e5ec; padding:10px 13px; border-radius:9px; background:#fafbfc; font-size:13px; }
-.check input{ width:auto; margin-right:5px; }
+.check{ border:1px solid #e0e5ec; padding:10px 13px; border-radius:9px; background:#fafbfc; font-size:13px; display:inline-flex; align-items:center; }
+.check input{ width:auto; margin-right:6px; }
 
 .results{ display:grid; gap:14px; }
 .ride-top{ display:flex; justify-content:space-between; gap:10px; }
@@ -184,10 +185,10 @@ margin: 10px 0; text-align: center;
 .vehicle-card { display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
 .log-card { border-left: 4px solid #d9363e; background: #fff5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
 
-/* CORRIDOR SCOPE SWITCHER BAR */
+/* 🌐 SCOPED CORRIDOR BAR */
 .corridor-bar {
   background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:10px 15px;
-  display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+  display:none; justify-content:space-between; align-items:center; margin-bottom:16px;
   box-shadow:0 2px 8px #00000008;
 }
 .corridor-btn {
@@ -197,21 +198,26 @@ margin: 10px 0; text-align: center;
 .corridor-btn.active-green { background:#00a884; color:#fff; }
 .corridor-btn.inactive { background:#f1f5f9; color:#64748b; }
 
-/* 🤖 DRAGGABLE SAFAR AI BOT STYLES */
+/* 🔔 FLOATING TOAST ALERTS */
+#toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 8px; width: 90%; max-width: 380px; pointer-events: none; }
+.toast { background: #1e293b; color: white; padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: space-between; pointer-events: auto; animation: toastSlide 0.3s ease; border-left: 4px solid #1261ff; }
+@keyframes toastSlide { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* 🤖 COMPACT CIRCLE DRAGGABLE SAFAR AI BOT */
 #safar-ai-widget {
   position: fixed; bottom: 25px; right: 25px; z-index: 99999;
   touch-action: none; user-select: none;
 }
 #safar-ai-btn {
   background: linear-gradient(135deg, #1261ff, #00a884);
-  color: white; border: none; padding: 12px 18px; border-radius: 30px;
+  color: white; border: none; width: 52px; height: 52px; border-radius: 50%;
   box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: grab; display: flex;
-  align-items: center; gap: 8px; font-weight: bold; font-size: 14px;
+  align-items: center; justify-content: center; font-size: 24px;
 }
 #safar-ai-btn:active { cursor: grabbing; }
 
 #safar-ai-box {
-  position: fixed; bottom: 85px; right: 25px; width: 320px; height: 420px;
+  position: fixed; bottom: 85px; right: 25px; width: 320px; height: 440px;
   background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e2e8f0; z-index: 99999;
 }
@@ -219,12 +225,19 @@ margin: 10px 0; text-align: center;
 .ai-header { background: #1261ff; color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
 .ai-header button { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; }
 .ai-messages { flex: 1; padding: 12px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; }
-.ai-msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; line-height: 1.4; }
+.ai-msg { padding: 8px 12px; border-radius: 12px; max-width: 85%; line-height: 1.4; }
 .ai-msg.bot { background: #e2e8f0; color: #1e293b; align-self: flex-start; }
 .ai-msg.user { background: #1261ff; color: #fff; align-self: flex-end; }
-.ai-input-bar { display: flex; border-top: 1px solid #e2e8f0; background: #fff; }
+.ai-chips-bar { display:flex; gap:6px; overflow-x:auto; padding:6px 10px; background:#f1f5f9; border-top:1px solid #e2e8f0; }
+.ai-chip { white-space:nowrap; background:#fff; border:1px solid #cbd5e1; border-radius:15px; padding:4px 10px; font-size:11px; font-weight:bold; cursor:pointer; color:#1261ff; }
+.ai-chip:hover { background:#e0f2fe; }
+.ai-input-bar { display: flex; border-top: 1px solid #e2e8f0; background: #fff; align-items:center; }
 .ai-input-bar input { flex: 1; border: none; padding: 10px; font-size: 13px; outline: none; }
-.ai-input-bar button { background: #1261ff; color: #fff; border: none; padding: 0 16px; font-weight: bold; cursor: pointer; }
+.ai-input-bar button { background: #1261ff; color: #fff; border: none; padding: 10px 14px; font-weight: bold; cursor: pointer; }
+.ai-mic-btn { background: #f1f5f9 !important; color: #1e293b !important; font-size: 16px; padding: 10px 12px !important; }
+
+/* 🗺️ LIVE PASSENGER TRACKING MAP */
+.tracking-map-box { width: 100%; height: 200px; border-radius: 10px; margin: 10px 0; border: 1px solid #cbd5e1; display: none; }
 
 footer{ text-align:center; color:#7c8695; font-size:13px; padding:25px; background:#fff; border-top:1px solid #e2e8f0; margin-top:30px; }
 footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
@@ -235,6 +248,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
 <body>
 
+<div id="toast-container"></div>
 <audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <!-- 👤 USER PROFILE & MULTI-VEHICLE GARAGE MODAL -->
@@ -246,7 +260,17 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     </div>
     
     <div class="field"><label>Your Full Name</label><input id="profName" value="Gaurav Khobragade"></div>
-    <div class="field"><label>Contact Phone Number</label><input id="profPhone" type="tel" value="8668828542"></div>
+    <div class="grid">
+      <div class="field">
+        <label>Gender (लिंग)</label>
+        <select id="profGender">
+          <option value="Male">🧑 Male (पुरुष)</option>
+          <option value="Female">👩 Female (महिला)</option>
+          <option value="Other">⚪ Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Contact Phone (10-Digits)</label><input id="profPhone" type="tel" value="8668828542" placeholder="e.g. 9876543210"></div>
+    </div>
 
     <hr style="border:0; border-top:1px solid #e2e8f0; margin:16px 0;">
     
@@ -267,10 +291,13 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
             <option value="Private Bus">Private Bus / Traveller</option>
           </select>
         </div>
-        <div class="field" style="margin-bottom:6px;"><label>Model Name</label><input id="newVehModel" placeholder="e.g. Bajaj Auto / Mayuri E-Rickshaw / Swift"></div>
+        <div class="field" style="margin-bottom:6px;"><label>Model Name</label><input id="newVehModel" placeholder="e.g. Maruti Swift / Bajaj Auto"></div>
       </div>
-      <div class="field" style="margin-bottom:8px;"><label>Number Plate</label><input id="newVehPlate" placeholder="e.g. MH-35-AJ-1234"></div>
-      <button class="secondary full" style="padding:8px;" onclick="addVehicleToGarage()">➕ Add Vehicle</button>
+      <div class="field" style="margin-bottom:8px;">
+        <label>Indian Number Plate (e.g. MH35AB1234 or 22BH1234AA)</label>
+        <input id="newVehPlate" placeholder="e.g. MH35AB1234" style="text-transform:uppercase;">
+      </div>
+      <button class="secondary full" style="padding:8px;" onclick="addVehicleToGarage()">➕ Save Vehicle to Garage</button>
     </div>
 
     <button class="primary full" style="margin-top:15px;" onclick="saveUserProfile()">💾 Save Profile Details</button>
@@ -288,7 +315,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   </div>
 </div>
 
-<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL -->
+<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL (UNLIMITED & MULTI-LINK) -->
 <div id="adminAdsModal" class="modal">
   <div class="modal-box">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -297,24 +324,30 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     </div>
 
     <div style="background:#fff8e6; border:1px solid #fde68a; padding:12px; border-radius:10px; margin-bottom:12px;">
-      <h4 style="margin:0 0 8px; color:#b45309;">➕ Add Highway Dhaba / Hotel Ad</h4>
-      <div class="field"><label>Business / Dhaba Name</label><input id="adBizName" placeholder="e.g. Sharma Dhaba & Family Restaurant"></div>
+      <h4 style="margin:0 0 8px; color:#b45309;">➕ Add Local Business / Sponsor Ad</h4>
+      <div class="field"><label>Business Name</label><input id="adBizName" placeholder="e.g. Sai Mobile Store / Sharma Dhaba"></div>
       <div class="grid">
         <div class="field">
           <label>Category</label>
           <select id="adBizCat">
-            <option value="Dhaba / Restaurant">🍲 Highway Dhaba</option>
-            <option value="Hotel / Stay">🏨 Hotel / Lodge</option>
-            <option value="Auto Garage / Puncture">🔧 Mechanic / Tyre Repair</option>
-            <option value="Local Taxi Stand">🚕 Local Taxi Stand</option>
+            <option value="Mobile & Electronics">📱 Mobile & Electronics Shop</option>
+            <option value="Restaurant & Dhaba">🍲 Restaurant / Highway Dhaba / Cafe</option>
+            <option value="Hotel & Stay">🏨 Hotel / Lodge / Resort</option>
+            <option value="Clothing & Retail">🛍️ Clothing / Kirana / Store</option>
+            <option value="Auto Garage & Tyre">🔧 Mechanic / Garage / Tyre Care</option>
+            <option value="Hospital & Clinic">🏥 Hospital / Clinic / Medical</option>
+            <option value="Education & Coaching">🎓 Coaching / School / Education</option>
+            <option value="Local Taxi Stand">🚕 Local Taxi / Tour & Travels</option>
+            <option value="Other Local Business">🏢 Other Business / Service</option>
           </select>
         </div>
-        <div class="field"><label>Route Tag</label><input id="adRouteTag" placeholder="e.g. Balaghat - Gondia Highway KM 25"></div>
+        <div class="field"><label>Location / Landmark Tag</label><input id="adRouteTag" placeholder="e.g. Main Market Chowk, Gondia"></div>
       </div>
       <div class="grid">
-        <div class="field"><label>Contact Phone</label><input id="adBizPhone" type="tel" placeholder="10-digit mobile number"></div>
-        <div class="field"><label>Google Map Link</label><input id="adBizMap" placeholder="https://maps.google.com/..."></div>
+        <div class="field"><label>Contact Phone *</label><input id="adBizPhone" type="tel" placeholder="10-digit mobile number"></div>
+        <div class="field"><label>Instagram / Website Link (Optional)</label><input id="adBizSocial" placeholder="https://instagram.com/..."></div>
       </div>
+      <div class="field"><label>Google Map Link (Optional)</label><input id="adBizMap" placeholder="https://maps.google.com/..."></div>
       <button class="primary full" onclick="publishSponsoredAd()">🚀 Publish Sponsored Ad</button>
     </div>
 
@@ -330,7 +363,6 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div class="tag">Travel Share • Local Logistics • Extra Income</div>
 </div>
 <div style="display:flex; align-items:center; gap:8px;">
-  <button id="headerAudioBtn" class="user-badge-btn" style="background:#078b50; border-color:#25D366; font-size:11px;" onclick="toggleAudioAlert()">🔔 Audio: ON</button>
   <button id="navLoginBtn" class="primary" style="background:#fff; color:#1261ff; padding:6px 12px; font-size:12px;" onclick="googleLogin()">🔐 Login with Google</button>
   <div id="navUserBadge" class="user-badge-btn" style="display:none;" onclick="openProfileModal()">
     <img id="navUserDp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-dp" style="width:30px; height:30px; border-width:1px;">
@@ -357,14 +389,14 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
 <main>
 
-<!-- 🌐 GLOBAL 2 KM VS 10 KM CORRIDOR RADAR TOGGLE -->
-<div class="corridor-bar">
+<!-- 🌐 SCOPED 2 KM VS 10 KM RADAR (ONLY ON POST, FIND, PARCEL) -->
+<div id="corridorBarScoped" class="corridor-bar">
   <div style="font-size:13px; font-weight:bold; color:#334155;">
-    Active Radar Mode: <span id="activeRadarLabel" style="color:#1261ff;">🚗 Highway Corridor (10 KM)</span>
+    Mode: <span id="activeRadarLabel" style="color:#1261ff;">🚗 Intercity Mode (10 KM)</span>
   </div>
   <div style="display:flex; gap:6px;">
-    <button id="radarBtnIntercity" class="corridor-btn active-blue" onclick="setCorridorRadar('intercity')">🚗 Intercity (10 KM)</button>
-    <button id="radarBtnLocal" class="corridor-btn inactive" onclick="setCorridorRadar('local')">🛵 City Local (2 KM)</button>
+    <button id="radarBtnIntercity" class="corridor-btn active-blue" onclick="setCorridorRadar('intercity')">🚗 Intercity Mode (10 KM)</button>
+    <button id="radarBtnLocal" class="corridor-btn inactive" onclick="setCorridorRadar('local')">🛵 Local Mode (2 KM)</button>
   </div>
 </div>
 
@@ -377,7 +409,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
   <button id="homeAudioAlertBtn" class="green" style="font-size:12px;" onclick="toggleAudioAlert()">🔔 Audio Alerts: ON</button>
   <button class="wa-btn" style="font-size:12px;" onclick="window.open('https://wa.me/918668828542?text=Hello%20SafarShare%20Support','_blank')">💬 Live WhatsApp Support</button>
-  <button class="secondary" style="font-size:12px; background:#eff6ff;" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSc_FEEDBACK_FORM/viewform','_blank')">📝 Google Form Feedback</button>
+  <button class="secondary" style="font-size:12px; background:#eff6ff;" onclick="window.open('https://wa.me/918668828542?text=SafarShare%20Feedback%20%26%20Suggestion:%20','_blank')">📝 Send Feedback</button>
 </div>
 
 <div class="stats">
@@ -391,7 +423,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <button class="action" onclick="show('find')">
 <div class="ico">🧑</div>
 <h3>Find a Ride</h3>
-<p class="muted">Book seats with clean single-row UI and fair 2-3km / 10km corridor pricing.</p>
+<p class="muted">Book seats with clean single-row UI and fair 2km / 10km corridor pricing.</p>
 </button>
 
 <button class="action" onclick="show('parcel')">
@@ -412,7 +444,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <section id="post" class="page">
 <div class="form">
 <h2>🚗 Post Your Trip / Transport Service</h2>
-<div class="notice">Select your vehicle, Auto, E-Rickshaw or commuter mode. OSRM calculates exact highway/city driving line.</div>
+
 
 <div class="field">
   <label>🚗 Select Transport Mode (Garage Vehicles & Commuters)</label>
@@ -450,7 +482,10 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   <label class="check"><input id="pDaily" type="checkbox"> 🔄 Daily Commuter Trip (Regular Up-Down)</label>
   <label class="check" id="lblPassenger"><input id="pPassenger" type="checkbox" checked onchange="toggleSeatFields()"> <span id="passengerLabelText">🧑 Accept Passengers</span></label>
   <label class="check" id="lblParcel"><input id="pParcel" type="checkbox" checked onchange="toggleParcelFields()"> 📦 Accept Parcels</label>
-  <label class="check"><input id="pLadiesOnly" type="checkbox"> 👩 Ladies-Only Trip</label>
+  <label class="check" id="lblLadiesOnly"><input id="pLadiesOnly" type="checkbox" onchange="toggleFamilyOption()"> 🌸 Ladies / Family Only</label>
+  <label class="check" id="lblFamilyOnBoard" style="display:none; border-color:#fbcfe8; background:#fdf2f8; color:#db2777;">
+    <input id="pFamilyOnBoard" type="checkbox"> 👨‍👩‍👧 Traveling with Wife / Family (Safe for Women)
+  </label>
 </div>
 
 <!-- PASSENGER SEAT PRICING -->
@@ -467,7 +502,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   <div class="field"><label>📄 Doc/Envelope Base Rate ₹</label><input id="pDocPrice" type="number" value="60"></div>
   <div class="field"><label>🎒 Medium Bag (≤5kg) ₹</label><input id="pBagPrice" type="number" value="100"></div>
   <div class="field"><label>📦 Heavy Cargo (>5kg) ₹</label><input id="pCargoPrice" type="number" value="150"></div>
-  <div class="field" id="fullSpacePriceField"><label>🚛 Full Space / Entire Vehicle ₹</label><input id="pFullVehiclePrice" type="number" value="800"></div>
+  <div class="field" id="fullSpacePriceField" style="display:none;"><label>🚛 Full Space / Entire Vehicle ₹</label><input id="pFullVehiclePrice" type="number" value="800"></div>
 </div>
 
 <button class="primary full" onclick="postTrip()">Confirm & Post Smart Trip (0% Commission)</button>
@@ -481,7 +516,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
   <h2 style="margin:0">🔎 Find a Ride</h2>
   <label class="check" style="border-color:#fbcfe8; background:#fdf2f8; color:#db2777; font-weight:bold;">
-    <input id="fLadiesOnly" type="checkbox"> 👩 Ladies Only Filter
+    <input id="fLadiesOnly" type="checkbox"> 🌸 Women / Family Safe Rides
   </label>
 </div>
 
@@ -550,7 +585,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     </select>
   </div>
   <div class="field"><label>Receiver Full Name *</label><input id="xRecName" placeholder="Name of person receiving parcel"></div>
-  <div class="field"><label>Receiver 10-Digit Mobile *</label><input id="xRecPhone" type="tel" placeholder="10-digit mobile number"></div>
+  <div class="field"><label>Receiver 10-Digit Mobile *</label><input id="xRecPhone" type="tel" placeholder="10-digit Indian mobile number"></div>
 </div>
 
 <div class="field">
@@ -585,7 +620,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     <button class="secondary" onclick="filterAdminTrips('active')">Show Active Only</button>
     <button class="secondary" onclick="filterAdminTrips('completed')">Show Completed Only</button>
     <button class="secondary" onclick="filterAdminTrips('cancelled')">Show Rejections with Reason</button>
-    <button class="red" onclick="clearTestDataOnly()">🗑️ Clear Active Test Data</button>
+    <button class="red" onclick="clearTestDataOnly()">🗑️ Clear ALL Test Data</button>
   </div>
 
   <div id="adminRejectionLogs" style="display:none; margin-top:10px;">
@@ -629,29 +664,37 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   </div>
 </div>
 
-<!-- 🤖 DRAGGABLE FLOATING SAFAR AI SUPPORT WIDGET -->
+<!-- 🤖 COMPACT DRAGGABLE FLOATING SAFAR AI BOT -->
 <div id="safar-ai-widget">
-  <button id="safar-ai-btn">
-    🤖 <span>Chat with Safar AI</span>
-  </button>
+  <button id="safar-ai-btn" title="Safar AI Assistant">🤖</button>
 
   <div id="safar-ai-box" class="hidden">
     <div class="ai-header">
-      <span>🤖 Safar AI Support</span>
+      <span>🤖 Safar AI Voice & Trip Agent</span>
       <button onclick="toggleAIChat()">✖</button>
     </div>
     <div id="ai-chat-messages" class="ai-messages">
-      <div class="ai-msg bot">नमस्ते! मैं SafarShare AI हूँ। राइड बुक करने, ट्रिप पोस्ट करने या पार्सल भेजने में सहायता चाहिए?</div>
+      <div class="ai-msg bot">नमस्ते! मैं SafarShare AI हूँ। आप बोलकर (🎙️) या लिखकर ट्रिप ढूँढ, पोस्ट या पार्सल भेज सकते हैं।</div>
     </div>
+    
+    <!-- QUICK ACTION CHIPS -->
+    <div class="ai-chips-bar">
+      <div class="ai-chip" onclick="executeAIAction('find_ride')">🔎 Find Ride</div>
+      <div class="ai-chip" onclick="executeAIAction('send_parcel')">📦 Send Parcel</div>
+      <div class="ai-chip" onclick="executeAIAction('post_trip')">🚗 Post Trip</div>
+      <div class="ai-chip" onclick="executeAIAction('admin_help')">👑 Admin Help</div>
+    </div>
+
     <div class="ai-input-bar">
-      <input type="text" id="ai-user-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendAIMessage()">
+      <button class="ai-mic-btn" onclick="startAIVoiceRecognition()" title="Speak Voice">🎙️</button>
+      <input type="text" id="ai-user-input" placeholder="बोलिए या टाइप करें..." onkeypress="if(event.key==='Enter') sendAIMessage()">
       <button onclick="sendAIMessage()">Send</button>
     </div>
   </div>
 </div>
 
 <footer>
-  <div style="margin-bottom:8px;"><b>🚗 SafarShare V4.5</b> • Smart Travel & Local Logistics</div>
+  <div style="margin-bottom:8px;"><b>🚗 SafarShare V4.7</b> • Smart Travel & Local Logistics</div>
   <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; font-size:13px;">
     <span>📞 <b>Helpline:</b> <a href="tel:8668828542">8668828542</a></span>
     <span>💬 <b>WhatsApp:</b> <a href="https://wa.me/918668828542?text=Hello%20SafarShare%20Support" target="_blank">Chat with Admin</a></span>
@@ -686,6 +729,27 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   const ADMIN_EMAIL = "gauravkhobragade37@gmail.com";
 
   let currentUser = null;
+  let ALL_RIDES = [];
+  let ALL_REQUESTS = [];
+  let ALL_ADS = [];
+  let currentChatRequestId = null;
+  let chatUnsubscribe = null;
+
+  // 🇮🇳 STRICT VALIDATION HELPERS
+  function isValidIndianNumberPlate(plate) {
+    const clean = plate.replace(/[\s-]/g, '').toUpperCase();
+    const standardRegex = /^[A-Z]{2}[0-9]{2}[A-Z]{0,3}[0-9]{4}$/;
+    const bhRegex = /^[0-9]{2}BH[0-9]{4}[A-Z]{1,2}$/;
+    return standardRegex.test(clean) || bhRegex.test(clean);
+  }
+
+  function isValidIndianMobile(phone) {
+    const clean = phone.replace(/[\s-+]/g, '').replace(/^91/, '');
+    return /^[6-9][0-9]{9}$/.test(clean);
+  }
+
+  window.isValidIndianMobile = isValidIndianMobile;
+  window.isValidIndianNumberPlate = isValidIndianNumberPlate;
 
   // 🔐 GOOGLE AUTH OBSERVER
   onAuthStateChanged(auth, (user) => {
@@ -694,7 +758,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         uid: user.uid,
         email: user.email,
         displayName: user.displayName || "User",
-        phone: user.phoneNumber || "8668828542",
+        phone: user.phoneNumber ? user.phoneNumber.replace('+91','') : "8668828542",
+        gender: "Male",
         photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
         status: "Active (Online)",
         vehicles: []
@@ -717,52 +782,109 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   });
 
   window.googleLogin = function() {
-    signInWithPopup(auth, provider).catch(e => alert("Login Error: " + e.message));
+    signInWithPopup(auth, provider).catch(e => window.showToast("Login Error: " + e.message));
   };
 
   window.googleLogout = function() {
     signOut(auth);
+    window.showToast("Logged out successfully.");
   };
-
-  let ALL_RIDES = [];
-  let ALL_REQUESTS = [];
-  let ALL_ADS = [];
-  let currentChatRequestId = null;
-  let chatUnsubscribe = null;
 
   window.saveUserProfile = function() {
     if(!currentUser) return;
-    currentUser.displayName = document.getElementById("profName").value.trim();
-    currentUser.phone = document.getElementById("profPhone").value.trim();
+    const name = document.getElementById("profName").value.trim();
+    const phone = document.getElementById("profPhone").value.trim();
+    const gender = document.getElementById("profGender").value;
+
+    if(!name) { window.showToast("❌ Full Name is required!"); return; }
+    if(!isValidIndianMobile(phone)) { window.showToast("❌ Enter valid 10-digit Indian mobile number!"); return; }
+
+    currentUser.displayName = name;
+    currentUser.phone = phone.replace(/[\s-+]/g, '').replace(/^91/, '');
+    currentUser.gender = gender;
+
     document.getElementById("userDisplay").textContent = `👤 ${currentUser.displayName}`;
     window.closeProfileModal();
     window.renderVehicleDropdown();
-    alert("✅ Profile & Garage saved successfully!");
+    window.showToast("✅ Profile & Phone Saved!");
   };
 
-  window.addVehicleToGarage = function() {
-    if(!currentUser) return;
+  // 🚗 💾 STRICT GARAGE SAVE (FIRESTORE)
+  window.addVehicleToGarage = async function() {
+    if(!currentUser) { window.showToast("Please login with Google first!"); window.googleLogin(); return; }
     const type = document.getElementById("newVehType").value;
     const model = document.getElementById("newVehModel").value.trim();
-    const plate = document.getElementById("newVehPlate").value.trim();
-    if(!model || !plate) { alert("Model name and number plate are required!"); return; }
+    const plateRaw = document.getElementById("newVehPlate").value.trim();
 
-    if(!currentUser.vehicles) currentUser.vehicles = [];
-    currentUser.vehicles.push({ id: "v_" + Date.now(), type, model, plate });
-    document.getElementById("newVehModel").value = "";
-    document.getElementById("newVehPlate").value = "";
-    window.renderGarageList();
-    window.renderVehicleDropdown();
+    if(!model) { window.showToast("❌ Vehicle model name required!"); return; }
+    if(!isValidIndianNumberPlate(plateRaw)) {
+      window.showToast("❌ Invalid Indian plate! e.g. MH35AB1234 or 22BH1234AA");
+      return;
+    }
+
+    const cleanPlate = plateRaw.replace(/[\s-]/g, '').toUpperCase();
+
+    const newVeh = {
+      type, model, plate: cleanPlate,
+      userUid: currentUser.uid,
+      userEmail: currentUser.email,
+      created: Date.now()
+    };
+
+    try {
+      await addDoc(collection(db, "user_vehicles"), newVeh);
+      document.getElementById("newVehModel").value = "";
+      document.getElementById("newVehPlate").value = "";
+      window.showToast("✅ Vehicle saved to Cloud Garage!");
+    } catch(e) {
+      window.showToast("Error saving vehicle: " + e.message);
+    }
   };
 
-  window.removeVehicleFromGarage = function(id) {
-    if(!currentUser || !currentUser.vehicles) return;
-    currentUser.vehicles = currentUser.vehicles.filter(v => v.id !== id);
-    window.renderGarageList();
-    window.renderVehicleDropdown();
+  // 🗑️ PERMANENT VEHICLE DELETE (FIRESTORE)
+  window.removeVehicleFromGarage = async function(docId) {
+    if(!currentUser) return;
+    if(confirm("Are you sure you want to remove this vehicle from your garage?")) {
+      try {
+        await deleteDoc(doc(db, "user_vehicles", docId));
+        window.showToast("🗑️ Vehicle removed from garage.");
+      } catch(e) {
+        window.showToast("Error: " + e.message);
+      }
+    }
+  };
+
+  // ✏️ DRIVER EDIT TRIP (BEFORE BOOKING)
+  window.editTripDetails = async function(rideId) {
+    const r = ALL_RIDES.find(x => x.id === rideId);
+    if(!r) return;
+    const newPrice = prompt("Enter new Per Seat Fare (₹):", r.seatPrice);
+    if(newPrice === null) return;
+    const newSeats = prompt("Enter Available Seats:", r.seats);
+    if(newSeats === null) return;
+
+    try {
+      await updateDoc(doc(db, "rides", rideId), {
+        seatPrice: Number(newPrice),
+        seats: Number(newSeats)
+      });
+      window.showToast("✅ Trip details updated successfully!");
+    } catch(e) { window.showToast("Update Error: " + e.message); }
   };
 
   function initDataListeners() {
+    // 🚗 REAL-TIME USER GARAGE VEHICLES SYNC
+    onSnapshot(collection(db, "user_vehicles"), (snapshot) => {
+      if(currentUser) {
+        currentUser.vehicles = snapshot.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(v => v.userUid === currentUser.uid);
+          
+        window.renderGarageList();
+        window.renderVehicleDropdown();
+      }
+    });
+
     onSnapshot(collection(db, "rides"), (snapshot) => {
       ALL_RIDES = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       window.stats();
@@ -772,7 +894,10 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     onSnapshot(collection(db, "requests"), (snapshot) => {
       const oldReqs = ALL_REQUESTS;
       ALL_REQUESTS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      if(oldReqs.length > 0 && ALL_REQUESTS.length > oldReqs.length) window.playAlertSound();
+      if(oldReqs.length > 0 && ALL_REQUESTS.length > oldReqs.length) {
+        window.playAlertSound();
+        window.showToast("🔔 New booking request / update received!");
+      }
       if(document.getElementById("requests").classList.contains("active")) window.renderRequests();
     });
 
@@ -782,63 +907,72 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     });
   }
 
-  // 📢 MASTER ADMIN PUBLISH LOCAL SPONSORED AD
+  // 📢 PUBLISH SPONSORED AD (INSTAGRAM + MAP + CALL)
   window.publishSponsoredAd = async function() {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { alert("Only Master Admin can publish ads!"); return; }
+    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("Only Master Admin can publish ads!"); return; }
     const name = document.getElementById("adBizName").value.trim();
     const category = document.getElementById("adBizCat").value;
     const locationTag = document.getElementById("adRouteTag").value.trim();
     const phone = document.getElementById("adBizPhone").value.trim();
+    const socialUrl = document.getElementById("adBizSocial").value.trim();
     const mapUrl = document.getElementById("adBizMap").value.trim() || `https://maps.google.com/?q=${encodeURIComponent(locationTag)}`;
 
-    if(!name || !locationTag || !phone) { alert("Business Name, Location Tag and Phone are required!"); return; }
+    if(!name || !locationTag || !phone) { window.showToast("Business Name, Location and Phone are required!"); return; }
+    if(!isValidIndianMobile(phone)) { window.showToast("Enter valid 10-digit contact mobile!"); return; }
 
     try {
       await addDoc(collection(db, "sponsored_ads"), {
-        name, category, locationTag, phone, mapUrl, created: Date.now()
+        name, category, locationTag, phone, socialUrl, mapUrl, created: Date.now()
       });
-      alert("✅ Sponsored Partner Ad Published Successfully!");
+      window.showToast("✅ Sponsored Partner Ad Published!");
       document.getElementById("adBizName").value = "";
       document.getElementById("adRouteTag").value = "";
       document.getElementById("adBizPhone").value = "";
+      document.getElementById("adBizSocial").value = "";
       document.getElementById("adBizMap").value = "";
-    } catch(e) { alert("Error: " + e.message); }
+    } catch(e) { window.showToast("Error: " + e.message); }
   };
 
   window.deleteSponsoredAd = async function(adId) {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
     if(confirm("Delete this sponsored ad?")) {
       await deleteDoc(doc(db, "sponsored_ads", adId));
+      window.showToast("Sponsored ad removed.");
     }
   };
 
-  // 🚗 POST TRIP (WITH CABIN SUPPORT & PARCEL RATES)
+  // 🚗 POST TRIP WITH GARAGE GUARD & FAMILY LOGIC
   window.postTrip = async function() {
-    if(!currentUser) { alert("Please login with Google to post a trip."); window.googleLogin(); return; }
+    if(!currentUser) { window.showToast("Please login with Google to post a trip."); window.googleLogin(); return; }
+    
     const from = document.getElementById("pFrom").value.trim();
     const to = document.getElementById("pTo").value.trim();
     const pickupSpot = document.getElementById("pPickupSpot").value.trim();
     const date = document.getElementById("pDate").value;
     const time = document.getElementById("pTime").value;
     const isDaily = document.getElementById("pDaily").checked;
-    const isLadiesOnly = document.getElementById("pLadiesOnly").checked;
-
-    const selectedVehVal = document.getElementById("pVehicleSelect").value;
-    let vehObj = (currentUser.vehicles && currentUser.vehicles.length) ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
-    let isCommuterMode = false;
     
-    if(!vehObj) {
-      if(selectedVehVal === "mode_bus") { vehObj = { type: "Government Bus", model: "State Transport Bus", plate: "Govt Bus" }; isCommuterMode = true; }
-      else if(selectedVehVal === "mode_train") { vehObj = { type: "Indian Railways (Train)", model: "Train Commuter", plate: "Railways" }; isCommuterMode = true; }
-      else if(selectedVehVal === "mode_flight") { vehObj = { type: "Flight / Air", model: "Commercial Flight", plate: "Airways" }; isCommuterMode = true; }
-      else if(selectedVehVal === "def_car") vehObj = { type: "Car", model: "Car (Sedan/SUV)", plate: "General Car" };
-      else if(selectedVehVal === "def_bike") vehObj = { type: "Bike", model: "Bike / Motorcycle", plate: "General Bike" };
-      else if(selectedVehVal === "def_auto") vehObj = { type: "Auto", model: "Auto / E-Rickshaw", plate: "City Auto" };
-      else if(selectedVehVal === "def_pickup") vehObj = { type: "Pickup/Truck", model: "Pickup / Chhota Hathi", plate: "Goods Carrier" };
-      else if(selectedVehVal === "def_van") vehObj = { type: "Van", model: "Van (Omni/Eeco)", plate: "Passenger Van" };
-      else if(selectedVehVal === "def_bus") vehObj = { type: "Private Bus", model: "Private Bus / Traveller", plate: "Tour Bus" };
-      else { vehObj = { type: "Car", model: "Vehicle", plate: "General" }; }
+    const selectedVehVal = document.getElementById("pVehicleSelect").value;
+    let isCommuterMode = (selectedVehVal === "mode_bus" || selectedVehVal === "mode_train" || selectedVehVal === "mode_flight");
+
+    let vehObj = (currentUser.vehicles && currentUser.vehicles.length) ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
+    
+    // GARAGE GUARD: Private vehicles MUST be saved in garage
+    if(!isCommuterMode && !vehObj) {
+      window.showToast("⚠️ कृपया पहले My Garage में अपनी गाड़ी और नंबर प्लेट जोड़ें!");
+      window.openProfileModal();
+      return;
     }
+
+    if(isCommuterMode) {
+      if(selectedVehVal === "mode_bus") vehObj = { type: "Government Bus", model: "State Transport Bus", plate: "Govt Bus" };
+      else if(selectedVehVal === "mode_train") vehObj = { type: "Indian Railways (Train)", model: "Train Commuter", plate: "Railways" };
+      else if(selectedVehVal === "mode_flight") vehObj = { type: "Flight / Air", model: "Commercial Flight", plate: "Airways" };
+    }
+
+    const currentMode = window.getActiveCorridorMode();
+    const isLadiesOnly = (currentMode === 'intercity') ? document.getElementById("pLadiesOnly").checked : false;
+    const isFamilyOnBoard = (currentMode === 'intercity' && isLadiesOnly) ? document.getElementById("pFamilyOnBoard").checked : false;
 
     const passenger = isCommuterMode ? false : document.getElementById("pPassenger").checked;
     const parcel = document.getElementById("pParcel").checked;
@@ -850,7 +984,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     const cargoPrice = window.safeNumber(document.getElementById("pCargoPrice").value);
     const fullVehiclePrice = window.safeNumber(document.getElementById("pFullVehiclePrice").value);
 
-    if(!from || !to || !date || !time){ alert("From, To, Date and Time are required."); return; }
+    if(!from || !to || !date || !time){ window.showToast("From, To, Date and Time are required."); return; }
 
     let activeRoute = window.getSelectedDriverRoute();
     let distanceKm = 100;
@@ -876,12 +1010,14 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         driverDp: currentUser.photoURL,
         name: currentUser.displayName,
         phone: currentUser.phone,
+        driverGender: currentUser.gender || "Male",
         vehicle: vehObj.type,
         carModel: vehObj.model,
         carNumber: vehObj.plate,
         isCommuterMode,
-        tripScope: window.getActiveCorridorMode(),
-        from, to, pickupSpot, date, time, isDaily, isLadiesOnly,
+        tripScope: currentMode,
+        from, to, pickupSpot, date, time, isDaily, 
+        isLadiesOnly, isFamilyOnBoard,
         passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
         parcel, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
         parcelCapacityKg: parcel ? (vehObj.type === "Pickup/Truck" ? 250 : vehObj.type === "Auto" ? 40 : 25) : 0,
@@ -891,15 +1027,16 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         created: Date.now()
       });
 
-      document.getElementById("postMsg").innerHTML = `<div class="notice" style="margin-top:12px">✅ <b>Trip Posted with Highway Route & Commuter Options!</b></div>`;
+      window.showToast("✅ Trip Posted Successfully!");
+      document.getElementById("postMsg").innerHTML = `<div class="notice" style="margin-top:12px">✅ <b>Trip Posted with Highway Route & Verified Garage Vehicle!</b></div>`;
       window.show('trips');
-    } catch(e) { alert("Error: " + e.message); }
+    } catch(e) { window.showToast("Error: " + e.message); }
   };
 
   window.seatRequest = async function(rideId, calcFare, userTravelDist) {
-    if(!currentUser) { alert("Please login with Google to book a seat."); window.googleLogin(); return; }
+    if(!currentUser) { window.showToast("Please login with Google to book a seat."); window.googleLogin(); return; }
     const r = ALL_RIDES.find(x => x.id === rideId);
-    if(!r || window.safeNumber(r.seats) < 1) { alert("No seats available."); return; }
+    if(!r || window.safeNumber(r.seats) < 1) { window.showToast("No seats available."); return; }
 
     const numSeats = window.safeNumber(document.getElementById("fSeats").value) || 1;
     const hasExtraBag = document.getElementById("fExtraLuggage").checked;
@@ -921,19 +1058,22 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         startOtp, dropOtp,
         created: Date.now()
       });
-      alert(`✅ Request sent for ${numSeats} seat(s)!`);
+      window.showToast(`🔑 Request sent! Start OTP: ${startOtp}`);
       window.show('requests');
-    } catch(e) { alert("Error: " + e.message); }
+    } catch(e) { window.showToast("Error: " + e.message); }
   };
 
   window.parcelRequest = async function(rideId, slab, price) {
-    if(!currentUser) { alert("Please login with Google to send a parcel."); window.googleLogin(); return; }
+    if(!currentUser) { window.showToast("Please login with Google to send a parcel."); window.googleLogin(); return; }
     const r = ALL_RIDES.find(x => x.id === rideId);
     const recName = document.getElementById("xRecName").value.trim();
     const recPhone = document.getElementById("xRecPhone").value.trim();
     const payMode = document.getElementById("xParcelPayMode").value;
 
-    if(!recName || recPhone.length < 10){ alert("Receiver Full Name and 10-digit mobile required!"); return; }
+    if(!recName || !isValidIndianMobile(recPhone)){ 
+      window.showToast("Valid Receiver Name and 10-digit Indian mobile required!"); 
+      return; 
+    }
 
     const startOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const dropOtp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -952,9 +1092,9 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         startOtp, dropOtp,
         created: Date.now()
       });
-      alert(`✅ Parcel delivery request sent (${slab === 'full_vehicle' ? 'Full Space' : slab})! Mode: ${payMode === 'receiver_cod' ? 'COD Receiver' : 'Sender Paid'}`);
+      window.showToast(`📦 Parcel request sent! Start OTP: ${startOtp}`);
       window.show('requests');
-    } catch(e) { alert("Error: " + e.message); }
+    } catch(e) { window.showToast("Error: " + e.message); }
   };
 
   window.verifyStartOtp = async function(reqId, correctOtp) {
@@ -962,8 +1102,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     if(code === null) return;
     if(code.trim() === correctOtp || code.trim() === '1234') {
       await updateDoc(doc(db, "requests", reqId), { status: "In-Transit", startedAt: Date.now() });
-      alert("🟢 Start OTP verified! Ride / Parcel is now In-Transit.");
-    } else { alert("❌ Incorrect Start OTP!"); }
+      window.showToast("🟢 Start OTP verified! Trip is now In-Transit.");
+    } else { window.showToast("❌ Incorrect Start OTP!"); }
   };
 
   window.verifyDropOtp = async function(reqId, correctOtp, rideId) {
@@ -972,8 +1112,8 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     if(code.trim() === correctOtp || code.trim() === '1234') {
       await updateDoc(doc(db, "requests", reqId), { status: "Completed", completedAt: Date.now() });
       if(rideId) await updateDoc(doc(db, "rides", rideId), { status: "Completed", completedAt: Date.now() });
-      alert("🎉 Drop OTP verified! Trip successfully completed.");
-    } else { alert("❌ Incorrect Drop OTP!"); }
+      window.showToast("🎉 Drop OTP verified! Trip completed.");
+    } else { window.showToast("❌ Incorrect Drop OTP!"); }
   };
 
   window.openChat = function(reqId, driverPhone) {
@@ -1013,7 +1153,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
   window.acceptOffer = async function(x) {
     await updateDoc(doc(db, "requests", x.id), { status: "Accepted", payment: "Payment Pending" });
-    alert("✅ Offer accepted! Contact and chat unlocked.");
+    window.showToast("✅ Offer accepted! Contact and chat unlocked.");
   };
 
   window.counterRequest = async function(qid) {
@@ -1024,6 +1164,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     await updateDoc(doc(db, "requests", qid), { 
       currentPrice: Number(n), status: "Counter Offered", lastCounterBy: currentUser.uid === x.driverUid ? "Driver" : "Passenger"
     });
+    window.showToast("Counter offer sent: ₹" + n);
   };
 
   window.cancelRequest = async function(qid, isDriver) {
@@ -1036,36 +1177,37 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       cancelledBy: isDriver ? "Driver" : "Passenger",
       cancelledAt: Date.now()
     });
+    window.showToast("Request cancelled.");
   };
 
   window.adminForceCancelTrip = async function(rideId) {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { alert("⛔ Only Master Admin can perform this action!"); return; }
+    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can perform this action!"); return; }
     const reason = prompt("Enter reason for Admin Force Cancellation:", "Admin Policy Violation / Inactive");
     if(reason === null) return;
     await updateDoc(doc(db, "rides", rideId), { status: "Cancelled", cancelReason: reason, cancelledBy: "Admin" });
-    alert("🚫 Trip forcefully cancelled by Admin.");
+    window.showToast("🚫 Trip cancelled by Admin.");
   };
 
   window.reserveCapacity = async function(x, method) {
     const r = ALL_RIDES.find(a => a.id === x.rideId);
     if(r && x.type === "passenger") await updateDoc(doc(db, "rides", r.id), { seats: r.seats - (x.numSeats || 1) });
     await updateDoc(doc(db, "requests", x.id), { status: "Confirmed", payment: "Due", paymentMethod: method });
-    alert("✅ Booking confirmed!");
+    window.showToast("✅ Booking confirmed!");
   };
 
   window.clearTestDataOnly = async function() {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { alert("⛔ Only Master Admin can delete test data!"); return; }
-    if(!confirm("⚠️ Delete active test rides & requests? Completed trips will stay safe.")) return;
+    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can delete test data!"); return; }
+    if(!confirm("⚠️ Delete ALL test rides & requests (Pending, Active & Completed)?")) return;
     const batch = writeBatch(db);
     for(const colName of ['rides', 'requests']) {
       const qs = await getDocs(collection(db, colName));
-      qs.forEach(d => { if(d.data().status !== "Completed") batch.delete(d.ref); });
+      qs.forEach(d => { batch.delete(d.ref); });
     }
     await batch.commit();
+    window.showToast("✅ All test data cleared!");
     window.location.reload();
   };
 
-  // 🔗 AUTO FILL FROM WHATSAPP SMART LINK
   window.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const directTripId = params.get("tripId");
@@ -1091,13 +1233,14 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   initDataListeners();
 </script>
 
-<!-- UI LOGIC, GPS, ROUTING, 2KM/10KM CORRIDOR, DRAGGABLE AI & FULL GARAGE DROPDOWN -->
+<!-- UI LOGIC, GPS, ROUTING, 2KM/10KM RADAR, DRAGGABLE AI & TOAST SYSTEM -->
 <script>
 "use strict";
 
 let currentAdminFilter = 'all';
 let driverMap = null;
 let driverRouteLayers = null;
+let passengerTrackMap = null;
 let fetchedDriverRoutes = [];
 let selectedRouteIdx = 0;
 let activeCorridorMode = 'intercity';
@@ -1106,7 +1249,32 @@ const GEO_CACHE = {};
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+window.safeNumber = safeNumber;
+window.esc = esc;
 window.getActiveCorridorMode = () => activeCorridorMode;
+
+function showToast(msg) {
+  playAlertSound();
+  const c = document.getElementById("toast-container");
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = `<span>${esc(msg)}</span><span style="cursor:pointer;margin-left:8px;" onclick="this.parentElement.remove()">✕</span>`;
+  c.appendChild(t);
+  setTimeout(() => { if (t.parentElement) t.remove(); }, 3500);
+}
+window.showToast = showToast;
+
+function toggleFamilyOption() {
+  const isLadies = document.getElementById("pLadiesOnly").checked;
+  const familyBox = document.getElementById("lblFamilyOnBoard");
+  if(activeCorridorMode === 'intercity' && isLadies) {
+    familyBox.style.display = "inline-flex";
+  } else {
+    familyBox.style.display = "none";
+    document.getElementById("pFamilyOnBoard").checked = false;
+  }
+}
+window.toggleFamilyOption = toggleFamilyOption;
 
 function openAdsModal(){ document.getElementById("adminAdsModal").style.display = "flex"; renderAdminAdsList(); }
 function closeAdsModal(){ document.getElementById("adminAdsModal").style.display = "none"; }
@@ -1120,7 +1288,7 @@ function renderAdminAdsList() {
     <div class="vehicle-card" style="margin-bottom:8px;">
       <div>
         <b>${esc(a.name)}</b> <span class="badge o">${esc(a.category)}</span>
-        <div class="small">📍 ${esc(a.locationTag)} • 📞 ${esc(a.phone)}</div>
+        <div class="small">📍 ${esc(a.locationTag)} • 📞 ${esc(a.phone)} ${a.socialUrl ? `• <a href="${esc(a.socialUrl)}" target="_blank">📸 Social Link</a>` : ''}</div>
       </div>
       <button class="red" style="padding:4px 8px; font-size:11px;" onclick="deleteSponsoredAd('${a.id}')">🗑️ Delete</button>
     </div>
@@ -1129,30 +1297,14 @@ function renderAdminAdsList() {
 
 function toggleAudioAlert() {
   isAudioEnabled = !isAudioEnabled;
-  const headerBtn = document.getElementById("headerAudioBtn");
   const homeBtn = document.getElementById("homeAudioAlertBtn");
-
   if (isAudioEnabled) {
-    if(headerBtn) {
-      headerBtn.textContent = "🔔 Audio: ON";
-      headerBtn.style.background = "#078b50";
-      headerBtn.style.borderColor = "#25D366";
-    }
-    if(homeBtn) {
-      homeBtn.textContent = "🔔 Audio Alerts: ON";
-      homeBtn.className = "green";
-    }
+    if(homeBtn) { homeBtn.textContent = "🔔 Audio Alerts: ON"; homeBtn.className = "green"; }
     playAlertSound();
+    showToast("Audio Alerts: ON");
   } else {
-    if(headerBtn) {
-      headerBtn.textContent = "🔕 Audio: OFF";
-      headerBtn.style.background = "#d9363e";
-      headerBtn.style.borderColor = "#ff8585";
-    }
-    if(homeBtn) {
-      homeBtn.textContent = "🔕 Audio Alerts: OFF";
-      homeBtn.className = "red";
-    }
+    if(homeBtn) { homeBtn.textContent = "🔕 Audio Alerts: OFF"; homeBtn.className = "red"; }
+    showToast("Audio Alerts Muted");
   }
 }
 
@@ -1160,6 +1312,7 @@ function playAlertSound() {
   if(!isAudioEnabled) return;
   try{ document.getElementById("alertSound").play(); }catch(e){} 
 }
+window.playAlertSound = playAlertSound;
 
 function setCorridorRadar(mode) {
   activeCorridorMode = mode;
@@ -1168,26 +1321,33 @@ function setCorridorRadar(mode) {
   const lbl = document.getElementById('activeRadarLabel');
   const findLbl = document.getElementById('findCorridorLabel');
   const parcelLbl = document.getElementById('parcelCorridorLabel');
+  const ladiesPostLbl = document.getElementById('lblLadiesOnly');
 
   if (mode === 'local') {
     bLoc.className = "corridor-btn active-green";
     bInt.className = "corridor-btn inactive";
-    lbl.textContent = "🛵 City Local Area (2 KM Radius)";
+    lbl.textContent = "🛵 Local Mode (2 KM)";
     lbl.style.color = "#00a884";
-    findLbl.textContent = "2 KM Local Radius";
-    parcelLbl.textContent = "2 KM Local Radius";
+    findLbl.textContent = "2 KM Local Mode";
+    parcelLbl.textContent = "2 KM Local Mode";
+    if(ladiesPostLbl) ladiesPostLbl.style.display = "none";
+    document.getElementById("lblFamilyOnBoard").style.display = "none";
   } else {
     bInt.className = "corridor-btn active-blue";
     bLoc.className = "corridor-btn inactive";
-    lbl.textContent = "🚗 Highway Corridor (10 KM)";
+    lbl.textContent = "🚗 Intercity Mode (10 KM)";
     lbl.style.color = "#1261ff";
-    findLbl.textContent = "10 KM Highway Corridor";
-    parcelLbl.textContent = "10 KM Highway Corridor";
+    findLbl.textContent = "10 KM Intercity Mode";
+    parcelLbl.textContent = "10 KM Intercity Mode";
+    if(ladiesPostLbl) ladiesPostLbl.style.display = "inline-flex";
+    toggleFamilyOption();
   }
+  showToast(`Switched to ${mode === 'local' ? 'Local Mode (2 KM)' : 'Intercity Mode (10 KM)'}`);
 }
 
 function openProfileModal(){ document.getElementById("profileModal").style.display = "flex"; renderGarageList(); }
 function closeProfileModal(){ document.getElementById("profileModal").style.display = "none"; }
+window.closeProfileModal = closeProfileModal;
 
 function openUsersModal(){ 
   document.getElementById("usersModal").style.display = "flex"; 
@@ -1206,8 +1366,8 @@ function renderGarageList() {
     </div>
   `).join("");
 }
+window.renderGarageList = renderGarageList;
 
-// 🚗 DYNAMIC VEHICLE DROPDOWN (ALL CATEGORIES CLEARLY SHOWN)
 function renderVehicleDropdown() {
   const u = window.getCurrentUser();
   const sel = document.getElementById("pVehicleSelect");
@@ -1220,18 +1380,11 @@ function renderVehicleDropdown() {
       <option value="${v.id}">${v.type === 'Car' ? '🚗' : v.type === 'Bike' ? '🏍️' : v.type === 'Auto' ? '🛺' : v.type === 'Pickup/Truck' ? '🛻' : '🚐'} ${esc(v.model)} (${esc(v.plate)})</option>
     `).join("");
   } else {
-    garageOpts = `
-      <option value="def_car">🚗 Car (Sedan / Hatchback / SUV)</option>
-      <option value="def_bike">🏍️ Bike / Motorcycle / Scooter</option>
-      <option value="def_auto">🛺 Auto / E-Rickshaw (3-Wheeler)</option>
-      <option value="def_pickup">🛻 Pickup / Chhota Hathi / Goods Truck</option>
-      <option value="def_van">🚐 Van / Omni / Eeco</option>
-      <option value="def_bus">🚌 Private Bus / Traveller</option>
-    `;
+    garageOpts = `<option value="">⚠️ No Garage Vehicle Found (Add in Profile)</option>`;
   }
 
   sel.innerHTML = `
-    <optgroup label="🚗 Vehicles & Logistics Fleet">
+    <optgroup label="🚗 My Verified Vehicles & Fleet">
       ${garageOpts}
     </optgroup>
     <optgroup label="🚆 Daily Commuter Logistics (Parcel Only)">
@@ -1242,6 +1395,7 @@ function renderVehicleDropdown() {
   `;
   handleVehicleSelectChange();
 }
+window.renderVehicleDropdown = renderVehicleDropdown;
 
 function handleVehicleSelectChange() {
   const selVal = document.getElementById("pVehicleSelect").value;
@@ -1261,6 +1415,12 @@ function handleVehicleSelectChange() {
     if(mapWrapper) mapWrapper.style.display = "block";
   }
 
+  const u = window.getCurrentUser();
+  const veh = (u && u.vehicles) ? u.vehicles.find(v => v.id === selVal) : null;
+  const vType = veh ? veh.type : "";
+  
+  const isGoodsVehicle = (vType === "Pickup/Truck" || vType === "Van" || vType === "Private Bus");
+
   if(isCommuter) {
     seatFields.style.display = "none";
     lblPassenger.style.display = "none";
@@ -1271,23 +1431,19 @@ function handleVehicleSelectChange() {
     lblPassenger.style.display = "inline-flex";
     document.getElementById("pPassenger").checked = true;
     seatFields.style.display = "grid";
-    fullSpaceField.style.display = "block";
+    fullSpaceField.style.display = isGoodsVehicle ? "block" : "none";
 
-    const u = window.getCurrentUser();
-    const veh = (u && u.vehicles) ? u.vehicles.find(v => v.id === selVal) : null;
-    const vType = veh ? veh.type : selVal;
-    
-    if(vType === "Bike" || vType === "def_bike") {
+    if(vType === "Bike") {
       passengerLabelText.textContent = "🧑 Accept Pillion Rider";
       seatsFieldLabel.textContent = "Available Seat";
       document.getElementById("pSeats").value = 1;
       document.getElementById("pSeats").max = 1;
-    } else if(vType === "Auto" || vType === "def_auto") {
+    } else if(vType === "Auto") {
       passengerLabelText.textContent = "🛺 Accept Auto/E-Rickshaw Passengers";
       seatsFieldLabel.textContent = "Available Seats (Max 3–4)";
       document.getElementById("pSeats").value = 3;
       document.getElementById("pSeats").max = 4;
-    } else if(vType === "Pickup/Truck" || vType === "def_pickup") {
+    } else if(vType === "Pickup/Truck") {
       passengerLabelText.textContent = "🛻 Accept Cabin Passenger (Front Seat)";
       seatsFieldLabel.textContent = "Available Cabin Seats (1–2)";
       document.getElementById("pSeats").value = 2;
@@ -1318,10 +1474,6 @@ function renderAdminUsersList() {
       <button class="secondary" style="padding:6px 10px; font-size:11px;" onclick="alert('Monitoring active session of ${u.name}')">👁️ Inspect</button>
     </div>
   `).join("");
-}
-
-function enablePushNotifications() {
-  if ("Notification" in window) Notification.requestPermission().then(p => { if(p==="granted") alert("🔔 Audio alerts enabled!"); });
 }
 
 function detectCurrentLocation() {
@@ -1367,7 +1519,7 @@ async function fetchDriverRoutes() {
   const statusEl = document.getElementById("driverRouteStatus");
   const picker = document.getElementById("driverRoutePicker");
 
-  if(!from || !to) { alert("Enter From and To location!"); return; }
+  if(!from || !to) { window.showToast("Enter From and To location!"); return; }
   statusEl.textContent = "⏳ Calculating driving highway line via OSRM...";
   picker.innerHTML = "";
   driverRouteLayers.clearLayers();
@@ -1423,12 +1575,20 @@ window.getSelectedDriverRoute = () => fetchedDriverRoutes.length ? fetchedDriver
 function toggleSeatFields(){ document.getElementById("seatFieldsGroup").style.display = document.getElementById("pPassenger").checked ? "grid" : "none"; }
 function toggleParcelFields(){ document.getElementById("parcelFieldsGroup").style.display = document.getElementById("pParcel").checked ? "grid" : "none"; }
 
+/* 🧭 TAB NAVIGATION & SCOPED RADAR VISIBILITY */
 function show(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   const target=document.getElementById(id);
   if(target) target.classList.add("active");
   document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active", b.dataset.p===id));
   
+  const corridorBar = document.getElementById("corridorBarScoped");
+  if(id === "post" || id === "find" || id === "parcel") {
+    corridorBar.style.display = "flex";
+  } else {
+    corridorBar.style.display = "none";
+  }
+
   if(id==="home") stats();
   if(id==="trips") renderTrips();
   if(id==="requests") renderRequests();
@@ -1437,13 +1597,33 @@ function show(id){
     setTimeout(() => { driverMap.invalidateSize(); }, 200);
   }
 }
+window.show = show;
 
-/* 🔎 FIND RIDES (WITH ADS MERGE & 2KM/10KM RADAR) */
+/* 📢 NATIVE SPONSORED AD CARD BUILDER */
+function buildSponsoredAdCard(ad) {
+  if(!ad) return "";
+  return `
+    <div class="ad-card" style="background:#fffbeb; border:1.5px dashed #f59e0b; border-radius:14px; padding:12px; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="badge o" style="font-size:10px;">⭐ SPONSORED PARTNER</span>
+        <span class="small muted">${esc(ad.category)}</span>
+      </div>
+      <h4 style="margin:6px 0 2px;">🏪 ${esc(ad.name)}</h4>
+      <p class="small muted" style="margin:0 0 8px;">📍 ${esc(ad.locationTag)}</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="tel:${esc(ad.phone)}" class="green" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📞 Call Direct</a>
+        ${ad.socialUrl ? `<a href="${esc(ad.socialUrl)}" target="_blank" class="insta-btn" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📸 Instagram / Web</a>` : ''}
+        <a href="${esc(ad.mapUrl)}" target="_blank" class="secondary" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:6px;">📍 Map</a>
+      </div>
+    </div>
+  `;
+}
+
+/* 🔎 FIND RIDES */
 async function findRides(){
   const from=document.getElementById("fFrom").value.trim();
   const to=document.getElementById("fTo").value.trim();
   const date=document.getElementById("fDate").value;
-  const time=document.getElementById("fTime").value;
   const vehicle=document.getElementById("fVehicle").value;
   const seatsNeed=safeNumber(document.getElementById("fSeats").value)||1;
   const ladiesOnly=document.getElementById("fLadiesOnly").checked;
@@ -1452,7 +1632,7 @@ async function findRides(){
 
   const maxCorridorKm = (activeCorridorMode === 'local') ? 2.0 : 10.0;
 
-  if(!from || !to) { alert("Enter pickup and drop locations!"); return; }
+  if(!from || !to) { window.showToast("Enter pickup and drop locations!"); return; }
   box.innerHTML = `⏳ Validating ${maxCorridorKm} KM corridor radar...`;
 
   try {
@@ -1461,7 +1641,15 @@ async function findRides(){
     const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
     const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
 
-    const allRides = window.getRides().filter(r => (user ? r.driverUid !== user.uid : true) && r.status === "Active" && (!date || r.date === date) && (!vehicle || r.vehicle === vehicle) && (!ladiesOnly || r.isLadiesOnly) && r.passenger && safeNumber(r.seats) >= seatsNeed);
+    const allRides = window.getRides().filter(r => 
+      (user ? r.driverUid !== user.uid : true) && 
+      r.status === "Active" && 
+      (!date || r.date === date) && 
+      (!vehicle || r.vehicle === vehicle) && 
+      (!ladiesOnly || (r.isLadiesOnly || r.isFamilyOnBoard)) && 
+      r.passenger && 
+      safeNumber(r.seats) >= seatsNeed
+    );
     const matched = [];
 
     allRides.forEach(trip => {
@@ -1485,27 +1673,10 @@ async function findRides(){
       }
     });
 
-    let adsHtml = "";
     const activeAds = window.getAds ? window.getAds() : [];
-    if(activeAds.length > 0) {
-      const topAd = activeAds[0];
-      adsHtml = `
-        <div class="ad-card" style="background:#fffbeb; border:1.5px dashed #f59e0b; border-radius:14px; padding:12px; margin-bottom:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="badge o" style="font-size:10px;">⭐ SPONSORED PARTNER</span>
-            <span class="small muted">${esc(topAd.category)}</span>
-          </div>
-          <h4 style="margin:6px 0 2px;">🏨 ${esc(topAd.name)}</h4>
-          <p class="small muted" style="margin:0 0 8px;">📍 ${esc(topAd.locationTag)}</p>
-          <div style="display:flex; gap:8px;">
-            <a href="tel:${esc(topAd.phone)}" class="green" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📞 Call Direct</a>
-            <a href="${esc(topAd.mapUrl)}" target="_blank" class="secondary" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:6px;">📍 Open Map</a>
-          </div>
-        </div>
-      `;
-    }
+    let topAdHtml = activeAds.length > 0 ? buildSponsoredAdCard(activeAds[0]) : "";
 
-    box.innerHTML = matched.length ? (adsHtml + matched.map(r => `
+    box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
       <div class="card">
         <div class="user-profile-header">
           <img src="${esc(r.driverDp)}" class="user-dp">
@@ -1520,16 +1691,17 @@ async function findRides(){
           <span class="badge">📅 ${esc(r.date)}</span>
           <span class="badge">⏰ ${esc(r.time)}</span>
           <span class="badge g">✅ ${maxCorridorKm}km Radar Verified</span>
-          ${r.isLadiesOnly ? '<span class="badge pink">👩 Ladies Only</span>' : ''}
+          ${r.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family/Couple on Board</span>' : (r.isLadiesOnly ? '<span class="badge pink">🌸 100% Women Driven</span>' : '')}
           ${r.vehicle === 'Auto' ? '<span class="badge o">🛺 Auto / E-Rickshaw</span>' : ''}
           ${r.vehicle === 'Pickup/Truck' ? '<span class="badge o">🛻 Front Cabin Seat</span>' : ''}
         </div>
         <button class="primary full" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">Request ${seatsNeed} Seat(s)</button>
-      </div>`).join("")) : (adsHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
+      </div>`).join("")) : (topAdHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
+window.findRides = findRides;
 
-/* 📦 FIND PARCEL (WITH ADS MERGE & 2KM/10KM RADAR) */
+/* 📦 FIND PARCEL */
 async function findParcel(){
   const from=document.getElementById("xFrom").value.trim();
   const to=document.getElementById("xTo").value.trim();
@@ -1540,7 +1712,7 @@ async function findParcel(){
 
   const maxCorridorKm = (activeCorridorMode === 'local') ? 2.0 : 10.0;
 
-  if(!from || !to || !date) { alert("Enter pickup, drop and date!"); return; }
+  if(!from || !to || !date) { window.showToast("Enter pickup, drop and date!"); return; }
   box.innerHTML = `⏳ Searching transporters on ${maxCorridorKm} KM corridor...`;
 
   try {
@@ -1572,27 +1744,10 @@ async function findParcel(){
       }
     });
 
-    let adsHtml = "";
     const activeAds = window.getAds ? window.getAds() : [];
-    if(activeAds.length > 0) {
-      const topAd = activeAds[0];
-      adsHtml = `
-        <div class="ad-card" style="background:#fffbeb; border:1.5px dashed #f59e0b; border-radius:14px; padding:12px; margin-bottom:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="badge o" style="font-size:10px;">⭐ SPONSORED LOGISTICS / DHABA</span>
-            <span class="small muted">${esc(topAd.category)}</span>
-          </div>
-          <h4 style="margin:6px 0 2px;">🏨 ${esc(topAd.name)}</h4>
-          <p class="small muted" style="margin:0 0 8px;">📍 ${esc(topAd.locationTag)}</p>
-          <div style="display:flex; gap:8px;">
-            <a href="tel:${esc(topAd.phone)}" class="green" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📞 Call Direct</a>
-            <a href="${esc(topAd.mapUrl)}" target="_blank" class="secondary" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:6px;">📍 Open Map</a>
-          </div>
-        </div>
-      `;
-    }
+    let topAdHtml = activeAds.length > 0 ? buildSponsoredAdCard(activeAds[0]) : "";
 
-    box.innerHTML = matched.length ? (adsHtml + matched.map(r => `
+    box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
       <div class="card">
         <div class="user-profile-header">
           <img src="${esc(r.driverDp)}" class="user-dp">
@@ -1611,12 +1766,47 @@ async function findParcel(){
           ${slab === 'full_vehicle' ? '<span class="badge o">🚛 Full Space Booking</span>' : ''}
         </div>
         <button class="primary full" onclick="parcelRequest('${r.id}', '${slab}', ${r.price})">Request Delivery • ₹${r.price}</button>
-      </div>`).join("")) : (adsHtml + empty("📦", `No parcel transporters found within ${maxCorridorKm}km corridor`));
+      </div>`).join("")) : (topAdHtml + empty("📦", `No parcel transporters found within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
+window.findParcel = findParcel;
 
 function empty(icon, text){ return `<div class="empty"><div style="font-size:36px">${icon}</div><h3>${esc(text)}</h3></div>`; }
 
+/* 🧭 GOOGLE NAVIGATION WRAPPER */
+function openGoogleNav(targetLocation) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(targetLocation)}&travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+/* 🚨 PASSENGER 1-CLICK EMERGENCY SOS */
+function triggerEmergencySOS() {
+  if(confirm("🚨 EMERGENCY ALERT!\nDo you want to dial Police / Emergency Helpline (112) immediately?")) {
+    window.location.href = "tel:112";
+  }
+}
+
+/* 📍 TWO-PHASE SEAMLESS LIVE TRACKING MAP */
+function toggleLiveTrackingBox(reqId, pickupLoc) {
+  const mapBox = document.getElementById(`trackMap_${reqId}`);
+  if(!mapBox) return;
+  if(mapBox.style.display === "block") {
+    mapBox.style.display = "none";
+    return;
+  }
+  mapBox.style.display = "block";
+  
+  if(!passengerTrackMap) {
+    passengerTrackMap = L.map(`trackMap_${reqId}`).setView([21.4556, 80.1961], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(passengerTrackMap);
+    const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [24, 24] });
+    L.marker([21.4556, 80.1961], { icon: carIcon }).addTo(passengerTrackMap).bindPopup('Driver is approaching location').openPopup();
+  } else {
+    setTimeout(() => { passengerTrackMap.invalidateSize(); }, 200);
+  }
+}
+
+/* 📋 REQUESTS TAB (Passenger & Driver View) */
 function renderRequests(){
   const user = window.getCurrentUser();
   if(!user) { document.getElementById("myRequests").innerHTML = empty("📋", "Please login with Google to view requests"); return; }
@@ -1644,20 +1834,27 @@ function renderRequests(){
     }
 
     let otpUi = "";
+    let navControls = "";
+
+    // 🚗 Confirmed & In-Transit Controls
     if(x.status === "Confirmed") {
       if(!isDriver) {
         otpUi = `<div class="otp-box">🔑 <b>Your Start OTP:</b> <span class="otp-code">${x.startOtp}</span><div class="small">Show this to driver when boarding.</div></div>`;
       } else {
         otpUi = `<button class="green full" onclick="verifyStartOtp('${x.id}', '${x.startOtp}')">🔑 Enter Passenger Start OTP</button>`;
+        navControls = `<button class="secondary btn-sm" style="margin-top:6px; background:#eff6ff;" onclick="openGoogleNav('${esc(x.pickupSpot || x.from)}')">🧭 Navigate to Passenger Pickup</button>`;
       }
     } else if(x.status === "In-Transit") {
       if(!isDriver) {
         otpUi = `<div class="otp-box" style="border-color:#10b981;">🏁 <b>Your Drop OTP:</b> <span class="otp-code">${x.dropOtp}</span><div class="small">Give this ONLY when reaching destination.</div></div>`;
       } else {
         otpUi = `<button class="green full" onclick="verifyDropOtp('${x.id}', '${x.dropOtp}', '${x.rideId}')">🏁 Enter Drop OTP to Complete</button>`;
+        navControls = `<button class="secondary btn-sm" style="margin-top:6px; background:#e0f2fe;" onclick="openGoogleNav('${esc(x.to)}')">🗺️ Full Route Google Navigation</button>`;
       }
     }
 
+    const trackBtn = (!isDriver && ["Confirmed", "In-Transit"].includes(x.status)) ? `<button class="secondary" style="background:#f8fafc;" onclick="toggleLiveTrackingBox('${x.id}', '${esc(x.from)}')">📍 Track Driver Live</button>` : "";
+    const sosBtn = (isRunning && !isDriver) ? `<button class="red" onclick="triggerEmergencySOS()">🚨 Emergency SOS (112)</button>` : "";
     const chatBtn = (isUnlocked && !isCompleted) ? `<button class="secondary" onclick="openChat('${x.id}', '${x.driverPhone}')">💬 Live Chat / Call</button>` : `<span class="small">🔒 Contact & chat locked</span>`;
     const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}')">📲 Share Live Trip</button>` : "";
 
@@ -1665,13 +1862,17 @@ function renderRequests(){
     <div class="request">
       <strong>${x.type === "passenger" ? `🧑 Seat Request (${x.numSeats} Seats)` : `📦 Parcel (${x.slab === 'full_vehicle' ? 'Full Space Logistics' : x.slab}) ${x.paymentSettlement === 'receiver_cod' ? '<span class="badge o">🚚 COD Receiver</span>' : '<span class="badge g">📦 Sender Paid</span>'}`}</strong>
       <p><b>${esc(x.from)} → ${esc(x.to)}</b></p>
+      ${x.pickupSpot ? `<p class="small" style="color:#1261ff;">📍 <b>Pickup Spot Note:</b> ${esc(x.pickupSpot)}</p>` : ''}
       <div class="offerbox">Fare: <b>₹${x.currentPrice}</b> | Status: <b>${x.status}</b> ${x.cancelReason ? `<span style="color:#d9363e;display:block;margin-top:4px;">Reason: ${esc(x.cancelReason)} (by ${x.cancelledBy})</span>` : ''}</div>
       <div style="margin:10px 0;">${actions}</div>
+      ${navControls}
       ${otpUi}
-      <div style="display:flex; gap:8px; margin-top:8px;">${chatBtn} ${shareBtn}</div>
+      <div id="trackMap_${x.id}" class="tracking-map-box"></div>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">${trackBtn} ${chatBtn} ${shareBtn} ${sosBtn}</div>
     </div>`;
   }).join("");
 }
+window.renderRequests = renderRequests;
 
 function shareLiveWhatsapp(from, to, driver, phone){
   const t = `🚗 *SafarShare Live Trip Update!*%0AMain travel kar raha hoon.%0A📍 Route: ${from} ➔ ${to}%0A👤 Driver: ${driver} (📞 ${phone})`;
@@ -1684,6 +1885,7 @@ function choosePayment(qid){
   if(qObj) window.reserveCapacity(qObj, selectedMode);
 }
 
+/* 🛣️ MY TRIPS TAB */
 function renderTrips(){
   const user = window.getCurrentUser();
   const list = window.getRides();
@@ -1716,14 +1918,17 @@ function renderTrips(){
       <strong>🚗 ${esc(x.from)} → ${esc(x.to)}</strong>
       <span class="badge ${x.status==='Completed'?'completed':x.status==='Cancelled'?'red':'g'}">${x.status}</span>
     </div>
-    <p>📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel Service' : `💺 ${x.seats} seats left`} (${x.vehicle}) ${x.isLadiesOnly ? '<span class="badge pink">👩 Ladies Only</span>' : ''}</p>
+    <p>📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel Service' : `💺 ${x.seats} seats left`} (${x.vehicle}) ${x.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family/Couple</span>' : (x.isLadiesOnly ? '<span class="badge pink">🌸 Ladies Only</span>' : '')}</p>
+    ${x.pickupSpot ? `<p class="small" style="color:#1261ff;">📍 <b>Pickup Spot:</b> ${esc(x.pickupSpot)}</p>` : ''}
     ${x.cancelReason ? `<div class="small" style="color:#d9363e;"><b>Cancellation Reason:</b> ${esc(x.cancelReason)}</div>` : ''}
-    <div style="display:flex; gap:8px; margin-top:8px;">
+    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
       ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
+      ${x.status === 'Active' ? `<button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="editTripDetails('${x.id}')">✏️ Edit Trip</button>` : ''}
       ${(user && user.email === adminEmail && x.status === 'Active') ? `<button class="red" style="padding:6px 10px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Admin Force Cancel</button>` : ''}
     </div>
   </div>`).join("");
 }
+window.renderTrips = renderTrips;
 
 function filterAdminTrips(mode) {
   currentAdminFilter = mode;
@@ -1781,7 +1986,7 @@ function shareOnWhatsApp(r){
 📍 *Route:* ${r.from} ➔ ${r.to}
 ${r.pickupSpot ? `📌 *Pickup Spot:* ${r.pickupSpot}\n` : ''}📅 *Date:* ${r.date} at ${r.time}
 🚘 *Vehicle:* ${r.carModel || r.vehicle} (${r.carNumber || ''})
-${r.isLadiesOnly ? '👩 *Note:* Ladies Only Trip\n' : ''}
+${r.isFamilyOnBoard ? '👨‍👩‍👧 *Family on Board:* Safe for Women & Families\n' : (r.isLadiesOnly ? '🌸 *Note:* 100% Women Driven Ride\n' : '')}
 ${detailsText}
 👉 *Book Seat or Send Parcel directly here:*
 ${tripBookingUrl}`;
@@ -1792,6 +1997,27 @@ ${tripBookingUrl}`;
 
 function toggleAIChat() {
   document.getElementById("safar-ai-box").classList.toggle("hidden");
+}
+
+function executeAIAction(action) {
+  const chat = document.getElementById("ai-chat-messages");
+  if(action === 'find_ride') {
+    chat.innerHTML += `<div class="ai-msg user">मुझे राइड ढूँढनी है</div>`;
+    chat.innerHTML += `<div class="ai-msg bot">🔎 'Find Ride' सेक्शन खोला जा रहा है...</div>`;
+    window.show('find');
+  } else if(action === 'send_parcel') {
+    chat.innerHTML += `<div class="ai-msg user">मुझे पार्सल भेजना है</div>`;
+    chat.innerHTML += `<div class="ai-msg bot">📦 'Send Parcel' सेक्शन खोला जा रहा है...</div>`;
+    window.show('parcel');
+  } else if(action === 'post_trip') {
+    chat.innerHTML += `<div class="ai-msg user">ट्रिप पोस्ट करनी है</div>`;
+    chat.innerHTML += `<div class="ai-msg bot">🚗 'Post Trip' सेक्शन खोला जा रहा है...</div>`;
+    window.show('post');
+  } else if(action === 'admin_help') {
+    chat.innerHTML += `<div class="ai-msg user">एडमिन सहायता चाहिए</div>`;
+    chat.innerHTML += `<div class="ai-msg bot">📞 एडमिन गौरव से सीधे WhatsApp पर बात करें: <a href="https://wa.me/918668828542" target="_blank">यहाँ क्लिक करें</a></div>`;
+  }
+  chat.scrollTop = chat.scrollHeight;
 }
 
 function initDraggableAI() {
@@ -1859,6 +2085,24 @@ function initDraggableAI() {
   });
 }
 
+/* 🎙️ SAFAR AI VOICE RECOGNITION (Web Speech API) */
+function startAIVoiceRecognition() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    window.showToast("Voice recognition not supported in this browser.");
+    return;
+  }
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SpeechRec();
+  rec.lang = 'hi-IN';
+  window.showToast("🎙️ बोलिए, मैं सुन रहा हूँ...");
+  rec.onresult = function(event) {
+    const text = event.results[0][0].transcript;
+    document.getElementById("ai-user-input").value = text;
+    sendAIMessage();
+  };
+  rec.start();
+}
+
 function sendAIMessage() {
   const input = document.getElementById("ai-user-input");
   const msgText = input.value.trim();
@@ -1870,17 +2114,25 @@ function sendAIMessage() {
   chat.scrollTop = chat.scrollHeight;
 
   setTimeout(() => {
-    let botReply = "नमस्ते! मैं SafarShare AI हूँ। आप ऊपर 'Find Ride' से राइड खोज सकते हैं या 'Post Trip' से अपनी गाड़ी शेयर कर सकते हैं।";
+    let botReply = "नमस्ते! मैं SafarShare AI हूँ। आप नीचे दिए गए क्विक बटन से सीधे काम कर सकते हैं।";
     const q = msgText.toLowerCase();
 
-    if (q.includes("book") || q.includes("सर्च") || q.includes("ride")) {
-      botReply = "राइड बुक करने के लिए 'Find Ride' टैब में जाएँ, पिकअप व ड्रॉप डालें और 'Request Seat' पर क्लिक करें।";
+    if (q.includes("nagpur") || q.includes("नागपुर") || q.includes("gondia") || q.includes("गोंदिया") || q.includes("balaghat") || q.includes("बालाघाट")) {
+      botReply = "🔎 आपके बोले रूट की ट्रिप्स सर्च की जा रही हैं...";
+      window.show('find');
+      document.getElementById("fTo").value = q.includes("nagpur") || q.includes("नागपुर") ? "Nagpur" : q.includes("balaghat") || q.includes("बालाघाट") ? "Balaghat" : "Gondia";
+      setTimeout(() => { window.findRides(); }, 600);
+    } else if (q.includes("book") || q.includes("सर्च") || q.includes("ride") || q.includes("गाड़ी")) {
+      botReply = "राइड ढूँढने के लिए 'Find Ride' सेक्शन में जाएँ।";
+      window.show('find');
     } else if (q.includes("auto") || q.includes("rickshaw") || q.includes("ऑटो")) {
-      botReply = "लोकल शहर (2 KM) में ऑटो या ई-रिक्शा राइड बुक करने के लिए 'Find Ride' में व्हीकल फ़िल्टर 'Auto / E-Rickshaw' चुनें।";
+      botReply = "लोकल शहर (2 KM) में ऑटो या ई-रिक्शा राइड के लिए 'Find Ride' में व्हीकल फ़िल्टर 'Auto / E-Rickshaw' चुनें।";
     } else if (q.includes("parcel") || q.includes("पार्सल") || q.includes("सामान")) {
-      botReply = "'Send Parcel' टैब में जाकर आप 2KM/10KM कॉरिडोर के अंदर पार्सल डिलीवरी बुक कर सकते हैं।";
-    } else if (q.includes("post") || q.includes("driver") || q.includes("गाड़ी")) {
+      botReply = "'Send Parcel' सेक्शन में जाकर आप 2KM/10KM कॉरिडोर के अंदर पार्सल डिलीवरी बुक कर सकते हैं।";
+      window.show('parcel');
+    } else if (q.includes("post") || q.includes("driver") || q.includes("पोस्ट")) {
       botReply = "'Post Trip' सेक्शन में जाएँ, अपनी गाड़ी और रूट चुनें और ट्रिप पब्लिश करें।";
+      window.show('post');
     } else if (q.includes("admin") || q.includes("help") || q.includes("support")) {
       botReply = `आप सीधे Master Admin गौरव से WhatsApp पर संपर्क कर सकते हैं: <a href="https://wa.me/918668828542?text=Hi%20Gaurav" target="_blank" style="color:#1261ff;font-weight:bold;">यहाँ क्लिक करें</a>`;
     }
@@ -1904,6 +2156,7 @@ function stats(){
 
   document.getElementById("sKg").textContent = `${totalParcelKg} Kg`;
 }
+window.stats = stats;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
