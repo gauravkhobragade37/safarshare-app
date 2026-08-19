@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SafarShare V4.9 - Smart Travel & Logistics Platform</title>
+<title>SafarShare V5.0 - Smart Travel & Logistics Platform</title>
 
 <!-- PWA MANIFEST & THEME -->
 <link rel="manifest" href="./manifest.json">
@@ -354,7 +354,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
   </div>
 </div>
 
-<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL (PHOTO BANNER SUPPORT) -->
+<!-- 📢 MASTER ADMIN LOCAL ADS MANAGER MODAL (WITH SPECIFIC TARGET ROUTE) -->
 <div id="adminAdsModal" class="modal">
   <div class="modal-box">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -382,6 +382,13 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         </div>
         <div class="field"><label>Location / Landmark Tag *</label><input id="adRouteTag" placeholder="e.g. Main Market Chowk, Gondia"></div>
       </div>
+      
+      <!-- 🎯 TARGET SPECIFIC ROUTE FIELD -->
+      <div class="field">
+        <label>🎯 Target Route / Highway (जिस रूट पर ऐड दिखाना है)</label>
+        <input id="adTargetRoute" placeholder="e.g. Gondia - Nagpur / Balaghat (खाली रखने पर All Routes)">
+      </div>
+
       <div class="grid">
         <div class="field"><label>Contact Phone *</label><input id="adBizPhone" type="tel" placeholder="10-digit mobile number"></div>
         <div class="field"><label>Instagram / Social Link (Optional)</label><input id="adBizSocial" placeholder="https://instagram.com/..."></div>
@@ -733,7 +740,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 </div>
 
 <footer>
-  <div style="margin-bottom:8px;"><b>🚗 SafarShare V4.9</b> • Smart Travel & Local Logistics</div>
+  <div style="margin-bottom:8px;"><b>🚗 SafarShare V5.0</b> • Smart Travel & Local Logistics</div>
   <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; font-size:13px;">
     <span>📞 <b>Helpline:</b> <a href="tel:8668828542">8668828542</a></span>
     <span>💬 <b>WhatsApp:</b> <a href="https://wa.me/918668828542?text=Hello%20SafarShare%20Support" target="_blank">Chat with Admin</a></span>
@@ -805,7 +812,6 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
         vehicles: []
       };
 
-      // 💾 Automatically create/update active user in 'users' collection
       try {
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
@@ -916,7 +922,7 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
     }
   };
 
-  // ✏️ CLEAN IN-APP EDIT TRIP MODAL (NO PROMPT)
+  // ✏️ CLEAN IN-APP EDIT TRIP MODAL
   window.openEditTripModal = function(rideId) {
     const r = ALL_RIDES.find(x => x.id === rideId);
     if(!r) return;
@@ -1015,19 +1021,19 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
       window.renderAdminAdsList();
     });
 
-    // 👥 LIVE SYNC ACTIVE USERS
     onSnapshot(collection(db, "users"), (snapshot) => {
       ALL_USERS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       window.renderAdminUsersList();
     });
   }
 
-  // 📢 PUBLISH SPONSORED AD (PHOTO BANNER + INSTAGRAM + MAP + CALL)
+  // 📢 PUBLISH SPONSORED AD (WITH TARGET ROUTE + PHOTO BANNER)
   window.publishSponsoredAd = async function() {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("Only Master Admin can publish ads!"); return; }
     const name = document.getElementById("adBizName").value.trim();
     const category = document.getElementById("adBizCat").value;
     const locationTag = document.getElementById("adRouteTag").value.trim();
+    const targetRoute = document.getElementById("adTargetRoute").value.trim();
     const phone = document.getElementById("adBizPhone").value.trim();
     const socialUrl = document.getElementById("adBizSocial").value.trim();
     const imageUrl = document.getElementById("adBizImage").value.trim();
@@ -1038,11 +1044,12 @@ footer a { color:#1261ff; text-decoration:none; font-weight:bold; }
 
     try {
       await addDoc(collection(db, "sponsored_ads"), {
-        name, category, locationTag, phone, socialUrl, imageUrl, mapUrl, created: Date.now()
+        name, category, locationTag, targetRoute, phone, socialUrl, imageUrl, mapUrl, created: Date.now()
       });
       window.showToast("✅ Sponsored Partner Ad Published!");
       document.getElementById("adBizName").value = "";
       document.getElementById("adRouteTag").value = "";
+      document.getElementById("adTargetRoute").value = "";
       document.getElementById("adBizPhone").value = "";
       document.getElementById("adBizSocial").value = "";
       document.getElementById("adBizImage").value = "";
@@ -1408,7 +1415,7 @@ function renderAdminAdsList() {
     <div class="vehicle-card" style="margin-bottom:8px;">
       <div>
         <b>${esc(a.name)}</b> <span class="badge o">${esc(a.category)}</span>
-        <div class="small">📍 ${esc(a.locationTag)} • 📞 ${esc(a.phone)} ${a.socialUrl ? `• <a href="${esc(a.socialUrl)}" target="_blank">📸 Social Link</a>` : ''}</div>
+        <div class="small">📍 ${esc(a.locationTag)} ${a.targetRoute ? `• 🎯 <b>Route:</b> ${esc(a.targetRoute)}` : '• 🌐 <b>All Routes</b>'} • 📞 ${esc(a.phone)} ${a.socialUrl ? `• <a href="${esc(a.socialUrl)}" target="_blank">📸 Social Link</a>` : ''}</div>
       </div>
       <button class="red" style="padding:4px 8px; font-size:11px;" onclick="deleteSponsoredAd('${a.id}')">🗑️ Delete</button>
     </div>
@@ -1542,7 +1549,6 @@ function handleVehicleSelectChange() {
   
   const isGoodsVehicle = (vType === "Pickup/Truck" || vType === "Van" || vType === "Private Bus");
 
-  // 🚆 HIDE LADIES / FAMILY BOXES FOR COMMUTER MODES
   if(isCommuter) {
     seatFields.style.display = "none";
     lblPassenger.style.display = "none";
@@ -1740,7 +1746,27 @@ function show(id){
 }
 window.show = show;
 
-/* 📢 NATIVE SPONSORED AD CARD BUILDER (PHOTO BANNER SUPPORT) */
+/* 🎯 SMART ROUTE FILTERED ADS ENGINE */
+function getMatchingAds(fromQuery, toQuery) {
+  const allAds = window.getAds ? window.getAds() : [];
+  if (!allAds.length) return null;
+
+  const f = (fromQuery || "").toLowerCase();
+  const t = (toQuery || "").toLowerCase();
+
+  const routeSpecificAd = allAds.find(a => {
+    if (!a.targetRoute) return false;
+    const r = a.targetRoute.toLowerCase();
+    return (f && r.includes(f)) || (t && r.includes(t)) || (f && f.includes(r)) || (t && t.includes(r));
+  });
+
+  if (routeSpecificAd) return routeSpecificAd;
+
+  const genericAd = allAds.find(a => !a.targetRoute || a.targetRoute.trim() === "" || a.targetRoute.toLowerCase() === "all");
+  return genericAd || allAds[0];
+}
+
+/* 📢 NATIVE SPONSORED AD CARD BUILDER */
 function buildSponsoredAdCard(ad) {
   if(!ad) return "";
   const imgTag = ad.imageUrl ? `<img src="${esc(ad.imageUrl)}" style="width:100%; max-height:140px; object-fit:cover; border-radius:10px; margin-bottom:8px;">` : '';
@@ -1752,7 +1778,7 @@ function buildSponsoredAdCard(ad) {
         <span class="small muted">${esc(ad.category)}</span>
       </div>
       <h4 style="margin:6px 0 2px;">🏪 ${esc(ad.name)}</h4>
-      <p class="small muted" style="margin:0 0 8px;">📍 ${esc(ad.locationTag)}</p>
+      <p class="small muted" style="margin:0 0 8px;">📍 ${esc(ad.locationTag)} ${ad.targetRoute ? `<span class="badge g" style="font-size:10px; margin-left:4px;">🎯 ${esc(ad.targetRoute)}</span>` : ''}</p>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <a href="tel:${esc(ad.phone)}" class="green" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📞 Call Direct</a>
         ${ad.socialUrl ? `<a href="${esc(ad.socialUrl)}" target="_blank" class="insta-btn" style="text-decoration:none; font-size:11px; padding:6px 12px; border-radius:6px;">📸 Instagram / Web</a>` : ''}
@@ -1816,8 +1842,8 @@ async function findRides(){
       }
     });
 
-    const activeAds = window.getAds ? window.getAds() : [];
-    let topAdHtml = activeAds.length > 0 ? buildSponsoredAdCard(activeAds[0]) : "";
+    const matchedAd = getMatchingAds(from, to);
+    let topAdHtml = matchedAd ? buildSponsoredAdCard(matchedAd) : "";
 
     box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
       <div class="card">
@@ -1887,8 +1913,8 @@ async function findParcel(){
       }
     });
 
-    const activeAds = window.getAds ? window.getAds() : [];
-    let topAdHtml = activeAds.length > 0 ? buildSponsoredAdCard(activeAds[0]) : "";
+    const matchedAd = getMatchingAds(from, to);
+    let topAdHtml = matchedAd ? buildSponsoredAdCard(matchedAd) : "";
 
     box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
       <div class="card">
@@ -2109,7 +2135,7 @@ function filterAdminTrips(mode) {
   renderTrips();
 }
 
-// 📲 STRICT WHATSAPP SHARE (Exact Selected Only)
+// 📲 STRICT WHATSAPP SHARE
 function shareOnWhatsApp(r){
   const currentUrl = window.location.origin + window.location.pathname;
   const tripBookingUrl = `${currentUrl}?tripId=${r.id}`;
