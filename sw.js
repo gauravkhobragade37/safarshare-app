@@ -1,51 +1,41 @@
-// SafarShare Background Service Worker Engine
+const CACHE_NAME = 'safarshare-v6-live';
+const ASSETS_TO_CACHE = [
+  './app.html',
+  './manifest.json',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://unpkg.com/@turf/turf@6/turf.min.js'
+];
+
+// Install Event - Pre-cache new App UI
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-// Background Push & Hardware Vibration Notification
-self.addEventListener('push', (event) => {
-  let data = { title: 'SafarShare Alert', body: 'New trip or booking update available!' };
-  if (event.data) {
-    try {
-      data = event.data.json();
-    } catch(e) {
-      data.body = event.data.text();
-    }
-  }
-
-  const options = {
-    body: data.body,
-    icon: 'https://cdn-icons-png.flaticon.com/512/3202/3202926.png',
-    badge: 'https://cdn-icons-png.flaticon.com/512/3202/3202926.png',
-    vibrate: [500, 150, 500, 150, 500], // 3 Strong Vibrations on screen-off
-    requireInteraction: true,
-    tag: 'safarshare-alert',
-    renotify: true,
-    data: { url: './index.html' }
-  };
-
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
 });
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+// Activate Event - Purge Old Caches
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes('index.html') && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow('./index.html');
-      }
-    })
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Fetch Event - Serve Network First for Dynamic Flow
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
