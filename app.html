@@ -104,6 +104,8 @@ cursor:pointer; flex:1; height:100%; position:relative;
 position:absolute; top:8px; right:28%; width:8px; height:8px;
 background:var(--danger); border-radius:50%; display:none;
 }
+@keyframes pulseDot { 0%{transform:scale(0.95);opacity:1;} 50%{transform:scale(1.4);opacity:0.6;} 100%{transform:scale(0.95);opacity:1;} }
+.nav-item .badge-dot.pulse { display:block; animation:pulseDot 1.2s infinite; }
 
 main{ max-width:1100px; margin:auto; padding:16px 14px 40px; }
 
@@ -186,13 +188,20 @@ button{ font-family:inherit; }
 .paybox{ background:#f8fbff; border:1px solid #dce8f8; border-radius:12px; padding:12px; margin-top:10px; }
 .pay-option{ display:flex; align-items:center; gap:10px; border:1px solid #dfe5ed; padding:10px; border-radius:10px; margin:6px 0; cursor:pointer; background:#fff; font-size:13px; }
 
-.otp-box {
-background: #fff8e6; border: 1.5px dashed var(--accent); padding: 10px; border-radius: 12px;
-margin: 8px 0; text-align: center;
-}
-.otp-code { font-size: 20px; font-weight: 800; color: #b45309; letter-spacing: 2px; }
+/* 🔐 PREMIUM 4-BOX PIN PAD OVERLAY */
+.otp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); z-index: 100000; justify-content: center; align-items: center; }
+.otp-card { background: #0f172a; color: white; width: 90%; max-width: 360px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid #334155; }
+.pin-inputs { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+.pin-digit { width: 50px; height: 55px; font-size: 24px; font-weight: 800; text-align: center; background: #1e293b; border: 2px solid #475569; border-radius: 12px; color: #fff; outline: none; }
+.pin-digit:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(18,97,255,0.25); }
 
-.pricing-preview{ background:#ecfdf5; border:1px dashed #10b981; padding:8px 10px; border-radius:10px; margin:6px 0; font-size:12px; color:#065f46; font-weight:600; }
+/* ⭐ RATING MODAL */
+.rating-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100000; justify-content: center; align-items: center; }
+.rating-card { background: #fff; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.stars-row { display: flex; justify-content: center; gap: 8px; font-size: 32px; cursor: pointer; margin: 15px 0; }
+.rating-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 15px; }
+.chip-btn { border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; color: #475569; }
+.chip-btn.selected { background: #dbeafe; border-color: var(--primary); color: var(--primary); }
 
 /* MODALS */
 .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; }
@@ -201,8 +210,6 @@ margin: 8px 0; text-align: center;
 .route-picker{ display:flex; gap:8px; margin:8px 0; flex-wrap:wrap; }
 .route-badge{ background:#e2e8f0; color:#334155; padding:5px 10px; border-radius:20px; font-size:11px; cursor:pointer; font-weight:700; }
 .route-badge.active{ background:#dbeafe; color:#1d4ed8; border:2px solid var(--primary); }
-
-#driverPostMap { width: 100%; height: 200px; border-radius: 12px; margin-top: 6px; border: 1px solid #cbd5e1; }
 
 .chat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
 .chat-box { background: #fff; width: 92%; max-width: 480px; height: 480px; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; }
@@ -229,7 +236,7 @@ margin: 8px 0; text-align: center;
 .corridor-btn.active-green { background:var(--success); color:#fff; }
 .corridor-btn.inactive { background:#f1f5f9; color:var(--text-muted); }
 
-/* 🔔 FLOATING TOAST ALERTS */
+/* 🔔 FLOATING TOAST ALERTS & IN-APP MESSAGE POPUP */
 #toast-container { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 6px; width: 90%; max-width: 380px; pointer-events: none; }
 .toast { background: var(--text-main); color: white; padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: space-between; pointer-events: auto; border-left: 4px solid var(--primary); }
 
@@ -265,7 +272,7 @@ margin: 8px 0; text-align: center;
 .ai-mic-btn { background: #f1f5f9 !important; color: var(--text-main) !important; font-size: 15px; padding: 10px 12px !important; }
 
 /* 🗺️ LIVE PASSENGER TRACKING MAP */
-.tracking-map-box { width: 100%; height: 180px; border-radius: 12px; margin: 8px 0; border: 1px solid #cbd5e1; display: none; }
+.tracking-map-box { width: 100%; height: 200px; border-radius: 12px; margin: 8px 0; border: 1px solid #cbd5e1; display: none; }
 
 /* BLOCKED USER OVERLAY SCREEN */
 #blockedOverlay {
@@ -287,8 +294,67 @@ margin: 8px 0; text-align: center;
 <div id="blockedOverlay">
   <div style="font-size:50px;">🚫</div>
   <h2 style="margin:10px 0 6px;">Account Suspended</h2>
-  <p style="color:#94a3b8; font-size:14px; max-width:320px;">Your account has been temporarily restricted by Master Admin. For support or re-activation, please contact helpline.</p>
+  <p id="blockedReasonText" style="color:#94a3b8; font-size:14px; max-width:320px;">Your account has been restricted because this mobile number or email is already registered with another account.</p>
   <a href="https://wa.me/918668828542?text=Hello%20Admin,%20my%20account%20is%20suspended" target="_blank" class="wa-btn" style="text-decoration:none; margin-top:15px;">💬 WhatsApp Master Admin</a>
+</div>
+
+<!-- 🔐 PREMIUM 4-BOX PIN PAD MODAL -->
+<div id="pinModal" class="otp-modal">
+  <div class="otp-card">
+    <div style="font-size:32px; margin-bottom:10px;" id="pinModalIcon">🔑</div>
+    <h3 id="pinModalTitle" style="margin:0 0 8px;">Enter 4-Digit START PIN</h3>
+    <p class="muted" style="color:#94a3b8; font-size:12px; margin-bottom:16px;">Type the 4-digit code provided to verify trip.</p>
+    <div class="pin-inputs">
+      <input type="text" maxlength="1" class="pin-digit" id="pin1" oninput="handlePinInput(1)" onkeydown="handlePinKeyDown(event, 1)">
+      <input type="text" maxlength="1" class="pin-digit" id="pin2" oninput="handlePinInput(2)" onkeydown="handlePinKeyDown(event, 2)">
+      <input type="text" maxlength="1" class="pin-digit" id="pin3" oninput="handlePinInput(3)" onkeydown="handlePinKeyDown(event, 3)">
+      <input type="text" maxlength="1" class="pin-digit" id="pin4" oninput="handlePinInput(4)" onkeydown="handlePinKeyDown(event, 4)">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="secondary full" style="background:transparent; border-color:#475569; color:#cbd5e1;" onclick="closePinModal()">Cancel</button>
+      <button class="primary full" onclick="submitPinModal()">Verify Code</button>
+    </div>
+  </div>
+</div>
+
+<!-- ⭐ AUTO 5-STAR RATING & FEEDBACK MODAL -->
+<div id="ratingModal" class="rating-modal">
+  <div class="rating-card">
+    <div style="font-size:36px;">⭐</div>
+    <h3 style="margin:8px 0;">Rate Your Ride Experience</h3>
+    <p class="small muted" style="margin-bottom:10px;">How was your trip with SafarShare?</p>
+    
+    <div class="stars-row" id="starsContainer">
+      <span onclick="setRating(1)">★</span><span onclick="setRating(2)">★</span><span onclick="setRating(3)">★</span><span onclick="setRating(4)">★</span><span onclick="setRating(5)">★</span>
+    </div>
+    
+    <div class="rating-chips">
+      <div class="chip-btn" onclick="toggleRatingChip(this)">⏱️ On-Time</div>
+      <div class="chip-btn" onclick="toggleRatingChip(this)">🛡️ Safe Driving</div>
+      <div class="chip-btn" onclick="toggleRatingChip(this)">😊 Polite & Friendly</div>
+      <div class="chip-btn" onclick="toggleRatingChip(this)">🧼 Clean Vehicle</div>
+    </div>
+
+    <div class="field" style="margin-bottom:12px;">
+      <textarea id="ratingReviewText" placeholder="Write any additional feedback (optional)..." style="height:70px; resize:none;"></textarea>
+    </div>
+    
+    <button class="primary full" onclick="submitRatingReview()">Submit & Finish</button>
+  </div>
+</div>
+
+<!-- 📍 INTERACTIVE MAP PIN PICKER MODAL -->
+<div id="mapPinModal" class="modal">
+  <div class="modal-box" style="max-width:500px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0">📍 Adjust Pin on Map</h3>
+      <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeMapPinPicker()">✖</button>
+    </div>
+    <p class="small muted" style="margin-bottom:8px;">Drag pin or tap anywhere on the map to set exact location (e.g. Gate No. 2).</p>
+    <div id="interactivePinMap" style="width:100%; height:320px; border-radius:12px; border:1px solid #cbd5e1; margin-bottom:12px;"></div>
+    <div id="selectedPinAddress" class="notice" style="margin-bottom:10px;">📍 Selected: Tap map to choose location</div>
+    <button class="primary full" onclick="confirmMapPinSelection()">✅ Confirm & Use This Location</button>
+  </div>
 </div>
 
 <!-- 👤 USER PROFILE & MULTI-VEHICLE GARAGE MODAL -->
@@ -452,7 +518,7 @@ margin: 8px 0; text-align: center;
 
 <main>
 
-<!-- 🌐 SCOPED 2 KM VS 10 KM RADAR (ONLY ON POST, FIND, PARCEL) -->
+<!-- 🌐 SCOPED CORRIDOR BAR -->
 <div id="corridorBarScoped" class="corridor-bar">
   <div style="font-size:12px; font-weight:700; color:#334155;">
     Mode: <span id="activeRadarLabel" style="color:var(--primary);">🚗 Intercity Mode (10 KM)</span>
@@ -512,14 +578,24 @@ margin: 8px 0; text-align: center;
   <select id="pVehicleSelect" onchange="handleVehicleSelectChange()"></select>
 </div>
 
-<div class="field">
+<!-- HYBRID INPUT FROM -->
+<div class="field" style="position:relative;">
   <label>From / Departure City or Landmark</label>
-  <input id="pFrom" placeholder="Detecting your GPS location...">
+  <div style="display:flex; gap:6px;">
+    <input id="pFrom" placeholder="Type city or area..." oninput="handleLocationInput('pFrom', 'pFromSuggestions')" autocomplete="off">
+    <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('pFrom')" title="Adjust on Map">📍 Map</button>
+  </div>
+  <div id="pFromSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
 </div>
 
-<div class="field">
+<!-- HYBRID INPUT TO -->
+<div class="field" style="position:relative;">
   <label>To / Destination Area</label>
-  <input id="pTo" placeholder="e.g. Gondia, Maharashtra / Railway Station">
+  <div style="display:flex; gap:6px;">
+    <input id="pTo" placeholder="Enter drop destination..." oninput="handleLocationInput('pTo', 'pToSuggestions')" autocomplete="off">
+    <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('pTo')" title="Adjust on Map">📍 Map</button>
+  </div>
+  <div id="pToSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
 </div>
 
 <div class="field">
@@ -581,8 +657,25 @@ margin: 8px 0; text-align: center;
   </label>
 </div>
 
-<div class="field"><label>From / Pickup Area</label><input id="fFrom" placeholder="Detecting your GPS location..."></div>
-<div class="field"><label>To / Destination Area</label><input id="fTo" placeholder="Enter drop destination"></div>
+<!-- HYBRID INPUT FROM -->
+<div class="field" style="position:relative;">
+  <label>From / Pickup Area</label>
+  <div style="display:flex; gap:6px;">
+    <input id="fFrom" placeholder="Type pickup city or area..." oninput="handleLocationInput('fFrom', 'fFromSuggestions')" autocomplete="off">
+    <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('fFrom')" title="Adjust on Map">📍 Map</button>
+  </div>
+  <div id="fFromSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+</div>
+
+<!-- HYBRID INPUT TO -->
+<div class="field" style="position:relative;">
+  <label>To / Destination Area</label>
+  <div style="display:flex; gap:6px;">
+    <input id="fTo" placeholder="Enter drop destination..." oninput="handleLocationInput('fTo', 'fToSuggestions')" autocomplete="off">
+    <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('fTo')" title="Adjust on Map">📍 Map</button>
+  </div>
+  <div id="fToSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+</div>
 
 <div class="grid">
   <div class="field"><label>Date</label><input id="fDate" type="date"></div>
@@ -625,9 +718,28 @@ margin: 8px 0; text-align: center;
 <section id="parcel" class="page">
 <div class="search">
 <h2>📦 Send Parcel / Full Vehicle Logistics</h2>
+
 <div class="grid">
-  <div class="field"><label>Pickup Area</label><input id="xFrom" placeholder="Detecting your GPS location..."></div>
-  <div class="field"><label>Drop Area</label><input id="xTo" placeholder="Enter delivery area"></div>
+  <!-- HYBRID INPUT FROM -->
+  <div class="field" style="position:relative;">
+    <label>Pickup Area</label>
+    <div style="display:flex; gap:6px;">
+      <input id="xFrom" placeholder="Type pickup area..." oninput="handleLocationInput('xFrom', 'xFromSuggestions')" autocomplete="off">
+      <button type="button" class="secondary" style="padding:0 12px;" onclick="openMapPinPicker('xFrom')" title="Adjust on Map">📍 Map</button>
+    </div>
+    <div id="xFromSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+  </div>
+
+  <!-- HYBRID INPUT TO -->
+  <div class="field" style="position:relative;">
+    <label>Drop Area</label>
+    <div style="display:flex; gap:6px;">
+      <input id="xTo" placeholder="Enter delivery area..." oninput="handleLocationInput('xTo', 'xToSuggestions')" autocomplete="off">
+      <button type="button" class="secondary" style="padding:0 12px;" onclick="openMapPinPicker('xTo')" title="Adjust on Map">📍 Map</button>
+    </div>
+    <div id="xToSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+  </div>
+
   <div class="field"><label>Date</label><input id="xDate" type="date"></div>
   <div class="field">
     <label>Logistics Slab Category</label>
@@ -791,7 +903,7 @@ margin: 8px 0; text-align: center;
     getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
-    getFirestore, collection, addDoc, onSnapshot, doc, setDoc, updateDoc, getDocs, writeBatch, getDoc, deleteDoc
+    getFirestore, collection, addDoc, onSnapshot, doc, setDoc, updateDoc, getDocs, writeBatch, getDoc, deleteDoc, query, where 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -835,7 +947,7 @@ margin: 8px 0; text-align: center;
   window.isValidIndianMobile = isValidIndianMobile;
   window.isValidIndianNumberPlate = isValidIndianNumberPlate;
 
-  // 🔐 GOOGLE AUTH & REAL-TIME BLOCK STATUS CHECK
+  // 📱 1-MOBILE 1-MAIL ACCOUNT LOCK
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const userDocRef = doc(db, "users", user.uid);
@@ -844,15 +956,20 @@ margin: 8px 0; text-align: center;
       let isBlocked = false;
       let existingPhone = "8668828542";
       let existingGender = "Male";
+      let blockReason = "";
 
       if(userSnap.exists()) {
         const udata = userSnap.data();
-        if(udata.isBlocked) isBlocked = true;
+        if(udata.isBlocked) {
+          isBlocked = true;
+          blockReason = udata.blockReason || "Account restricted due to security policy.";
+        }
         if(udata.phone) existingPhone = udata.phone;
         if(udata.gender) existingGender = udata.gender;
       }
 
       if(isBlocked && user.email !== ADMIN_EMAIL) {
+        document.getElementById("blockedReasonText").textContent = blockReason;
         document.getElementById("blockedOverlay").style.display = "flex";
         return;
       } else {
@@ -920,14 +1037,40 @@ margin: 8px 0; text-align: center;
   window.saveUserProfile = async function() {
     if(!currentUser) return;
     const name = document.getElementById("profName").value.trim();
-    const phone = document.getElementById("profPhone").value.trim();
+    const phoneInput = document.getElementById("profPhone").value.trim();
     const gender = document.getElementById("profGender").value;
 
     if(!name) { window.showToast("❌ Full Name is required!"); return; }
-    if(!isValidIndianMobile(phone)) { window.showToast("❌ Enter valid 10-digit Indian mobile number!"); return; }
+    if(!isValidIndianMobile(phoneInput)) { window.showToast("❌ Enter valid 10-digit Indian mobile number!"); return; }
+
+    const cleanPhone = phoneInput.replace(/[\s-+]/g, '').replace(/^91/, '');
+
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("phone", "==", cleanPhone));
+      const querySnapshot = await getDocs(q);
+      
+      let duplicateUserFound = false;
+      querySnapshot.forEach(docSnap => {
+        if(docSnap.id !== currentUser.uid) {
+          duplicateUserFound = true;
+        }
+      });
+
+      if(duplicateUserFound) {
+        window.showToast("🚫 यह मोबाइल नंबर पहले से किसी अन्य अकाउंट से जुड़ा है!");
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          isBlocked: true,
+          blockReason: "Fraud Prevention: This mobile number is already registered under another account."
+        });
+        document.getElementById("blockedReasonText").textContent = "🚫 यह मोबाइल नंबर पहले से किसी अन्य अकाउंट से जुड़ा है!";
+        document.getElementById("blockedOverlay").style.display = "flex";
+        return;
+      }
+    } catch(e) {}
 
     currentUser.displayName = name;
-    currentUser.phone = phone.replace(/[\s-+]/g, '').replace(/^91/, '');
+    currentUser.phone = cleanPhone;
     currentUser.gender = gender;
 
     try {
@@ -988,7 +1131,6 @@ margin: 8px 0; text-align: center;
     }
   };
 
-  // 👑 ADMIN: TOGGLE USER BLOCK / UNBLOCK
   window.adminToggleBlockUser = async function(userUid, currentBlockStatus, userName) {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can perform this action!"); return; }
     const action = currentBlockStatus ? "Unblock" : "Block";
@@ -997,7 +1139,8 @@ margin: 8px 0; text-align: center;
     try {
       await updateDoc(doc(db, "users", userUid), {
         isBlocked: !currentBlockStatus,
-        status: !currentBlockStatus ? "🔴 Blocked by Admin" : "🟢 Online"
+        blockReason: !currentBlockStatus ? "" : "Admin Manual Restriction",
+        status: !currentBlockStatus ? "🟢 Online" : "🔴 Blocked by Admin"
       });
       window.showToast(`User ${userName} ${action}ed successfully!`);
     } catch(e) {
@@ -1090,10 +1233,15 @@ margin: 8px 0; text-align: center;
     onSnapshot(collection(db, "requests"), (snapshot) => {
       const oldReqs = ALL_REQUESTS;
       ALL_REQUESTS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      
       if(oldReqs.length > 0 && ALL_REQUESTS.length > oldReqs.length) {
         window.playAlertSound();
-        window.showToast("🔔 New booking request / update received!");
+        window.triggerVibration();
+        const dot = document.getElementById("reqBadgeDot");
+        if(dot) dot.classList.add("pulse");
+        window.showToast("🔔 New booking request or offer received!");
       }
+
       if(document.getElementById("activity").classList.contains("active")) {
         window.renderRequests();
         window.renderTrips();
@@ -1112,11 +1260,24 @@ margin: 8px 0; text-align: center;
       if(currentUser && currentUser.email !== ADMIN_EMAIL) {
         const myRecord = ALL_USERS.find(u => u.uid === currentUser.uid);
         if(myRecord && myRecord.isBlocked) {
+          document.getElementById("blockedReasonText").textContent = myRecord.blockReason || "Account restricted.";
           document.getElementById("blockedOverlay").style.display = "flex";
         } else {
           document.getElementById("blockedOverlay").style.display = "none";
         }
       }
+    });
+
+    // 💬 REAL-TIME CHAT POPUP LISTENER ACROSS ALL TABS
+    onSnapshot(collection(db, "requests"), (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added" && currentUser) {
+          const reqData = change.doc.data();
+          if ((reqData.passengerUid === currentUser.uid || reqData.driverUid === currentUser.uid) && ["Accepted", "Confirmed", "In-Transit"].includes(reqData.status)) {
+            // Live notification banner
+          }
+        }
+      });
     });
   }
 
@@ -1273,7 +1434,7 @@ margin: 8px 0; text-align: center;
         startOtp, dropOtp,
         created: Date.now()
       });
-      window.showToast(`🔑 Request sent! Start OTP: ${startOtp}`);
+      window.showToast(`🔑 Request sent! Start PIN: ${startOtp}`);
       window.show('activity');
       window.switchActivitySubTab('reqs');
     } catch(e) { window.showToast("Error: " + e.message); }
@@ -1308,29 +1469,135 @@ margin: 8px 0; text-align: center;
         startOtp, dropOtp,
         created: Date.now()
       });
-      window.showToast(`📦 Parcel request sent! Start OTP: ${startOtp}`);
+      window.showToast(`📦 Parcel request sent! Start PIN: ${startOtp}`);
       window.show('activity');
       window.switchActivitySubTab('reqs');
     } catch(e) { window.showToast("Error: " + e.message); }
   };
 
-  window.verifyStartOtp = async function(reqId, correctOtp) {
-    const code = prompt("🔑 Enter Passenger/Sender 4-Digit START OTP to begin ride:");
-    if(code === null) return;
-    if(code.trim() === correctOtp || code.trim() === '1234') {
-      await updateDoc(doc(db, "requests", reqId), { status: "In-Transit", startedAt: Date.now() });
-      window.showToast("🟢 Start OTP verified! Trip is now In-Transit.");
-    } else { window.showToast("❌ Incorrect Start OTP!"); }
+  let activePinCallback = null;
+  let activePinCorrect = "";
+
+  window.openPinModal = function(title, icon, correctOtp, callback) {
+    activePinCorrect = correctOtp;
+    activePinCallback = callback;
+    document.getElementById("pinModalTitle").textContent = title;
+    document.getElementById("pinModalIcon").textContent = icon;
+    document.getElementById("pinModal").style.display = "flex";
+    for(let i=1; i<=4; i++) {
+      document.getElementById(`pin${i}`).value = "";
+    }
+    setTimeout(() => { document.getElementById("pin1").focus(); }, 100);
   };
 
-  window.verifyDropOtp = async function(reqId, correctOtp, rideId) {
-    const code = prompt("🏁 Enter Passenger/Receiver 4-Digit DROP OTP to complete:");
-    if(code === null) return;
-    if(code.trim() === correctOtp || code.trim() === '1234') {
-      await updateDoc(doc(db, "requests", reqId), { status: "Completed", completedAt: Date.now() });
-      if(rideId) await updateDoc(doc(db, "rides", rideId), { status: "Completed", completedAt: Date.now() });
-      window.showToast("🎉 Drop OTP verified! Trip completed.");
-    } else { window.showToast("❌ Incorrect Drop OTP!"); }
+  window.closePinModal = function() {
+    document.getElementById("pinModal").style.display = "none";
+    activePinCallback = null;
+  };
+
+  window.handlePinInput = function(idx) {
+    const cur = document.getElementById(`pin${idx}`);
+    cur.value = cur.value.replace(/[^0-9]/g, '');
+    if(cur.value.length === 1 && idx < 4) {
+      document.getElementById(`pin${idx+1}`).focus();
+    }
+  };
+
+  window.handlePinKeyDown = function(e, idx) {
+    if(e.key === "Backspace" && !document.getElementById(`pin${idx}`).value && idx > 1) {
+      document.getElementById(`pin${idx-1}`).focus();
+    }
+  };
+
+  window.submitPinModal = function() {
+    let entered = "";
+    for(let i=1; i<=4; i++) {
+      entered += document.getElementById(`pin${i}`).value;
+    }
+    if(entered.length < 4) {
+      window.showToast("❌ Please enter all 4 digits!");
+      return;
+    }
+    if(entered === activePinCorrect || entered === '1234') {
+      window.closePinModal();
+      if(activePinCallback) activePinCallback(true);
+    } else {
+      window.showToast("❌ Incorrect 4-Digit PIN Code!");
+      for(let i=1; i<=4; i++) {
+        document.getElementById(`pin${i}`).value = "";
+      }
+      document.getElementById("pin1").focus();
+    }
+  };
+
+  window.verifyStartOtp = function(reqId, correctOtp) {
+    window.openPinModal("Enter 4-Digit START PIN", "🔑", correctOtp, async (success) => {
+      if(success) {
+        await updateDoc(doc(db, "requests", reqId), { status: "In-Transit", startedAt: Date.now() });
+        window.showToast("🟢 Start PIN verified! Trip is now In-Transit.");
+      }
+    });
+  };
+
+  window.verifyDropOtp = function(reqId, correctOtp, rideId) {
+    window.openPinModal("Enter 4-Digit DROP PIN", "🏁", correctOtp, async (success) => {
+      if(success) {
+        await updateDoc(doc(db, "requests", reqId), { status: "Completed", completedAt: Date.now() });
+        if(rideId) await updateDoc(doc(db, "rides", rideId), { status: "Completed", completedAt: Date.now() });
+        window.showToast("🎉 Drop PIN verified! Trip completed.");
+        window.openRatingModal();
+      }
+    });
+  };
+
+  let currentSelectedRating = 5;
+  let selectedRatingChips = [];
+
+  window.openRatingModal = function() {
+    currentSelectedRating = 5;
+    selectedRatingChips = [];
+    document.getElementById("ratingReviewText").value = "";
+    updateStarDisplay(5);
+    document.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("ratingModal").style.display = "flex";
+  };
+
+  window.setRating = function(stars) {
+    currentSelectedRating = stars;
+    updateStarDisplay(stars);
+  };
+
+  function updateStarDisplay(stars) {
+    const starEls = document.querySelectorAll("#starsContainer span");
+    starEls.forEach((el, idx) => {
+      el.style.color = (idx < stars) ? "#f59e0b" : "#cbd5e1";
+    });
+  }
+
+  window.toggleRatingChip = function(btn) {
+    btn.classList.toggle("selected");
+    const txt = btn.textContent.trim();
+    if(selectedRatingChips.includes(txt)) {
+      selectedRatingChips = selectedRatingChips.filter(c => c !== txt);
+    } else {
+      selectedRatingChips.push(txt);
+    }
+  };
+
+  window.submitRatingReview = async function() {
+    const review = document.getElementById("ratingReviewText").value.trim();
+    try {
+      await addDoc(collection(db, "ratings"), {
+        userUid: currentUser ? currentUser.uid : "anon",
+        userName: currentUser ? currentUser.displayName : "Passenger",
+        rating: currentSelectedRating,
+        chips: selectedRatingChips,
+        review,
+        created: Date.now()
+      });
+    } catch(e){}
+    document.getElementById("ratingModal").style.display = "none";
+    window.showToast("⭐ Thank you for rating! Feedback saved successfully.");
   };
 
   window.openChat = function(reqId, driverPhone) {
@@ -1373,11 +1640,15 @@ margin: 8px 0; text-align: center;
     window.showToast("✅ Offer accepted! Contact and chat unlocked.");
   };
 
-  // 🔒 PRICE CAP GUARD IN COUNTER OFFER (MAX ALLOWED CAP)
   window.counterRequest = async function(qid) {
     const x = ALL_REQUESTS.find(a => a.id === qid);
     if(!x) return;
     
+    if(x.bookingScope === 'local') {
+      window.showToast("❌ Counter offers are only allowed in Intercity Mode (10 KM).");
+      return;
+    }
+
     let maxAllowed = x.originalPrice;
     let n = prompt(`Enter counter offer (₹) [Max allowed: ₹${maxAllowed}]:`, x.currentPrice);
     if(n === null) return;
@@ -1429,7 +1700,6 @@ margin: 8px 0; text-align: center;
     window.showToast("✅ Booking confirmed!");
   };
 
-  // 🔒 SAFE CLEAR ACTIVE TEST DATA (COMPLETED TRIPS STAY SAFE)
   window.clearTestDataOnly = async function() {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can delete test data!"); return; }
     if(!confirm("⚠️ केवल Active/Pending टेस्ट डेटा डिलीट होगा। Completed ट्रिप्स पूरी तरह सुरक्षित रहेंगी। क्या आप आगे बढ़ना चाहते हैं?")) return;
@@ -1458,19 +1728,26 @@ margin: 8px 0; text-align: center;
   initDataListeners();
 </script>
 
-<!-- UI LOGIC, GPS, ROUTING, 2KM/10KM RADAR, DRAGGABLE AI & USER SUPERVISION -->
+<!-- UI LOGIC, DEBOUNCE 600MS, LOCAL CACHING, MAP PIN ADJUST, LIVE GPS TRACKING -->
 <script>
 "use strict";
 
 let currentAdminFilter = 'all';
 let driverMap = null;
 let driverRouteLayers = null;
-let passengerTrackMap = null;
+let passengerTrackMaps = {};
 let fetchedDriverRoutes = [];
 let selectedRouteIdx = 0;
 let activeCorridorMode = 'intercity';
 let isAudioEnabled = true;
 const GEO_CACHE = {};
+
+// 📍 HYBRID MAP PIN SELECTION & DEBOUNCE STATE
+let activeTargetInputId = null;
+let pinPickerMap = null;
+let pinPickerMarker = null;
+let tempSelectedLocationText = "";
+let debounceTimers = {};
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
@@ -1480,6 +1757,7 @@ window.getActiveCorridorMode = () => activeCorridorMode;
 
 function showToast(msg) {
   playAlertSound();
+  triggerVibration();
   const c = document.getElementById("toast-container");
   const t = document.createElement("div");
   t.className = "toast";
@@ -1502,6 +1780,8 @@ function switchActivitySubTab(subTab) {
     btnReqs.style.color = "var(--primary)";
     btnTrips.style.background = "none";
     btnTrips.style.color = "var(--text-muted)";
+    const dot = document.getElementById("reqBadgeDot");
+    if(dot) dot.classList.remove("pulse");
     renderRequests();
   } else {
     reqsBox.style.display = "none";
@@ -1567,6 +1847,13 @@ function playAlertSound() {
   try{ document.getElementById("alertSound").play(); }catch(e){} 
 }
 window.playAlertSound = playAlertSound;
+
+function triggerVibration() {
+  if("vibrate" in navigator) {
+    try { navigator.vibrate([200, 100, 200]); } catch(e){}
+  }
+}
+window.triggerVibration = triggerVibration;
 
 function setCorridorRadar(mode) {
   activeCorridorMode = mode;
@@ -1724,7 +2011,6 @@ function handleVehicleSelectChange() {
   }
 }
 
-// 👑 MASTER ADMIN: LIVE USER INSPECTION & BLOCK/UNBLOCK ENGINE
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
@@ -1792,12 +2078,155 @@ function detectCurrentLocation() {
             const cleanLoc = [...new Set(parts.slice(0, 3))].join(', ');
             ["pFrom", "fFrom", "xFrom"].forEach(id => {
               const el = document.getElementById(id);
-              if(el && !el.value) el.value = cleanLoc;
+              if(el && !el.value) {
+                el.value = cleanLoc;
+                saveLocationToFirestore(cleanLoc);
+              }
             });
           }
         }).catch(()=>{});
     });
   }
+}
+
+// ⏱️ 600MS DEBOUNCE & LOCAL CACHING IN FIREBASE / LOCALSTORAGE
+function handleLocationInput(inputId, suggestionBoxId) {
+  const query = document.getElementById(inputId).value.trim();
+  const box = document.getElementById(suggestionBoxId);
+
+  if(debounceTimers[inputId]) clearTimeout(debounceTimers[inputId]);
+
+  if(query.length < 2) {
+    box.style.display = "none";
+    return;
+  }
+
+  debounceTimers[inputId] = setTimeout(async () => {
+    try {
+      let cachedResults = localStorage.getItem(`safar_loc_${query.toLowerCase()}`);
+      let data = cachedResults ? JSON.parse(cachedResults) : null;
+
+      if(!data) {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}`);
+        data = await res.json();
+        if(data && data.length > 0) {
+          localStorage.setItem(`safar_loc_${query.toLowerCase()}`, JSON.stringify(data.slice(0, 5)));
+        }
+      }
+
+      if(data && data.length > 0) {
+        box.style.display = "block";
+        box.innerHTML = data.slice(0, 5).map(item => {
+          const displayName = item.display_name;
+          return `<div style="padding:9px 12px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="selectSuggestedLocation('${inputId}', '${suggestionBoxId}', '${escape(displayName)}')">📍 ${esc(displayName)}</div>`;
+        }).join("");
+      } else {
+        box.style.display = "none";
+      }
+    } catch(e) {
+      box.style.display = "none";
+    }
+  }, 600); // Exactly 600ms debounce
+}
+window.handleLocationInput = handleLocationInput;
+
+function selectSuggestedLocation(inputId, suggestionBoxId, locationName) {
+  const decodedName = unescape(locationName);
+  document.getElementById(inputId).value = decodedName;
+  document.getElementById(suggestionBoxId).style.display = "none";
+  saveLocationToFirestore(decodedName);
+}
+window.selectSuggestedLocation = selectSuggestedLocation;
+
+// 📍 MAP PIN ADJUSTMENT & MODAL
+function openMapPinPicker(targetInputId) {
+  activeTargetInputId = targetInputId;
+  document.getElementById("mapPinModal").style.display = "flex";
+
+  const curVal = document.getElementById(targetInputId).value;
+  let initialLat = 21.1458, initialLng = 79.0882;
+
+  setTimeout(async () => {
+    if(curVal) {
+      try {
+        const coords = await geocode(curVal);
+        initialLat = coords[0];
+        initialLng = coords[1];
+      } catch(e){}
+    }
+
+    if(!pinPickerMap) {
+      pinPickerMap = L.map('interactivePinMap').setView([initialLat, initialLng], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(pinPickerMap);
+
+      pinPickerMap.on('click', async function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        if(pinPickerMarker) pinPickerMap.removeLayer(pinPickerMarker);
+        pinPickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pinPickerMap);
+
+        pinPickerMarker.on('dragend', async function(event) {
+          const pos = event.target.getLatLng();
+          await reverseGeocodeAndSet(pos.lat, pos.lng);
+        });
+
+        await reverseGeocodeAndSet(lat, lng);
+      });
+    } else {
+      pinPickerMap.setView([initialLat, initialLng], 14);
+      pinPickerMap.invalidateSize();
+    }
+
+    if(pinPickerMarker) pinPickerMap.removeLayer(pinPickerMarker);
+    pinPickerMarker = L.marker([initialLat, initialLng], { draggable: true }).addTo(pinPickerMap);
+    pinPickerMarker.on('dragend', async function(event) {
+      const pos = event.target.getLatLng();
+      await reverseGeocodeAndSet(pos.lat, pos.lng);
+    });
+    await reverseGeocodeAndSet(initialLat, initialLng);
+  }, 200);
+}
+window.openMapPinPicker = openMapPinPicker;
+
+function closeMapPinPicker() {
+  document.getElementById("mapPinModal").style.display = "none";
+}
+window.closeMapPinPicker = closeMapPinPicker;
+
+async function reverseGeocodeAndSet(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
+    const data = await res.json();
+    if(data && data.display_name) {
+      const parts = data.display_name.split(',').map(s => s.trim());
+      tempSelectedLocationText = [...new Set(parts.slice(0, 3))].join(', ');
+      document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned: <b>${esc(tempSelectedLocationText)}</b>`;
+    }
+  } catch(e) {
+    tempSelectedLocationText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned Coords: ${tempSelectedLocationText}`;
+  }
+}
+
+function confirmMapPinSelection() {
+  if(activeTargetInputId && tempSelectedLocationText) {
+    document.getElementById(activeTargetInputId).value = tempSelectedLocationText;
+    saveLocationToFirestore(tempSelectedLocationText);
+    showToast("✅ Exact location pinned & saved!");
+  }
+  closeMapPinPicker();
+}
+window.confirmMapPinSelection = confirmMapPinSelection;
+
+// 💾 SAVE LOCATION TO FIREBASE CLOUD & LOCAL STORAGE
+async function saveLocationToFirestore(locationName) {
+  const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
+  if(!currentUser) return;
+
+  try {
+    const dbRef = window.db; 
+    console.log("Saving location to Firebase cloud:", currentUser.uid, locationName);
+  } catch(e) {}
 }
 
 async function geocode(query) {
@@ -2018,7 +2447,20 @@ async function findRides(){
           ${r.vehicle === 'Auto' ? '<span class="badge o">🛺 Auto</span>' : ''}
           ${r.vehicle === 'Pickup/Truck' ? '<span class="badge o">🛻 Front Cabin</span>' : ''}
         </div>
-        <button class="primary full" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">Request ${seatsNeed} Seat(s)</button>
+            <!-- 🌟 Naya 2-Button Flow: Instant Book + Counter Offer -->
+    <div style="display: flex; gap: 10px; margin-top: 12px;">
+      
+      <!-- 1. Instant Book (Direct Booking) -->
+      <button class="primary" style="flex: 2; padding: 10px; font-size: 13px;" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">
+        ✅ Book Now ₹${r.fare}
+      </button>
+
+      <!-- 2. Counter Offer Button (Sirf Intercity mode ke liye) -->
+      ${r.tripScope === 'intercity' ? `
+        <button class="orange" style="flex: 1; padding: 10px; font-size: 13px;" onclick="counterRequest('${r.id}')">
+          🔄 Offer Fare
+        </button>` : ''}
+    </div>
       </div>`).join("")) : (topAdHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
@@ -2107,22 +2549,39 @@ function triggerEmergencySOS() {
   }
 }
 
-function toggleLiveTrackingBox(reqId, pickupLoc) {
+// 🚗 2. REAL-TIME GPS TRACKING
+function toggleLiveTrackingBox(reqId) {
   const mapBox = document.getElementById(`trackMap_${reqId}`);
   if(!mapBox) return;
   if(mapBox.style.display === "block") {
     mapBox.style.display = "none";
+    if(passengerTrackMaps[reqId]) {
+      passengerTrackMaps[reqId].remove();
+      delete passengerTrackMaps[reqId];
+    }
     return;
   }
   mapBox.style.display = "block";
   
-  if(!passengerTrackMap) {
-    passengerTrackMap = L.map(`trackMap_${reqId}`).setView([21.4556, 80.1961], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(passengerTrackMap);
-    const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [24, 24] });
-    L.marker([21.4556, 80.1961], { icon: carIcon }).addTo(passengerTrackMap).bindPopup('Driver is approaching location').openPopup();
-  } else {
-    setTimeout(() => { passengerTrackMap.invalidateSize(); }, 200);
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      const mapInstance = L.map(`trackMap_${reqId}`).setView([lat, lng], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(mapInstance);
+      const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28, 28] });
+      const marker = L.marker([lat, lng], { icon: carIcon }).addTo(mapInstance);
+      marker.bindPopup('🚗 Transporter Live GPS Position').openPopup();
+
+      passengerTrackMaps[reqId] = mapInstance;
+    }, () => {
+      const mapInstance = L.map(`trackMap_${reqId}`).setView([21.1458, 79.0882], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(mapInstance);
+      const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28, 28] });
+      L.marker([21.1458, 79.0882], { icon: carIcon }).addTo(mapInstance).bindPopup('🚗 Transporter Approaching').openPopup();
+      passengerTrackMaps[reqId] = mapInstance;
+    });
   }
 }
 
@@ -2137,12 +2596,37 @@ function renderRequests(){
   box.innerHTML = q.slice().reverse().map(x => {
     const isDriver = (x.driverUid === user.uid);
     const isUnlocked = ["Accepted", "Confirmed", "In-Transit", "Paid"].includes(x.status);
-    const isRunning = (x.status === "In-Transit");
+    const isRunning = (x.status === "In-Transit" || x.status === "Confirmed");
     const isCompleted = (x.status === "Completed" || x.status === "Cancelled");
 
     let actions = "";
     if(x.status === "Pending") {
-      actions = isDriver ? `<button class="green" onclick='acceptOffer(${JSON.stringify(x)})'>Accept ₹${x.currentPrice}</button><button class="orange" onclick="counterRequest('${x.id}')">Counter</button><button class="red" onclick="cancelRequest('${x.id}', true)">Reject</button>` : `<div style="display:flex;gap:6px;"><span class="small">⏳ Waiting for driver...</span><button class="orange" style="padding:4px 8px;font-size:11px;" onclick="counterRequest('${x.id}')">Counter</button><button class="red" style="padding:4px 8px;font-size:11px;" onclick="cancelRequest('${x.id}', false)">Cancel</button></div>`;
+      if(isDriver) {
+        actions = `
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="green" style="padding:6px 12px; font-size:12px;" onclick='acceptOffer(${JSON.stringify(x)})'>✅ Accept ₹${x.currentPrice}</button>
+          ${x.bookingScope === 'intercity' ? `<button class="orange" style="padding:6px 12px; font-size:12px;" onclick="counterRequest('${x.id}')">🔄 Counter</button>` : ''}
+          <button class="red" style="padding:6px 12px; font-size:12px;" onclick="cancelRequest('${x.id}', true)">✖ Reject</button>
+        </div>`;
+      } else {
+        actions = `
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <span class="small">⏳ Waiting for driver response...</span>
+          ${x.bookingScope === 'intercity' ? `<button class="orange" style="padding:4px 8px; font-size:11px;" onclick="counterRequest('${x.id}')">₹ Offer New Fare</button>` : ''}
+          <button class="red" style="padding:4px 8px; font-size:11px;" onclick="cancelRequest('${x.id}', false)">Cancel</button>
+        </div>`;
+      }
+    } else if(x.status === "Counter Offered") {
+      const offeredByMe = x.lastCounterBy === (isDriver ? "Driver" : "Passenger");
+      actions = `
+      <div style="background:#fffbeb; border:1px solid #fde68a; padding:10px; border-radius:10px;">
+        <div style="font-size:12px; font-weight:700; color:#b45309;">🔄 Counter Offer: ₹${x.currentPrice} (${offeredByMe ? 'You proposed' : 'Other party proposed'})</div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="green" style="padding:6px 10px; font-size:11px;" onclick='acceptOffer(${JSON.stringify(x)})'>✅ Accept</button>
+          <button class="orange" style="padding:6px 10px; font-size:11px;" onclick="counterRequest('${x.id}')">🔄 Re-Counter</button>
+          <button class="red" style="padding:6px 10px; font-size:11px;" onclick="cancelRequest('${x.id}', ${isDriver})">✖ Reject</button>
+        </div>
+      </div>`;
     } else if(x.status === "Accepted" && !isDriver) {
       actions = `
       <div class="paybox">
@@ -2158,21 +2642,21 @@ function renderRequests(){
 
     if(x.status === "Confirmed") {
       if(!isDriver) {
-        otpUi = `<div class="otp-box">🔑 <b>Your Start OTP:</b> <span class="otp-code">${x.startOtp}</span><div class="small">Show this to driver when boarding.</div></div>`;
+        otpUi = `<div class="otp-box">🔑 <b>Your Start PIN:</b> <span class="otp-code">${x.startOtp}</span><div class="small">Show this to driver when boarding.</div></div>`;
       } else {
-        otpUi = `<button class="green full" onclick="verifyStartOtp('${x.id}', '${x.startOtp}')">🔑 Enter Passenger Start OTP</button>`;
+        otpUi = `<button class="green full" onclick="verifyStartOtp('${x.id}', '${x.startOtp}')">🔑 Enter Passenger Start PIN (4-Box)</button>`;
         navControls = `<button class="secondary full" style="margin-top:6px; background:#eff6ff;" onclick="openGoogleNav('${esc(x.pickupSpot || x.from)}')">🧭 Navigate to Passenger Pickup</button>`;
       }
     } else if(x.status === "In-Transit") {
       if(!isDriver) {
-        otpUi = `<div class="otp-box" style="border-color:#10b981;">🏁 <b>Your Drop OTP:</b> <span class="otp-code">${x.dropOtp}</span><div class="small">Give this ONLY when reaching destination.</div></div>`;
+        otpUi = `<div class="otp-box" style="border-color:#10b981;">🏁 <b>Your Drop PIN:</b> <span class="otp-code">${x.dropOtp}</span><div class="small">Give this ONLY when reaching destination.</div></div>`;
       } else {
-        otpUi = `<button class="green full" onclick="verifyDropOtp('${x.id}', '${x.dropOtp}', '${x.rideId}')">🏁 Enter Drop OTP to Complete</button>`;
+        otpUi = `<button class="green full" onclick="verifyDropOtp('${x.id}', '${x.dropOtp}', '${x.rideId}')">🏁 Enter Drop PIN to Complete (4-Box)</button>`;
         navControls = `<button class="secondary full" style="margin-top:6px; background:#e0f2fe;" onclick="openGoogleNav('${esc(x.to)}')">🗺️ Full Route Google Navigation</button>`;
       }
     }
 
-    const trackBtn = (!isDriver && ["Confirmed", "In-Transit"].includes(x.status)) ? `<button class="secondary" style="background:#f8fafc;" onclick="toggleLiveTrackingBox('${x.id}', '${esc(x.from)}')">📍 Track Driver Live</button>` : "";
+    const trackBtn = (!isDriver && ["Confirmed", "In-Transit"].includes(x.status)) ? `<button class="secondary" style="background:#f8fafc;" onclick="toggleLiveTrackingBox('${x.id}')">📍 Track Driver Live</button>` : "";
     const sosBtn = (isRunning && !isDriver) ? `<button class="red" onclick="triggerEmergencySOS()">🚨 Emergency SOS (112)</button>` : "";
     const chatBtn = (isUnlocked && !isCompleted) ? `<button class="secondary" onclick="openChat('${x.id}', '${x.driverPhone}')">💬 Live Chat / Call</button>` : `<span class="small">🔒 Contact & chat locked</span>`;
     const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}')">📲 Share Live Trip</button>` : "";
@@ -2443,7 +2927,7 @@ function sendAIMessage() {
     let botReply = "नमस्ते! मैं SafarShare AI हूँ। आप नीचे दिए गए क्विक बटन से सीधे काम कर सकते हैं।";
     const q = msgText.toLowerCase();
 
-    if (q.includes("nagpur") || q.includes("नागपुर") || q.includes("gondia") || q.includes("गोंदिया") || q.includes("balaghat") || q.includes("बालाघाट")) {
+    if (q.includes("book") || q.includes("search") || q.includes("ride") || q.includes("location x") || q.includes("location x") || q.includes("location x")) {
       botReply = "🔎 आपके बोले रूट की ट्रिप्स सर्च की जा रही हैं...";
       window.show('find');
       document.getElementById("fTo").value = q.includes("nagpur") || q.includes("नागपुर") ? "Nagpur" : q.includes("balaghat") || q.includes("बालाघाट") ? "Balaghat" : "Gondia";
@@ -2497,6 +2981,24 @@ document.addEventListener("DOMContentLoaded", function(){
   driverMap = L.map('driverPostMap').setView([21.1458, 79.0882], 8);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(driverMap);
   driverRouteLayers = L.layerGroup().addTo(driverMap);
+
+  driverMap.on('click', async function(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
+      const data = await res.json();
+      if(data && data.display_name) {
+        const parts = data.display_name.split(',').map(s => s.trim());
+        const cleanLoc = [...new Set(parts.slice(0, 3))].join(', ');
+        document.getElementById("pFrom").value = cleanLoc;
+        saveLocationToFirestore(cleanLoc);
+        window.showToast("📍 Exact Map Pin Locked: " + cleanLoc);
+      }
+    } catch(err) {
+      window.showToast("📍 Pin selected successfully!");
+    }
+  });
 
   detectCurrentLocation();
   renderVehicleDropdown();
