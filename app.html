@@ -236,40 +236,16 @@ button{ font-family:inherit; }
 .corridor-btn.active-green { background:var(--success); color:#fff; }
 .corridor-btn.inactive { background:#f1f5f9; color:var(--text-muted); }
 
-/* 🔔 FLOATING TOAST ALERTS & IN-APP MESSAGE POPUP */
+/* 🔔 TOAST & SUGGESTIONS Z-INDEX */
 #toast-container { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 6px; width: 90%; max-width: 380px; pointer-events: none; }
 .toast { background: var(--text-main); color: white; padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: space-between; pointer-events: auto; border-left: 4px solid var(--primary); }
 
-/* 🤖 DRAGGABLE SAFAR AI BOT */
-#safar-ai-widget {
-  position: fixed; bottom: 75px; right: 18px; z-index: 9999;
-  touch-action: none; user-select: none;
+.suggestions-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; background: #ffffff;
+  border: 1px solid #cbd5e1; border-radius: 12px; z-index: 99999;
+  max-height: 160px; overflow-y: auto; display: none;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
-#safar-ai-btn {
-  background: linear-gradient(135deg, var(--primary), var(--success));
-  color: white; border: none; width: 50px; height: 50px; border-radius: 50%;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: grab; display: flex;
-  align-items: center; justify-content: center; font-size: 24px;
-}
-
-#safar-ai-box {
-  position: fixed; bottom: 130px; right: 18px; width: 320px; height: 430px;
-  background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e2e8f0; z-index: 99999;
-}
-#safar-ai-box.hidden { display: none; }
-.ai-header { background: var(--primary); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-.ai-header button { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; }
-.ai-messages { flex: 1; padding: 12px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; }
-.ai-msg { padding: 9px 12px; border-radius: 12px; max-width: 85%; line-height: 1.4; }
-.ai-msg.bot { background: #e2e8f0; color: var(--text-main); align-self: flex-start; }
-.ai-msg.user { background: var(--primary); color: #fff; align-self: flex-end; }
-.ai-chips-bar { display:flex; gap:6px; overflow-x:auto; padding:8px; background:#f1f5f9; border-top:1px solid #e2e8f0; }
-.ai-chip { white-space:nowrap; background:#fff; border:1px solid #cbd5e1; border-radius:14px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer; color:var(--primary); }
-.ai-input-bar { display: flex; border-top: 1px solid #e2e8f0; background: #fff; align-items:center; }
-.ai-input-bar input { flex: 1; border: none; padding: 10px; font-size: 13px; outline: none; }
-.ai-input-bar button { background: var(--primary); color: #fff; border: none; padding: 10px 14px; font-weight: 700; cursor: pointer; }
-.ai-mic-btn { background: #f1f5f9 !important; color: var(--text-main) !important; font-size: 15px; padding: 10px 12px !important; }
 
 /* 🗺️ LIVE PASSENGER TRACKING MAP */
 .tracking-map-box { width: 100%; height: 200px; border-radius: 12px; margin: 8px 0; border: 1px solid #cbd5e1; display: none; }
@@ -298,17 +274,17 @@ button{ font-family:inherit; }
   <a href="https://wa.me/918668828542?text=Hello%20Admin,%20my%20account%20is%20suspended" target="_blank" class="wa-btn" style="text-decoration:none; margin-top:15px;">💬 WhatsApp Master Admin</a>
 </div>
 
-<!-- 🔐 PREMIUM 4-BOX PIN PAD MODAL -->
+<!-- 🔐 PREMIUM 4-BOX PIN PAD MODAL WITH NUMERIC KEYBOARD -->
 <div id="pinModal" class="otp-modal">
   <div class="otp-card">
     <div style="font-size:32px; margin-bottom:10px;" id="pinModalIcon">🔑</div>
     <h3 id="pinModalTitle" style="margin:0 0 8px;">Enter 4-Digit START PIN</h3>
     <p class="muted" style="color:#94a3b8; font-size:12px; margin-bottom:16px;">Type the 4-digit code provided to verify trip.</p>
     <div class="pin-inputs">
-      <input type="text" maxlength="1" class="pin-digit" id="pin1" oninput="handlePinInput(1)" onkeydown="handlePinKeyDown(event, 1)">
-      <input type="text" maxlength="1" class="pin-digit" id="pin2" oninput="handlePinInput(2)" onkeydown="handlePinKeyDown(event, 2)">
-      <input type="text" maxlength="1" class="pin-digit" id="pin3" oninput="handlePinInput(3)" onkeydown="handlePinKeyDown(event, 3)">
-      <input type="text" maxlength="1" class="pin-digit" id="pin4" oninput="handlePinInput(4)" onkeydown="handlePinKeyDown(event, 4)">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-digit" id="pin1" oninput="handlePinInput(1)" onkeydown="handlePinKeyDown(event, 1)">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-digit" id="pin2" oninput="handlePinInput(2)" onkeydown="handlePinKeyDown(event, 2)">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-digit" id="pin3" oninput="handlePinInput(3)" onkeydown="handlePinKeyDown(event, 3)">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-digit" id="pin4" oninput="handlePinInput(4)" onkeydown="handlePinKeyDown(event, 4)">
     </div>
     <div style="display:flex; gap:10px; margin-top:10px;">
       <button class="secondary full" style="background:transparent; border-color:#475569; color:#cbd5e1;" onclick="closePinModal()">Cancel</button>
@@ -440,11 +416,11 @@ button{ font-family:inherit; }
   </div>
 </div>
 
-<!-- 👥 REAL-TIME ONLINE USERS & SUPERVISION MODAL (ADMIN) -->
+<!-- 👥 REAL-TIME ONLINE USERS & DEEP INSPECT MODAL (ADMIN) -->
 <div id="usersModal" class="modal">
   <div class="modal-box" style="max-width:560px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="margin:0">👥 Live Users & Deep Activity Inspector</h3>
+      <h3 style="margin:0">👥 Live Users & Route Inspection</h3>
       <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeUsersModal()">✖</button>
     </div>
     <div id="adminUsersList"></div>
@@ -578,24 +554,24 @@ button{ font-family:inherit; }
   <select id="pVehicleSelect" onchange="handleVehicleSelectChange()"></select>
 </div>
 
-<!-- HYBRID INPUT FROM -->
+<!-- HYBRID INPUT FROM WITH FIXED SUGGESTIONS Z-INDEX -->
 <div class="field" style="position:relative;">
   <label>From / Departure City or Landmark</label>
   <div style="display:flex; gap:6px;">
     <input id="pFrom" placeholder="Type city or area..." oninput="handleLocationInput('pFrom', 'pFromSuggestions')" autocomplete="off">
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('pFrom')" title="Adjust on Map">📍 Map</button>
   </div>
-  <div id="pFromSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+  <div id="pFromSuggestions" class="suggestions-dropdown"></div>
 </div>
 
-<!-- HYBRID INPUT TO -->
+<!-- HYBRID INPUT TO WITH FIXED SUGGESTIONS Z-INDEX -->
 <div class="field" style="position:relative;">
   <label>To / Destination Area</label>
   <div style="display:flex; gap:6px;">
     <input id="pTo" placeholder="Enter drop destination..." oninput="handleLocationInput('pTo', 'pToSuggestions')" autocomplete="off">
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('pTo')" title="Adjust on Map">📍 Map</button>
   </div>
-  <div id="pToSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+  <div id="pToSuggestions" class="suggestions-dropdown"></div>
 </div>
 
 <div class="field">
@@ -664,7 +640,7 @@ button{ font-family:inherit; }
     <input id="fFrom" placeholder="Type pickup city or area..." oninput="handleLocationInput('fFrom', 'fFromSuggestions')" autocomplete="off">
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('fFrom')" title="Adjust on Map">📍 Map</button>
   </div>
-  <div id="fFromSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+  <div id="fFromSuggestions" class="suggestions-dropdown"></div>
 </div>
 
 <!-- HYBRID INPUT TO -->
@@ -674,7 +650,7 @@ button{ font-family:inherit; }
     <input id="fTo" placeholder="Enter drop destination..." oninput="handleLocationInput('fTo', 'fToSuggestions')" autocomplete="off">
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('fTo')" title="Adjust on Map">📍 Map</button>
   </div>
-  <div id="fToSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+  <div id="fToSuggestions" class="suggestions-dropdown"></div>
 </div>
 
 <div class="grid">
@@ -727,7 +703,7 @@ button{ font-family:inherit; }
       <input id="xFrom" placeholder="Type pickup area..." oninput="handleLocationInput('xFrom', 'xFromSuggestions')" autocomplete="off">
       <button type="button" class="secondary" style="padding:0 12px;" onclick="openMapPinPicker('xFrom')" title="Adjust on Map">📍 Map</button>
     </div>
-    <div id="xFromSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+    <div id="xFromSuggestions" class="suggestions-dropdown"></div>
   </div>
 
   <!-- HYBRID INPUT TO -->
@@ -737,7 +713,7 @@ button{ font-family:inherit; }
       <input id="xTo" placeholder="Enter delivery area..." oninput="handleLocationInput('xTo', 'xToSuggestions')" autocomplete="off">
       <button type="button" class="secondary" style="padding:0 12px;" onclick="openMapPinPicker('xTo')" title="Adjust on Map">📍 Map</button>
     </div>
-    <div id="xToSuggestions" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:10px; z-index:999; max-height:150px; overflow-y:auto; display:none;"></div>
+    <div id="xToSuggestions" class="suggestions-dropdown"></div>
   </div>
 
   <div class="field"><label>Date</label><input id="xDate" type="date"></div>
@@ -781,7 +757,7 @@ button{ font-family:inherit; }
 
   <!-- SUB-VIEW 2: MY TRIPS & MASTER ADMIN -->
   <div id="subViewTrips" style="display:none;">
-    <!-- 👑 MASTER ADMIN CONTROL CENTER (FULL ORIGINAL LAYOUT) -->
+    <!-- 👑 MASTER ADMIN CONTROL CENTER -->
     <div id="adminPanel" class="admin-card" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h3 style="margin:0; font-size:17px;">👑 Master Admin Control Center</h3>
@@ -791,8 +767,7 @@ button{ font-family:inherit; }
       <div style="font-size:14px; margin-bottom:4px;">🚗 <strong>Completed Trips:</strong> <span id="adminCompletedCount">0</span></div>
       <div style="font-size:14px; margin-bottom:12px;">💰 <strong>Projected 5% Platform Revenue:</strong> ₹<span id="adminRevenueCount">0</span></div>
       
-      <!-- BUTTONS EXACT ROW ORDER -->
-      <button class="secondary full" style="margin-bottom:8px;" onclick="openUsersModal()">👥 View Real-Time Active Users</button>
+      <button class="secondary full" style="margin-bottom:8px;" onclick="openUsersModal()">👥 View Real-Time Active Users & Route Inspection</button>
 
       <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:8px; margin-bottom:8px;">
         <button class="orange full" onclick="openAdsModal()">📢 Manage Local Sponsored Ads</button>
@@ -806,7 +781,6 @@ button{ font-family:inherit; }
 
       <button class="secondary full" style="margin-bottom:8px;" onclick="filterAdminTrips('cancelled')">Show Rejections with Reason</button>
       
-      <!-- 🔒 SAFE CLEAR ACTIVE TEST DATA (COMPLETED STAYS SAFE) -->
       <button class="red full" onclick="clearTestDataOnly()">🗑️ Clear ALL Test Data</button>
 
       <div id="adminRejectionLogs" style="display:none; margin-top:10px;">
@@ -864,34 +838,6 @@ button{ font-family:inherit; }
     <div class="chat-input">
       <input id="chatInputText" type="text" placeholder="Write message...">
       <button class="primary" onclick="sendChatMessage()">Send</button>
-    </div>
-  </div>
-</div>
-
-<!-- 🤖 COMPACT DRAGGABLE FLOATING SAFAR AI BOT -->
-<div id="safar-ai-widget">
-  <button id="safar-ai-btn" title="Safar AI Assistant">🤖</button>
-
-  <div id="safar-ai-box" class="hidden">
-    <div class="ai-header">
-      <span>🤖 Safar AI Voice & Trip Agent</span>
-      <button onclick="toggleAIChat()">✖</button>
-    </div>
-    <div id="ai-chat-messages" class="ai-messages">
-      <div class="ai-msg bot">नमस्ते! मैं SafarShare AI हूँ। आप बोलकर (🎙️) या लिखकर ट्रिप ढूँढ, पोस्ट या पार्सल भेज सकते हैं।</div>
-    </div>
-    
-    <div class="ai-chips-bar">
-      <div class="ai-chip" onclick="executeAIAction('find_ride')">🔎 Find Ride</div>
-      <div class="ai-chip" onclick="executeAIAction('send_parcel')">📦 Send Parcel</div>
-      <div class="ai-chip" onclick="executeAIAction('post_trip')">🚗 Post Trip</div>
-      <div class="ai-chip" onclick="executeAIAction('admin_help')">👑 Admin Help</div>
-    </div>
-
-    <div class="ai-input-bar">
-      <button class="ai-mic-btn" onclick="startAIVoiceRecognition()" title="Speak Voice">🎙️</button>
-      <input type="text" id="ai-user-input" placeholder="बोलिए या टाइप करें..." onkeypress="if(event.key==='Enter') sendAIMessage()">
-      <button onclick="sendAIMessage()">Send</button>
     </div>
   </div>
 </div>
@@ -1212,6 +1158,7 @@ button{ font-family:inherit; }
     }
   };
 
+  // 🔔 4. ROBUST GLOBAL BACKGROUND LISTENER FOR UNREAD CHATS & REQUESTS
   function initDataListeners() {
     onSnapshot(collection(db, "user_vehicles"), (snapshot) => {
       if(currentUser) {
@@ -1246,6 +1193,32 @@ button{ font-family:inherit; }
         window.renderRequests();
         window.renderTrips();
       }
+    });
+
+    // 💬 GLOBAL CHAT BACKGROUND LISTENER FOR REAL-TIME MESSAGE POPUPS
+    onSnapshot(collection(db, "requests"), (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if(currentUser && (change.type === "added" || change.type === "modified")) {
+          const req = change.doc.data();
+          if(req.passengerUid === currentUser.uid || req.driverUid === currentUser.uid) {
+            const reqId = change.doc.id;
+            onSnapshot(collection(db, "requests", reqId, "messages"), (msgSnap) => {
+              msgSnap.docChanges().forEach((msgChange) => {
+                if(msgChange.type === "added") {
+                  const m = msgChange.doc.data();
+                  if(m.senderUid !== currentUser.uid && currentChatRequestId !== reqId) {
+                    window.playAlertSound();
+                    window.triggerVibration();
+                    const dot = document.getElementById("reqBadgeDot");
+                    if(dot) dot.classList.add("pulse");
+                    window.showToast(`💬 New Message from ${m.senderEmail}: "${m.text}"`);
+                  }
+                }
+              });
+            });
+          }
+        }
+      });
     });
 
     onSnapshot(collection(db, "sponsored_ads"), (snapshot) => {
@@ -1509,7 +1482,7 @@ button{ font-family:inherit; }
     if(entered === activePinCorrect || entered === '1234') {
       const cb = activePinCallback;
       window.closePinModal();
-      if(cb) cb(true); // 🟢 Fixed: Callback executed after safely capturing reference before closing modal
+      if(cb) cb(true);
     } else {
       window.showToast("❌ Incorrect 4-Digit PIN Code!");
       for(let i=1; i<=4; i++) {
@@ -1717,7 +1690,7 @@ button{ font-family:inherit; }
   initDataListeners();
 </script>
 
-<!-- UI LOGIC, DEBOUNCE 600MS, LOCAL CACHING, MAP PIN ADJUST, LIVE GPS TRACKING -->
+<!-- UI LOGIC WITH ROUTE TRACKING INSPECTION -->
 <script>
 "use strict";
 
@@ -1999,6 +1972,7 @@ function handleVehicleSelectChange() {
   }
 }
 
+// 👑 3. ADMIN DEEP INSPECTION WITH ROUTE & SERVICE TRACKING (ENHANCED)
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
@@ -2012,15 +1986,19 @@ function renderAdminUsersList() {
   }
 
   box.innerHTML = users.map(u => {
-    const userPostedTrips = allRides.filter(r => r.driverUid === u.uid && r.status === "Active");
-    const userActiveBookings = allReqs.filter(q => (q.passengerUid === u.uid || q.driverUid === u.uid) && ["Pending", "Accepted", "Confirmed", "In-Transit"].includes(q.status));
+    const userPostedTrips = allRides.filter(r => r.driverUid === u.uid);
+    const activeTripsCount = userPostedTrips.filter(r => r.status === "Active").length;
     
-    let activityText = "⚪ Idle (No Active Activity)";
+    const userBookings = allReqs.filter(q => q.passengerUid === u.uid || q.driverUid === u.uid);
+    const activeBookingsCount = userBookings.filter(q => ["Pending", "Accepted", "Confirmed", "In-Transit"].includes(q.status)).length;
+    
+    let activeRouteText = "No active route currently";
     if(userPostedTrips.length > 0) {
-      activityText = `🚗 Posted ${userPostedTrips.length} Trip(s): ${esc(userPostedTrips[0].from)} ➔ ${esc(userPostedTrips[0].to)}`;
-    } else if(userActiveBookings.length > 0) {
-      const b = userActiveBookings[0];
-      activityText = b.type === "passenger" ? `🧑 Booked Ride (${b.numSeats} Seats): ${esc(b.from)} ➔ ${esc(b.to)}` : `📦 Sending Parcel (${b.slab}): ${esc(b.from)} ➔ ${esc(b.to)}`;
+      const activeTrip = userPostedTrips.find(r => r.status === "Active") || userPostedTrips[userPostedTrips.length - 1];
+      activeRouteText = `🚗 Route: ${esc(activeTrip.from)} ➔ ${esc(activeTrip.to)} [${activeTrip.vehicle}]`;
+    } else if(userBookings.length > 0) {
+      const activeBook = userBookings[userBookings.length - 1];
+      activeRouteText = `${activeBook.type === 'passenger' ? '🧑 Ride Booking' : '📦 Parcel Logistics'}: ${esc(activeBook.from)} ➔ ${esc(activeBook.to)}`;
     }
 
     const isBlocked = !!u.isBlocked;
@@ -2032,21 +2010,24 @@ function renderAdminUsersList() {
           <img src="${esc(u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
           <div>
             <b>${esc(u.name || u.displayName)}</b> ${isBlocked ? '<span class="badge red">🚫 Blocked</span>' : '<span class="badge g">🟢 Active</span>'}
-            <div class="small">${esc(u.email)} • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a></div>
+            <div class="small">${esc(u.email)} • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a> • Gender: ${esc(u.gender || 'N/A')}</div>
           </div>
         </div>
         <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 10px; font-size:11px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
-          ${isBlocked ? '🟢 Unblock' : '🔴 Block User'}
+          ${isBlocked ? '🟢 Unblock' : '🔴 Block'}
         </button>
       </div>
 
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-top:8px; font-size:11px;">
-        <b>📡 Live Activity:</b> <span style="color:var(--primary);">${activityText}</span>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; margin-top:8px; font-size:12px;">
+        📡 <b>Current Live Activity / Route:</b> <span style="color:var(--primary); font-weight:700;">${activeRouteText}</span>
+        <div style="margin-top:4px; display:flex; gap:12px;">
+          <span>🚗 Trips Posted: <b>${userPostedTrips.length}</b> (Active: ${activeTripsCount})</span>
+          <span>📦 Bookings/Deliveries: <b>${userBookings.length}</b> (Active: ${activeBookingsCount})</span>
+        </div>
       </div>
 
       <div style="display:flex; gap:6px; margin-top:8px;">
-        <button class="wa-btn" style="padding:4px 8px; font-size:11px;" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}', '_blank')">💬 WhatsApp</button>
-        <button class="secondary" style="padding:4px 8px; font-size:11px;" onclick="alert('Inspection Details for: ${esc(u.name)}\\nTotal Trips: ${userPostedTrips.length}\\nActive Bookings: ${userActiveBookings.length}')">🔍 Deep Inspect</button>
+        <button class="wa-btn" style="padding:4px 8px; font-size:11px;" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}', '_blank')">💬 Direct WhatsApp Chat</button>
       </div>
     </div>`;
   }).join("");
@@ -2114,7 +2095,7 @@ function handleLocationInput(inputId, suggestionBoxId) {
     } catch(e) {
       box.style.display = "none";
     }
-  }, 600); // Exactly 600ms debounce
+  }, 600);
 }
 window.handleLocationInput = handleLocationInput;
 
@@ -2206,15 +2187,10 @@ function confirmMapPinSelection() {
 }
 window.confirmMapPinSelection = confirmMapPinSelection;
 
-// 💾 SAVE LOCATION TO FIREBASE CLOUD & LOCAL STORAGE
 async function saveLocationToFirestore(locationName) {
   const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
   if(!currentUser) return;
-
-  try {
-    const dbRef = window.db; 
-    console.log("Saving location to Firebase cloud:", currentUser.uid, locationName);
-  } catch(e) {}
+  try { console.log("Saving location:", currentUser.uid, locationName); } catch(e) {}
 }
 
 async function geocode(query) {
@@ -2532,7 +2508,7 @@ function triggerEmergencySOS() {
   }
 }
 
-// 🚗 2. REAL-TIME GPS TRACKING
+// 🚗 REAL-TIME GPS TRACKING
 function toggleLiveTrackingBox(reqId) {
   const mapBox = document.getElementById(`trackMap_${reqId}`);
   if(!mapBox) return;
@@ -2645,10 +2621,18 @@ function renderRequests(){
     const chatBtn = (isUnlocked && !isCompleted) ? `<button class="secondary" onclick="openChat('${x.id}', '${x.driverPhone}')">💬 Live Chat / Call</button>` : `<span class="small">🔒 Contact & chat locked</span>`;
     const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}')">📲 Share Live Trip</button>` : "";
 
+    // 📦 PARCEL RECEIVER DETAILS PERMANENT DISPLAY FOR DRIVER
+    const parcelReceiverInfo = (!isPassengerBooking) ? `
+      <div style="background:#f1f5f9; padding:8px 10px; border-radius:10px; margin:6px 0; font-size:12px; border:1px solid #e2e8f0;">
+        📦 <b>Receiver Name:</b> ${esc(x.recName || 'N/A')}<br>
+        📞 <b>Receiver Mobile:</b> <a href="tel:${esc(x.recPhone)}" style="color:var(--primary); font-weight:700;">${esc(x.recPhone || 'N/A')}</a>
+      </div>` : '';
+
     return `
     <div class="request">
       <strong>${x.type === "passenger" ? `🧑 Seat Request (${x.numSeats} Seats)` : `📦 Parcel (${x.slab === 'full_vehicle' ? 'Full Space' : x.slab}) ${x.paymentSettlement === 'receiver_cod' ? '<span class="badge o">🚚 COD Receiver</span>' : '<span class="badge g">📦 Sender Paid</span>'}`}</strong>
       <p style="margin:4px 0;"><b>${esc(x.from)} → ${esc(x.to)}</b></p>
+      ${parcelReceiverInfo}
       ${x.pickupSpot ? `<p class="small" style="color:var(--primary); margin:2px 0;">📍 <b>Pickup Spot:</b> ${esc(x.pickupSpot)}</p>` : ''}
       <div class="offerbox">Fare: <b>₹${x.currentPrice}</b> | Status: <b>${x.status}</b> ${x.cancelReason ? `<span style="color:var(--danger);display:block;margin-top:4px;">Reason: ${esc(x.cancelReason)} (by ${x.cancelledBy})</span>` : ''}</div>
       <div style="margin:8px 0;">${actions}</div>
@@ -2790,152 +2774,6 @@ ${tripBookingUrl}`;
   window.open(waUrl, "_blank");
 }
 
-function toggleAIChat() {
-  document.getElementById("safar-ai-box").classList.toggle("hidden");
-}
-
-function executeAIAction(action) {
-  const chat = document.getElementById("ai-chat-messages");
-  if(action === 'find_ride') {
-    chat.innerHTML += `<div class="ai-msg user">मुझे राइड ढूँढनी है</div>`;
-    chat.innerHTML += `<div class="ai-msg bot">🔎 'Find Ride' सेक्शन खोला जा रहा है...</div>`;
-    window.show('find');
-  } else if(action === 'send_parcel') {
-    chat.innerHTML += `<div class="ai-msg user">मुझे पार्सल भेजना है</div>`;
-    chat.innerHTML += `<div class="ai-msg bot">📦 'Send Parcel' सेक्शन खोला जा रहा है...</div>`;
-    window.show('parcel');
-  } else if(action === 'post_trip') {
-    chat.innerHTML += `<div class="ai-msg user">ट्रिप पोस्ट करनी है</div>`;
-    chat.innerHTML += `<div class="ai-msg bot">🚗 'Post Trip' सेक्शन खोला जा रहा है...</div>`;
-    window.show('post');
-  } else if(action === 'admin_help') {
-    chat.innerHTML += `<div class="ai-msg user">एडमिन सहायता चाहिए</div>`;
-    chat.innerHTML += `<div class="ai-msg bot">📞 एडमिन गौरव से सीधे WhatsApp पर बात करें: <a href="https://wa.me/918668828542" target="_blank">यहाँ क्लिक करें</a></div>`;
-  }
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function initDraggableAI() {
-  const widget = document.getElementById("safar-ai-widget");
-  const btn = document.getElementById("safar-ai-btn");
-  let isDragging = false;
-  let hasMoved = false;
-  let startX, startY, initialLeft, initialTop;
-
-  function onPointerDown(e) {
-    isDragging = true;
-    hasMoved = false;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    const rect = widget.getBoundingClientRect();
-    startX = clientX;
-    startY = clientY;
-    initialLeft = rect.left;
-    initialTop = rect.top;
-
-    widget.style.bottom = "auto";
-    widget.style.right = "auto";
-    widget.style.left = `${initialLeft}px`;
-    widget.style.top = `${initialTop}px`;
-  }
-
-  function onPointerMove(e) {
-    if (!isDragging) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    const dx = clientX - startX;
-    const dy = clientY - startY;
-
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-      hasMoved = true;
-    }
-
-    const newLeft = Math.max(10, Math.min(window.innerWidth - widget.offsetWidth - 10, initialLeft + dx));
-    const newTop = Math.max(10, Math.min(window.innerHeight - widget.offsetHeight - 10, initialTop + dy));
-
-    widget.style.left = `${newLeft}px`;
-    widget.style.top = `${newTop}px`;
-  }
-
-  function onPointerUp() {
-    isDragging = false;
-  }
-
-  btn.addEventListener("mousedown", onPointerDown);
-  window.addEventListener("mousemove", onPointerMove);
-  window.addEventListener("mouseup", onPointerUp);
-
-  btn.addEventListener("touchstart", onPointerDown, { passive: true });
-  window.addEventListener("touchmove", onPointerMove, { passive: true });
-  window.addEventListener("touchend", onPointerUp);
-
-  btn.addEventListener("click", (e) => {
-    if (hasMoved) {
-      e.stopImmediatePropagation();
-      return;
-    }
-    toggleAIChat();
-  });
-}
-
-function startAIVoiceRecognition() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    window.showToast("Voice recognition not supported in this browser.");
-    return;
-  }
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const rec = new SpeechRec();
-  rec.lang = 'hi-IN';
-  window.showToast("🎙️ बोलिए, मैं सुन रहा हूँ...");
-  rec.onresult = function(event) {
-    const text = event.results[0][0].transcript;
-    document.getElementById("ai-user-input").value = text;
-    sendAIMessage();
-  };
-  rec.start();
-}
-
-function sendAIMessage() {
-  const input = document.getElementById("ai-user-input");
-  const msgText = input.value.trim();
-  if (!msgText) return;
-
-  const chat = document.getElementById("ai-chat-messages");
-  chat.innerHTML += `<div class="ai-msg user">${esc(msgText)}</div>`;
-  input.value = "";
-  chat.scrollTop = chat.scrollHeight;
-
-  setTimeout(() => {
-    let botReply = "नमस्ते! मैं SafarShare AI हूँ। आप नीचे दिए गए क्विक बटन से सीधे काम कर सकते हैं।";
-    const q = msgText.toLowerCase();
-
-    if (q.includes("nagpur") || q.includes("नागपुर") || q.includes("gondia") || q.includes("गोंदिया") || q.includes("balaghat") || q.includes("बालाघाट")) {
-      botReply = "🔎 आपके बोले रूट की ट्रिप्स सर्च की जा रही हैं...";
-      window.show('find');
-      document.getElementById("fTo").value = q.includes("nagpur") || q.includes("नागपुर") ? "Nagpur" : q.includes("balaghat") || q.includes("बालाघाट") ? "Balaghat" : "Gondia";
-      setTimeout(() => { window.findRides(); }, 600);
-    } else if (q.includes("book") || q.includes("सर्च") || q.includes("ride") || q.includes("गाड़ी")) {
-      botReply = "राइड ढूँढने के लिए 'Find Ride' सेक्शन में जाएँ।";
-      window.show('find');
-    } else if (q.includes("auto") || q.includes("rickshaw") || q.includes("ऑटो")) {
-      botReply = "लोकल शहर (2 KM) में ऑटो या ई-रिक्शा राइड के लिए 'Find Ride' में व्हीकल फ़िल्टर 'Auto / E-Rickshaw' चुनें।";
-    } else if (q.includes("parcel") || q.includes("पार्सल") || q.includes("सामान")) {
-      botReply = "'Send Parcel' सेक्शन में जाकर आप 2KM/10KM कॉरिडोर के अंदर पार्सल डिलीवरी बुक कर सकते हैं।";
-      window.show('parcel');
-    } else if (q.includes("post") || q.includes("driver") || q.includes("पोस्ट")) {
-      botReply = "'Post Trip' सेक्शन में जाएँ, अपनी गाड़ी और रूट चुनें और ट्रिप पब्लिश करें।";
-      window.show('post');
-    } else if (q.includes("admin") || q.includes("help") || q.includes("support")) {
-      botReply = `आप सीधे Master Admin गौरव से WhatsApp पर संपर्क कर सकते हैं: <a href="https://wa.me/918668828542?text=Hi%20Gaurav" target="_blank" style="color:var(--primary);font-weight:bold;">यहाँ क्लिक करें</a>`;
-    }
-
-    chat.innerHTML += `<div class="ai-msg bot">${botReply}</div>`;
-    chat.scrollTop = chat.scrollHeight;
-  }, 400);
-}
-
 function stats(){
   const list = window.getRides().filter(x => x.status === "Active");
   document.getElementById("sTrips").textContent = list.length;
@@ -2986,7 +2824,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   detectCurrentLocation();
   renderVehicleDropdown();
-  initDraggableAI();
 });
 </script>
 
