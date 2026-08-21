@@ -243,7 +243,7 @@ button{ font-family:inherit; }
 .suggestions-dropdown {
   position: absolute; top: 100%; left: 0; right: 0; background: #ffffff;
   border: 1px solid #cbd5e1; border-radius: 12px; z-index: 99999;
-  max-height: 160px; overflow-y: auto; display: none;
+  max-height: 180px; overflow-y: auto; display: none;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
@@ -319,16 +319,32 @@ button{ font-family:inherit; }
   </div>
 </div>
 
-<!-- 📍 INTERACTIVE MAP PIN PICKER MODAL -->
+<!-- 📍 SMART INTERACTIVE MAP PIN PICKER MODAL (LOCATIONIQ + GPS + SEARCH) -->
 <div id="mapPinModal" class="modal">
-  <div class="modal-box" style="max-width:500px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h3 style="margin:0">📍 Adjust Pin on Map</h3>
-      <button style="background:none;border:none;font-size:20px;cursor:pointer" onclick="closeMapPinPicker()">✖</button>
+  <div class="modal-box" style="max-width:480px; padding:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="margin:0; font-size:16px; font-weight:800;" id="mapPinModalTitle">📍 Adjust Pin on Map</h3>
+      <button style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b;" onclick="closeMapPinPicker()">✖</button>
     </div>
-    <p class="small muted" style="margin-bottom:8px;">Drag pin or tap anywhere on the map to set exact location (e.g. Gate No. 2).</p>
-    <div id="interactivePinMap" style="width:100%; height:320px; border-radius:12px; border:1px solid #cbd5e1; margin-bottom:12px;"></div>
-    <div id="selectedPinAddress" class="notice" style="margin-bottom:10px;">📍 Selected: Tap map to choose location</div>
+    
+    <!-- FLOATING IN-MAP SEARCH -->
+    <div style="position:relative; margin-bottom:8px;">
+      <input type="text" id="mapInternalSearch" placeholder="🔍 Search area / city / landmark..." 
+             style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px;"
+             oninput="handleMapInternalSearch(this.value)" autocomplete="off">
+      <div id="mapInternalSuggestions" class="suggestions-dropdown"></div>
+    </div>
+
+    <!-- MAP CONTAINER WITH FLOATING GPS BUTTON -->
+    <div style="position:relative; width:100%; height:260px; border-radius:12px; overflow:hidden; border:1px solid #cbd5e1; margin-bottom:8px;">
+      <div id="interactivePinMap" style="width:100%; height:100%;"></div>
+      <button type="button" onclick="detectAndCenterGPS()" title="Re-center GPS"
+              style="position:absolute; bottom:12px; right:12px; z-index:400; background:#fff; border:1px solid #cbd5e1; border-radius:50%; width:38px; height:38px; font-size:18px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:pointer;">
+        🎯
+      </button>
+    </div>
+
+    <div id="selectedPinAddress" class="notice" style="margin-bottom:10px; font-size:12px;">📍 Pinned: Detecting location...</div>
     <button class="primary full" onclick="confirmMapPinSelection()">✅ Confirm & Use This Location</button>
   </div>
 </div>
@@ -554,7 +570,7 @@ button{ font-family:inherit; }
   <select id="pVehicleSelect" onchange="handleVehicleSelectChange()"></select>
 </div>
 
-<!-- HYBRID INPUT FROM WITH FIXED SUGGESTIONS Z-INDEX -->
+<!-- HYBRID INPUT FROM -->
 <div class="field" style="position:relative;">
   <label>From / Departure City or Landmark</label>
   <div style="display:flex; gap:6px;">
@@ -564,7 +580,7 @@ button{ font-family:inherit; }
   <div id="pFromSuggestions" class="suggestions-dropdown"></div>
 </div>
 
-<!-- HYBRID INPUT TO WITH FIXED SUGGESTIONS Z-INDEX -->
+<!-- HYBRID INPUT TO -->
 <div class="field" style="position:relative;">
   <label>To / Destination Area</label>
   <div style="display:flex; gap:6px;">
@@ -601,6 +617,19 @@ button{ font-family:inherit; }
   </label>
 </div>
 
+<!-- 🔁 ALSO POST RETURN TRIP OPTION -->
+<div class="checkrow" style="margin-top: 0; margin-bottom: 12px;">
+  <label class="check" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534; font-weight: 700; cursor: pointer; width: 100%;">
+    <input type="checkbox" id="pAlsoReturnTrip" onchange="toggleReturnTimeField()">
+    🔁 Also Post Return Trip
+  </label>
+</div>
+
+<div id="returnTimeWrapper" style="display: none; background: #f8fafc; padding: 10px 12px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 12px;">
+  <label style="font-size: 12px; color: #475569; font-weight: 700;">Return Departure Time</label>
+  <input type="time" id="pReturnTime" value="18:00" style="margin-top: 4px;">
+</div>
+
 <!-- PASSENGER SEAT PRICING -->
 <div id="seatFieldsGroup" class="grid">
   <div class="field">
@@ -610,12 +639,26 @@ button{ font-family:inherit; }
   <div class="field"><label>Full Route Seat Price ₹</label><input id="pSeatPrice" type="number" min="0" value="250"></div>
 </div>
 
-<!-- PARCEL & BULK VEHICLE PRICING -->
-<div id="parcelFieldsGroup" class="grid" style="background:#f8fafc; padding:12px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
-  <div class="field"><label>📄 Doc/Envelope Rate ₹</label><input id="pDocPrice" type="number" value="60"></div>
-  <div class="field"><label>🎒 Medium Bag (≤5kg) ₹</label><input id="pBagPrice" type="number" value="100"></div>
-  <div class="field"><label>📦 Heavy Cargo (>5kg) ₹</label><input id="pCargoPrice" type="number" value="150"></div>
-  <div class="field" id="fullSpacePriceField" style="display:none;"><label>🚛 Full Space / Entire Vehicle ₹</label><input id="pFullVehiclePrice" type="number" value="800"></div>
+<!-- PARCEL PRICING WITH AUTO-SYNC CHECKBOXES -->
+<div id="parcelFieldsGroup" style="background:#f8fafc; padding:12px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
+  <h5 style="margin:0 0 10px;">📦 Parcel Pricing & Availability Checkboxes</h5>
+  
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+    <div class="field" style="flex:1; margin-bottom:0;"><label>📄 Doc/Envelope Rate ₹</label><input id="pDocPrice" type="number" value="60"></div>
+    <label class="check" style="margin-top:18px; height:42px; display:inline-flex; align-items:center;"><input type="checkbox" id="pTypeDoc" checked> Active</label>
+  </div>
+
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+    <div class="field" style="flex:1; margin-bottom:0;"><label>🎒 Medium Bag (≤5kg) ₹</label><input id="pBagPrice" type="number" value="100"></div>
+    <label class="check" style="margin-top:18px; height:42px; display:inline-flex; align-items:center;"><input type="checkbox" id="pTypeBag" checked> Active</label>
+  </div>
+
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+    <div class="field" style="flex:1; margin-bottom:0;"><label>📦 Heavy Cargo (>5kg) ₹</label><input id="pCargoPrice" type="number" value="150"></div>
+    <label class="check" style="margin-top:18px; height:42px; display:inline-flex; align-items:center;"><input type="checkbox" id="pTypeCargo" checked> Active</label>
+  </div>
+
+  <div class="field" id="fullSpacePriceField" style="display:none; margin-top:8px;"><label>🚛 Full Space / Entire Vehicle ₹</label><input id="pFullVehiclePrice" type="number" value="800"></div>
 </div>
 
 <button class="primary full" onclick="postTrip()">Confirm & Post Smart Trip (0% Commission)</button>
@@ -651,6 +694,12 @@ button{ font-family:inherit; }
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('fTo')" title="Adjust on Map">📍 Map</button>
   </div>
   <div id="fToSuggestions" class="suggestions-dropdown"></div>
+</div>
+
+<!-- 🔵 PASSENGER ROUTE PREVIEW MAP (OSRM BLUE PIPELINE) -->
+<div id="passengerMapWrapper" style="margin: 10px 0;">
+  <div id="passengerSearchMap" style="width: 100%; height: 160px; border-radius: 12px; border: 1px solid #cbd5e1; display: none;"></div>
+  <div id="passengerRouteStatus" style="font-size: 12px; margin-top: 4px; color: var(--primary); font-weight: 700;"></div>
 </div>
 
 <div class="grid">
@@ -1004,12 +1053,12 @@ button{ font-family:inherit; }
       });
 
       if(duplicateUserFound) {
-        window.showToast("🚫 यह मोबाइल नंबर पहले से किसी अन्य अकाउंट से जुड़ा है!");
+        window.showToast("🚫 Mobile number already linked with another account!");
         await updateDoc(doc(db, "users", currentUser.uid), {
           isBlocked: true,
           blockReason: "Fraud Prevention: This mobile number is already registered under another account."
         });
-        document.getElementById("blockedReasonText").textContent = "🚫 यह मोबाइल नंबर पहले से किसी अन्य अकाउंट से जुड़ा है!";
+        document.getElementById("blockedReasonText").textContent = "🚫 Mobile number already linked with another account!";
         document.getElementById("blockedOverlay").style.display = "flex";
         return;
       }
@@ -1158,7 +1207,7 @@ button{ font-family:inherit; }
     }
   };
 
-  // 🔔 4. ROBUST GLOBAL BACKGROUND LISTENER FOR UNREAD CHATS & REQUESTS
+  // 🔔 4. GLOBAL LISTENERS
   function initDataListeners() {
     onSnapshot(collection(db, "user_vehicles"), (snapshot) => {
       if(currentUser) {
@@ -1174,51 +1223,28 @@ button{ font-family:inherit; }
     onSnapshot(collection(db, "rides"), (snapshot) => {
       ALL_RIDES = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       window.stats();
-      if(document.getElementById("activity").classList.contains("active")) window.renderTrips();
+      if(document.getElementById("activity").classList.contains("active")) {
+        window.renderTrips();
+        window.updateWalletLedger();
+      }
     });
 
     onSnapshot(collection(db, "requests"), (snapshot) => {
-      const oldReqs = ALL_REQUESTS;
       ALL_REQUESTS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       
-      if(oldReqs.length > 0 && ALL_REQUESTS.length > oldReqs.length) {
+      const newPending = ALL_REQUESTS.filter(r => r.status === "Pending" && (currentUser && r.driverUid === currentUser.uid));
+      if(newPending.length > 0) {
         window.playAlertSound();
         window.triggerVibration();
         const dot = document.getElementById("reqBadgeDot");
         if(dot) dot.classList.add("pulse");
-        window.showToast("🔔 New booking request or offer received!");
       }
 
       if(document.getElementById("activity").classList.contains("active")) {
         window.renderRequests();
         window.renderTrips();
+        window.updateWalletLedger();
       }
-    });
-
-    // 💬 GLOBAL CHAT BACKGROUND LISTENER FOR REAL-TIME MESSAGE POPUPS
-    onSnapshot(collection(db, "requests"), (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if(currentUser && (change.type === "added" || change.type === "modified")) {
-          const req = change.doc.data();
-          if(req.passengerUid === currentUser.uid || req.driverUid === currentUser.uid) {
-            const reqId = change.doc.id;
-            onSnapshot(collection(db, "requests", reqId, "messages"), (msgSnap) => {
-              msgSnap.docChanges().forEach((msgChange) => {
-                if(msgChange.type === "added") {
-                  const m = msgChange.doc.data();
-                  if(m.senderUid !== currentUser.uid && currentChatRequestId !== reqId) {
-                    window.playAlertSound();
-                    window.triggerVibration();
-                    const dot = document.getElementById("reqBadgeDot");
-                    if(dot) dot.classList.add("pulse");
-                    window.showToast(`💬 New Message from ${m.senderEmail}: "${m.text}"`);
-                  }
-                }
-              });
-            });
-          }
-        }
-      });
     });
 
     onSnapshot(collection(db, "sponsored_ads"), (snapshot) => {
@@ -1279,6 +1305,7 @@ button{ font-family:inherit; }
     }
   };
 
+  // 🚗 POST TRIP WITH RETURN TRIP SUPPORT
   window.postTrip = async function() {
     if(!currentUser) { window.showToast("Please login with Google to post a trip."); window.googleLogin(); return; }
     
@@ -1288,6 +1315,8 @@ button{ font-family:inherit; }
     const date = document.getElementById("pDate").value;
     const time = document.getElementById("pTime").value;
     const isDaily = document.getElementById("pDaily").checked;
+    const alsoReturn = document.getElementById("pAlsoReturnTrip").checked;
+    const returnTime = document.getElementById("pReturnTime").value || "18:00";
     
     const selectedVehVal = document.getElementById("pVehicleSelect").value;
     let isCommuterMode = (selectedVehVal === "mode_bus" || selectedVehVal === "mode_train" || selectedVehVal === "mode_flight");
@@ -1295,7 +1324,7 @@ button{ font-family:inherit; }
     let vehObj = (currentUser.vehicles && currentUser.vehicles.length) ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
     
     if(!isCommuterMode && !vehObj) {
-      window.showToast("⚠️ कृपया पहले My Garage में अपनी गाड़ी और नंबर प्लेट जोड़ें!");
+      window.showToast("⚠️ Please add your verified vehicle & plate in My Garage first!");
       window.openProfileModal();
       return;
     }
@@ -1312,6 +1341,14 @@ button{ font-family:inherit; }
 
     const passenger = isCommuterMode ? false : document.getElementById("pPassenger").checked;
     const parcel = document.getElementById("pParcel").checked;
+    
+    let parcelTypes = [];
+    if(parcel) {
+      if(document.getElementById("pTypeDoc").checked) parcelTypes.push("doc");
+      if(document.getElementById("pTypeBag").checked) parcelTypes.push("bag");
+      if(document.getElementById("pTypeCargo").checked) parcelTypes.push("cargo");
+    }
+
     const seats = passenger ? window.safeNumber(document.getElementById("pSeats").value) : 0;
     const seatPrice = passenger ? window.safeNumber(document.getElementById("pSeatPrice").value) : 0;
 
@@ -1325,46 +1362,74 @@ button{ font-family:inherit; }
     let activeRoute = window.getSelectedDriverRoute();
     let distanceKm = 100;
     let geomData = null;
+    let reverseGeomData = null;
 
     if(isCommuterMode && (selectedVehVal === "mode_train" || selectedVehVal === "mode_flight")) {
       try {
         const c1 = await window.geocode(from);
         const c2 = await window.geocode(to);
         geomData = JSON.stringify({ type: "LineString", coordinates: [[c1[1], c1[0]], [c2[1], c2[0]]] });
+        reverseGeomData = JSON.stringify({ type: "LineString", coordinates: [[c2[1], c2[0]], [c1[1], c1[0]]] });
       } catch(e){}
     } else if(activeRoute) {
       distanceKm = parseFloat((activeRoute.distance / 1000).toFixed(1));
       geomData = JSON.stringify(activeRoute.geometry);
+      if(activeRoute.geometry && activeRoute.geometry.coordinates) {
+        reverseGeomData = JSON.stringify({
+          type: "LineString",
+          coordinates: [...activeRoute.geometry.coordinates].reverse()
+        });
+      }
     }
 
     const ratePerKm = (seatPrice > 0 && distanceKm > 0) ? (seatPrice / distanceKm) : 1.5;
 
+    const baseTripDoc = {
+      driverUid: currentUser.uid,
+      driverEmail: currentUser.email,
+      driverDp: currentUser.photoURL,
+      name: currentUser.displayName,
+      phone: currentUser.phone,
+      driverGender: currentUser.gender || "Male",
+      vehicle: vehObj.type,
+      carModel: vehObj.model,
+      carNumber: vehObj.plate,
+      isCommuterMode,
+      tripScope: currentMode,
+      date, 
+      isDaily, 
+      isLadiesOnly, isFamilyOnBoard,
+      passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
+      parcel, parcelTypes, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
+      parcelCapacityKg: parcel ? (vehObj.type === "Pickup/Truck" ? 250 : vehObj.type === "Auto" ? 40 : 25) : 0,
+      totalDistanceKm: distanceKm,
+      status: "Active",
+      created: Date.now()
+    };
+
     try {
+      // 1. Forward Trip
       await addDoc(collection(db, "rides"), {
-        driverUid: currentUser.uid,
-        driverEmail: currentUser.email,
-        driverDp: currentUser.photoURL,
-        name: currentUser.displayName,
-        phone: currentUser.phone,
-        driverGender: currentUser.gender || "Male",
-        vehicle: vehObj.type,
-        carModel: vehObj.model,
-        carNumber: vehObj.plate,
-        isCommuterMode,
-        tripScope: currentMode,
-        from, to, pickupSpot, date, time, isDaily, 
-        isLadiesOnly, isFamilyOnBoard,
-        passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
-        parcel, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
-        parcelCapacityKg: parcel ? (vehObj.type === "Pickup/Truck" ? 250 : vehObj.type === "Auto" ? 40 : 25) : 0,
-        totalDistanceKm: distanceKm,
-        geometry: geomData,
-        status: "Active",
-        created: Date.now()
+        ...baseTripDoc,
+        from, to, pickupSpot, time,
+        geometry: geomData
       });
 
-      window.showToast("✅ Trip Posted Successfully!");
-      document.getElementById("postMsg").innerHTML = `<div class="notice" style="margin-top:10px">✅ <b>Trip Posted with Highway Route & Verified Garage Vehicle!</b></div>`;
+      // 2. Return Trip (If Selected)
+      if(alsoReturn) {
+        await addDoc(collection(db, "rides"), {
+          ...baseTripDoc,
+          from: to, 
+          to: from, 
+          pickupSpot: "",
+          time: returnTime,
+          geometry: reverseGeomData || geomData,
+          created: Date.now() + 100
+        });
+      }
+
+      window.showToast(alsoReturn ? "✅ Round Trips Posted Successfully!" : "✅ Trip Posted Successfully!");
+      document.getElementById("postMsg").innerHTML = `<div class="notice" style="margin-top:10px">✅ <b>${alsoReturn ? 'Both Trips (Round-Trip)' : 'Trip'} Posted with Highway Route & Garage Vehicle!</b></div>`;
       window.show('activity');
       window.switchActivitySubTab('trips');
     } catch(e) { window.showToast("Error: " + e.message); }
@@ -1504,10 +1569,22 @@ button{ font-family:inherit; }
   window.verifyDropOtp = function(reqId, correctOtp, rideId) {
     window.openPinModal("Enter 4-Digit DROP PIN", "🏁", correctOtp, async (success) => {
       if(success) {
+        const reqData = ALL_REQUESTS.find(r => r.id === reqId);
+        const earnedAmount = reqData ? reqData.currentPrice : 0;
+
         await updateDoc(doc(db, "requests", reqId), { status: "Completed", completedAt: Date.now() });
-        if(rideId) await updateDoc(doc(db, "rides", rideId), { status: "Completed", completedAt: Date.now() });
+        if(rideId) {
+          await updateDoc(doc(db, "rides", rideId), { 
+            status: "Completed", 
+            completedAt: Date.now(),
+            earnedAmount: earnedAmount 
+          });
+        }
         window.showToast("🎉 Drop PIN verified! Trip completed.");
-        window.openRatingModal();
+        
+        if(currentUser && reqData && reqData.passengerUid === currentUser.uid) {
+          window.openRatingModal();
+        }
       }
     });
   };
@@ -1617,12 +1694,12 @@ button{ font-family:inherit; }
     
     let newOffer = Number(n);
     if(isNaN(newOffer) || newOffer <= 0) {
-      window.showToast("❌ मान्य किराया दर्ज करें!");
+      window.showToast("❌ Please enter a valid fare!");
       return;
     }
     
     if(newOffer > maxAllowed) {
-      window.showToast(`❌ किराया ₹${maxAllowed} से अधिक नहीं हो सकता!`);
+      window.showToast(`❌ Counter fare cannot exceed ₹${maxAllowed}!`);
       return;
     }
 
@@ -1664,7 +1741,7 @@ button{ font-family:inherit; }
 
   window.clearTestDataOnly = async function() {
     if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can delete test data!"); return; }
-    if(!confirm("⚠️ केवल Active/Pending टेस्ट डेटा डिलीट होगा। Completed ट्रिप्स पूरी तरह सुरक्षित रहेंगी। क्या आप आगे बढ़ना चाहते हैं?")) return;
+    if(!confirm("⚠️ Only Active/Pending test data will be deleted. Completed trips remain safe. Continue?")) return;
     
     const batch = writeBatch(db);
     for(const colName of ['rides', 'requests']) {
@@ -1676,8 +1753,25 @@ button{ font-family:inherit; }
       });
     }
     await batch.commit();
-    window.showToast("✅ Active/Pending टेस्ट डेटा साफ़ हो गया!");
+    window.showToast("✅ Active/Pending test data cleared!");
     window.location.reload();
+  };
+
+  window.saveLocationToFirestore = async function(locationName, lat, lon) {
+    const user = currentUser;
+    if(!user || !locationName) return;
+    try {
+      const docId = (lat && lon) ? `${lat.toFixed(3)}_${lon.toFixed(3)}` : encodeURIComponent(locationName.slice(0, 30));
+      const kw = locationName.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2);
+      await setDoc(doc(db, "cached_locations", docId), {
+        display_name: locationName,
+        lat: lat || 0,
+        lon: lon || 0,
+        keywords: kw,
+        savedBy: user.uid,
+        savedAt: Date.now()
+      }, { merge: true });
+    } catch(e) {}
   };
 
   window.getCurrentUser = () => currentUser;
@@ -1690,9 +1784,12 @@ button{ font-family:inherit; }
   initDataListeners();
 </script>
 
-<!-- UI LOGIC WITH ROUTE TRACKING INSPECTION -->
+<!-- UI LOGIC & LOCATIONIQ ENGINE -->
 <script>
 "use strict";
+
+const LOCATIONIQ_API_KEY = "pk.10fcbc3966ee1a09d6e30ae53f2c7c33";
+const localMemoryCache = {};
 
 let currentAdminFilter = 'all';
 let driverMap = null;
@@ -1702,13 +1799,27 @@ let fetchedDriverRoutes = [];
 let selectedRouteIdx = 0;
 let activeCorridorMode = 'intercity';
 let isAudioEnabled = true;
-const GEO_CACHE = {};
 
 let activeTargetInputId = null;
 let pinPickerMap = null;
 let pinPickerMarker = null;
 let tempSelectedLocationText = "";
 let debounceTimers = {};
+
+let passengerSearchMap = null;
+let passengerRouteLayer = null;
+
+const greenPinIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
+
+const redPinIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
@@ -1752,6 +1863,7 @@ function switchActivitySubTab(subTab) {
     btnReqs.style.background = "none";
     btnReqs.style.color = "var(--text-muted)";
     renderTrips();
+    updateWalletLedger();
   }
 }
 window.switchActivitySubTab = switchActivitySubTab;
@@ -1770,6 +1882,12 @@ function toggleFamilyOption() {
   }
 }
 window.toggleFamilyOption = toggleFamilyOption;
+
+function toggleReturnTimeField() {
+  const isChecked = document.getElementById("pAlsoReturnTrip").checked;
+  document.getElementById("returnTimeWrapper").style.display = isChecked ? "block" : "none";
+}
+window.toggleReturnTimeField = toggleReturnTimeField;
 
 function openAdsModal(){ document.getElementById("adminAdsModal").style.display = "flex"; renderAdminAdsList(); }
 function closeAdsModal(){ document.getElementById("adminAdsModal").style.display = "none"; }
@@ -1972,7 +2090,6 @@ function handleVehicleSelectChange() {
   }
 }
 
-// 👑 3. ADMIN DEEP INSPECTION WITH ROUTE & SERVICE TRACKING (ENHANCED)
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
@@ -2034,86 +2151,92 @@ function renderAdminUsersList() {
 }
 window.renderAdminUsersList = renderAdminUsersList;
 
-function detectCurrentLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(position => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.display_name) {
-            const parts = data.display_name.split(',').map(s => s.trim());
-            const cleanLoc = [...new Set(parts.slice(0, 3))].join(', ');
-            ["pFrom", "fFrom", "xFrom"].forEach(id => {
-              const el = document.getElementById(id);
-              if(el && !el.value) {
-                el.value = cleanLoc;
-                saveLocationToFirestore(cleanLoc);
-              }
-            });
-          }
-        }).catch(()=>{});
-    });
-  }
-}
-
-// ⏱️ 600MS DEBOUNCE & LOCAL CACHING IN FIREBASE / LOCALSTORAGE
+// ⚡ 500MS DEBOUNCE LOCATIONIQ + LOCAL CACHING
 function handleLocationInput(inputId, suggestionBoxId) {
   const query = document.getElementById(inputId).value.trim();
   const box = document.getElementById(suggestionBoxId);
 
   if(debounceTimers[inputId]) clearTimeout(debounceTimers[inputId]);
 
-  if(query.length < 2) {
+  if(query.length < 3) {
     box.style.display = "none";
+    return;
+  }
+
+  const lowerQuery = query.toLowerCase();
+  if(localMemoryCache[lowerQuery]) {
+    renderSuggestionsHtml(inputId, suggestionBoxId, localMemoryCache[lowerQuery]);
     return;
   }
 
   debounceTimers[inputId] = setTimeout(async () => {
     try {
-      let cachedResults = localStorage.getItem(`safar_loc_${query.toLowerCase()}`);
-      let data = cachedResults ? JSON.parse(cachedResults) : null;
-
-      if(!data) {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}`);
-        data = await res.json();
-        if(data && data.length > 0) {
-          localStorage.setItem(`safar_loc_${query.toLowerCase()}`, JSON.stringify(data.slice(0, 5)));
-        }
-      }
+      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&limit=5&format=json`;
+      const res = await fetch(url);
+      const data = await res.json();
 
       if(data && data.length > 0) {
-        box.style.display = "block";
-        box.innerHTML = data.slice(0, 5).map(item => {
-          const displayName = item.display_name;
-          return `<div style="padding:9px 12px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="selectSuggestedLocation('${inputId}', '${suggestionBoxId}', '${escape(displayName)}')">📍 ${esc(displayName)}</div>`;
-        }).join("");
+        localMemoryCache[lowerQuery] = data;
+        renderSuggestionsHtml(inputId, suggestionBoxId, data);
       } else {
-        box.style.display = "none";
+        fallbackNominatimSearch(inputId, suggestionBoxId, query);
       }
     } catch(e) {
-      box.style.display = "none";
+      fallbackNominatimSearch(inputId, suggestionBoxId, query);
     }
-  }, 600);
+  }, 500);
 }
 window.handleLocationInput = handleLocationInput;
 
-function selectSuggestedLocation(inputId, suggestionBoxId, locationName) {
+async function fallbackNominatimSearch(inputId, suggestionBoxId, query) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    if(data && data.length > 0) {
+      renderSuggestionsHtml(inputId, suggestionBoxId, data);
+    } else {
+      document.getElementById(suggestionBoxId).style.display = "none";
+    }
+  } catch(err) {
+    document.getElementById(suggestionBoxId).style.display = "none";
+  }
+}
+
+function renderSuggestionsHtml(inputId, suggestionBoxId, data) {
+  const box = document.getElementById(suggestionBoxId);
+  box.style.display = "block";
+  box.innerHTML = data.slice(0, 5).map(item => {
+    const displayName = item.display_name;
+    const lat = parseFloat(item.lat);
+    const lon = parseFloat(item.lon);
+    return `<div style="padding:9px 12px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="selectSuggestedLocation('${inputId}', '${suggestionBoxId}', '${escape(displayName)}', ${lat}, ${lon})">📍 ${esc(displayName)}</div>`;
+  }).join("");
+}
+
+function selectSuggestedLocation(inputId, suggestionBoxId, locationName, lat, lon) {
   const decodedName = unescape(locationName);
   document.getElementById(inputId).value = decodedName;
   document.getElementById(suggestionBoxId).style.display = "none";
-  saveLocationToFirestore(decodedName);
+  if(window.saveLocationToFirestore) window.saveLocationToFirestore(decodedName, lat, lon);
+
+  if(inputId === 'fFrom' || inputId === 'fTo') updatePassengerRoutePreview();
+  if(inputId === 'pFrom' || inputId === 'pTo') fetchDriverRoutes();
 }
 window.selectSuggestedLocation = selectSuggestedLocation;
 
-// 📍 MAP PIN ADJUSTMENT & MODAL
+// 📍 SMART MAP PIN PICKER (DYNAMIC GREEN/RED PIN, GPS, IN-MAP SEARCH)
 function openMapPinPicker(targetInputId) {
   activeTargetInputId = targetInputId;
+  const isPickup = targetInputId.toLowerCase().includes('from') || targetInputId.toLowerCase().includes('pickup');
+  
+  document.getElementById("mapPinModalTitle").innerHTML = isPickup 
+    ? `🟢 Set Pickup Location` 
+    : `🔴 Set Drop Destination`;
+  
   document.getElementById("mapPinModal").style.display = "flex";
 
   const curVal = document.getElementById(targetInputId).value;
-  let initialLat = 21.1458, initialLng = 79.0882;
+  let initialLat = 21.4588, initialLng = 80.1961;
 
   setTimeout(async () => {
     if(curVal) {
@@ -2125,37 +2248,87 @@ function openMapPinPicker(targetInputId) {
     }
 
     if(!pinPickerMap) {
-      pinPickerMap = L.map('interactivePinMap').setView([initialLat, initialLng], 14);
+      pinPickerMap = L.map('interactivePinMap').setView([initialLat, initialLng], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(pinPickerMap);
 
       pinPickerMap.on('click', async function(e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-        if(pinPickerMarker) pinPickerMap.removeLayer(pinPickerMarker);
-        pinPickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pinPickerMap);
-
-        pinPickerMarker.on('dragend', async function(event) {
-          const pos = event.target.getLatLng();
-          await reverseGeocodeAndSet(pos.lat, pos.lng);
-        });
-
-        await reverseGeocodeAndSet(lat, lng);
+        setPinPosition(e.latlng.lat, e.latlng.lng, isPickup);
       });
     } else {
-      pinPickerMap.setView([initialLat, initialLng], 14);
+      pinPickerMap.setView([initialLat, initialLng], 15);
       pinPickerMap.invalidateSize();
     }
 
-    if(pinPickerMarker) pinPickerMap.removeLayer(pinPickerMarker);
-    pinPickerMarker = L.marker([initialLat, initialLng], { draggable: true }).addTo(pinPickerMap);
-    pinPickerMarker.on('dragend', async function(event) {
-      const pos = event.target.getLatLng();
-      await reverseGeocodeAndSet(pos.lat, pos.lng);
-    });
-    await reverseGeocodeAndSet(initialLat, initialLng);
+    if(curVal) {
+      setPinPosition(initialLat, initialLng, isPickup);
+    } else {
+      detectAndCenterGPS(isPickup);
+    }
   }, 200);
 }
 window.openMapPinPicker = openMapPinPicker;
+
+function detectAndCenterGPS(isPickup = true) {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      if(pinPickerMap) pinPickerMap.setView([lat, lon], 16);
+      setPinPosition(lat, lon, isPickup);
+    }, () => {
+      setPinPosition(21.4588, 80.1961, isPickup);
+    }, { enableHighAccuracy: true });
+  }
+}
+window.detectAndCenterGPS = detectAndCenterGPS;
+
+async function setPinPosition(lat, lon, isPickup) {
+  const chosenIcon = isPickup ? greenPinIcon : redPinIcon;
+  if(pinPickerMarker) pinPickerMap.removeLayer(pinPickerMarker);
+  
+  pinPickerMarker = L.marker([lat, lon], { draggable: true, icon: chosenIcon }).addTo(pinPickerMap);
+  pinPickerMarker.on('dragend', async function(event) {
+    const pos = event.target.getLatLng();
+    await reverseGeocodeAndSet(pos.lat, pos.lng);
+  });
+
+  await reverseGeocodeAndSet(lat, lon);
+}
+
+function handleMapInternalSearch(val) {
+  const box = document.getElementById("mapInternalSuggestions");
+  if(!val || val.trim().length < 3) {
+    box.style.display = "none";
+    return;
+  }
+  clearTimeout(debounceTimers["mapInternal"]);
+  debounceTimers["mapInternal"] = setTimeout(async () => {
+    try {
+      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(val)}&countrycodes=in&limit=4&format=json`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data && data.length > 0) {
+        box.style.display = "block";
+        box.innerHTML = data.map(item => `
+          <div style="padding:8px 10px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;"
+               onclick="selectInternalMapSearch(${item.lat}, ${item.lon}, '${escape(item.display_name)}')">
+            📍 ${esc(item.display_name)}
+          </div>
+        `).join("");
+      }
+    } catch(e){}
+  }, 400);
+}
+window.handleMapInternalSearch = handleMapInternalSearch;
+
+function selectInternalMapSearch(lat, lon, name) {
+  document.getElementById("mapInternalSuggestions").style.display = "none";
+  document.getElementById("mapInternalSearch").value = "";
+  const isPickup = activeTargetInputId ? (activeTargetInputId.toLowerCase().includes('from') || activeTargetInputId.toLowerCase().includes('pickup')) : true;
+  pinPickerMap.setView([lat, lon], 16);
+  setPinPosition(lat, lon, isPickup);
+}
+window.selectInternalMapSearch = selectInternalMapSearch;
 
 function closeMapPinPicker() {
   document.getElementById("mapPinModal").style.display = "none";
@@ -2163,6 +2336,17 @@ function closeMapPinPicker() {
 window.closeMapPinPicker = closeMapPinPicker;
 
 async function reverseGeocodeAndSet(lat, lng) {
+  try {
+    const url = `https://api.locationiq.com/v1/reverse?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&format=json`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data && data.display_name) {
+      tempSelectedLocationText = data.display_name;
+      document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned: <b>${esc(tempSelectedLocationText)}</b>`;
+      return;
+    }
+  } catch(e) {}
+  
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
     const data = await res.json();
@@ -2180,43 +2364,103 @@ async function reverseGeocodeAndSet(lat, lng) {
 function confirmMapPinSelection() {
   if(activeTargetInputId && tempSelectedLocationText) {
     document.getElementById(activeTargetInputId).value = tempSelectedLocationText;
-    saveLocationToFirestore(tempSelectedLocationText);
-    showToast("✅ Exact location pinned & saved!");
+    if(window.saveLocationToFirestore) window.saveLocationToFirestore(tempSelectedLocationText);
+    showToast("✅ Exact location pinned & set!");
+    
+    if(activeTargetInputId === 'fFrom' || activeTargetInputId === 'fTo') updatePassengerRoutePreview();
+    if(activeTargetInputId === 'pFrom' || activeTargetInputId === 'pTo') fetchDriverRoutes();
   }
   closeMapPinPicker();
 }
 window.confirmMapPinSelection = confirmMapPinSelection;
 
-async function saveLocationToFirestore(locationName) {
-  const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
-  if(!currentUser) return;
-  try { console.log("Saving location:", currentUser.uid, locationName); } catch(e) {}
-}
-
 async function geocode(query) {
   const clean = query.trim().toLowerCase();
-  if(GEO_CACHE[clean]) return GEO_CACHE[clean];
+  if(localMemoryCache[clean] && localMemoryCache[clean][0]) {
+    return [parseFloat(localMemoryCache[clean][0].lat), parseFloat(localMemoryCache[clean][0].lon)];
+  }
+
+  try {
+    const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data && data.length > 0) {
+      const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      localMemoryCache[clean] = data;
+      return coords;
+    }
+  } catch(e) {}
 
   const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}`);
   const data = await res.json();
   if(data && data.length > 0) {
     const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-    GEO_CACHE[clean] = coords;
+    localMemoryCache[clean] = data;
     return coords;
   }
-  throw new Error("Location not found: " + query);
+  return [21.4588, 80.1961];
 }
 window.geocode = geocode;
 
-/* 🚗 OSRM ROUTING */
+/* 🔵 PASSENGER ROUTE PREVIEW MAP */
+async function updatePassengerRoutePreview() {
+  const from = document.getElementById("fFrom").value.trim();
+  const to = document.getElementById("fTo").value.trim();
+  const mapDiv = document.getElementById("passengerSearchMap");
+  const statusEl = document.getElementById("passengerRouteStatus");
+
+  if (!from || !to) return;
+  mapDiv.style.display = "block";
+  statusEl.textContent = "⏳ Calculating travel corridor route...";
+
+  if (!passengerSearchMap) {
+    passengerSearchMap = L.map('passengerSearchMap').setView([21.4588, 80.1961], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(passengerSearchMap);
+    passengerRouteLayer = L.layerGroup().addTo(passengerSearchMap);
+  } else {
+    passengerSearchMap.invalidateSize();
+    passengerRouteLayer.clearLayers();
+  }
+
+  try {
+    const fromCoord = await geocode(from);
+    const toCoord = await geocode(to);
+
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromCoord[1]},${fromCoord[0]};${toCoord[1]},${toCoord[0]}?overview=full&geometries=geojson`;
+    const res = await fetch(osrmUrl);
+    const data = await res.json();
+
+    if (data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      const distKm = (route.distance / 1000).toFixed(1);
+
+      const lineLayer = L.geoJSON(route.geometry, {
+        style: { color: "#1261ff", weight: 5, opacity: 0.9 }
+      });
+      const pStart = L.marker([fromCoord[0], fromCoord[1]], { icon: greenPinIcon }).bindPopup("🟢 Pickup");
+      const pEnd = L.marker([toCoord[0], toCoord[1]], { icon: redPinIcon }).bindPopup("🔴 Drop");
+
+      passengerRouteLayer.addLayer(lineLayer);
+      passengerRouteLayer.addLayer(pStart);
+      passengerRouteLayer.addLayer(pEnd);
+
+      passengerSearchMap.fitBounds(lineLayer.getBounds(), { padding: [20, 20] });
+      statusEl.innerHTML = `📍 Travel Distance: <b>${distKm} km</b> (${activeCorridorMode === 'local' ? '2 KM' : '10 KM'} Corridor Connected)`;
+    }
+  } catch (e) {
+    statusEl.textContent = "";
+  }
+}
+
+/* 🚗 DRIVER ROUTE ENGINE (OSRM BLUE PIPELINE) */
 async function fetchDriverRoutes() {
   const from = document.getElementById("pFrom").value.trim();
   const to = document.getElementById("pTo").value.trim();
   const statusEl = document.getElementById("driverRouteStatus");
   const picker = document.getElementById("driverRoutePicker");
 
-  if(!from || !to) { window.showToast("Enter From and To location!"); return; }
-  statusEl.textContent = "⏳ Calculating driving highway line via OSRM...";
+  if(!from || !to) return;
+  statusEl.textContent = "⏳ Calculating driving highway route...";
   picker.innerHTML = "";
   driverRouteLayers.clearLayers();
 
@@ -2232,7 +2476,7 @@ async function fetchDriverRoutes() {
     selectedRouteIdx = 0;
     renderDriverMapRoutes();
     renderDriverRouteBadges();
-    statusEl.innerHTML = `✅ Found <b>${fetchedDriverRoutes.length}</b> highway route(s). Ready to post!`;
+    statusEl.innerHTML = `✅ Found <b>${fetchedDriverRoutes.length}</b> route(s). Ready to post!`;
   } catch(e) { statusEl.textContent = "❌ Error: " + e.message; }
 }
 
@@ -2240,10 +2484,21 @@ function renderDriverMapRoutes() {
   driverRouteLayers.clearLayers();
   fetchedDriverRoutes.forEach((r, idx) => {
     const isSelected = (idx === selectedRouteIdx);
-    const layer = L.geoJSON(r.geometry, { style: { color: isSelected ? "#1261ff" : "#94a3b8", weight: isSelected ? 5 : 3 } });
+    const layer = L.geoJSON(r.geometry, { 
+      style: { color: isSelected ? "#1261ff" : "#94a3b8", weight: isSelected ? 5 : 3, opacity: isSelected ? 0.9 : 0.6 } 
+    });
     layer.on('click', () => selectDriverRoute(idx));
     driverRouteLayers.addLayer(layer);
-    if(isSelected) driverMap.fitBounds(layer.getBounds(), { padding: [20, 20] });
+    
+    if(isSelected) {
+      const coords = r.geometry.coordinates;
+      const startPt = [coords[0][1], coords[0][0]];
+      const endPt = [coords[coords.length - 1][1], coords[coords.length - 1][0]];
+      
+      driverRouteLayers.addLayer(L.marker(startPt, { icon: greenPinIcon }).bindPopup("🟢 Departure"));
+      driverRouteLayers.addLayer(L.marker(endPt, { icon: redPinIcon }).bindPopup("🔴 Destination"));
+      driverMap.fitBounds(layer.getBounds(), { padding: [20, 20] });
+    }
   });
 }
 
@@ -2269,7 +2524,29 @@ function selectDriverRoute(idx) {
 window.getSelectedDriverRoute = () => fetchedDriverRoutes.length ? fetchedDriverRoutes[selectedRouteIdx] : null;
 
 function toggleSeatFields(){ document.getElementById("seatFieldsGroup").style.display = document.getElementById("pPassenger").checked ? "grid" : "none"; }
-function toggleParcelFields(){ document.getElementById("parcelFieldsGroup").style.display = document.getElementById("pParcel").checked ? "grid" : "none"; }
+function toggleParcelFields(){ 
+  const isParcel = document.getElementById("pParcel").checked;
+  document.getElementById("parcelFieldsGroup").style.display = isParcel ? "block" : "none"; 
+}
+
+// 📦 SMART AUTO-CHECK PARCEL PRICING
+function setupParcelAutoCheck() {
+  const pairs = [
+    { input: 'pDocPrice', check: 'pTypeDoc' },
+    { input: 'pBagPrice', check: 'pTypeBag' },
+    { input: 'pCargoPrice', check: 'pTypeCargo' }
+  ];
+  pairs.forEach(pair => {
+    const inEl = document.getElementById(pair.input);
+    const chEl = document.getElementById(pair.check);
+    if (inEl && chEl) {
+      inEl.addEventListener('input', () => {
+        const val = parseFloat(inEl.value);
+        chEl.checked = !isNaN(val) && val > 0;
+      });
+    }
+  });
+}
 
 /* 🧭 NATIVE TAB NAVIGATION */
 function show(id){
@@ -2289,6 +2566,7 @@ function show(id){
   if(id==="activity") {
     renderTrips();
     renderRequests();
+    updateWalletLedger();
   }
 
   if(id==="post" && driverMap){
@@ -2445,7 +2723,13 @@ async function findParcel(){
     const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
     const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
 
-    const list = window.getRides().filter(r => (user ? r.driverUid !== user.uid : true) && r.status === "Active" && r.date === date && r.parcel);
+    const list = window.getRides().filter(r => 
+      (user ? r.driverUid !== user.uid : true) && 
+      r.status === "Active" && 
+      r.date === date && 
+      r.parcel && 
+      (slab === 'full_vehicle' || !r.parcelTypes || r.parcelTypes.includes(slab))
+    );
     const matched = [];
 
     list.forEach(r => {
@@ -2490,7 +2774,7 @@ async function findParcel(){
           ${slab === 'full_vehicle' ? '<span class="badge o">🚛 Full Space</span>' : ''}
         </div>
         <button class="primary full" onclick="parcelRequest('${r.id}', '${slab}', ${r.price})">Request Delivery • ₹${r.price}</button>
-      </div>`).join("")) : (topAdHtml + empty("📦", `No parcel transporters found within ${maxCorridorKm}km corridor`));
+      </div>`).join("")) : (topAdHtml + empty("📦", `No transporters found supporting this parcel type within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
 window.findParcel = findParcel;
@@ -2508,7 +2792,6 @@ function triggerEmergencySOS() {
   }
 }
 
-// 🚗 REAL-TIME GPS TRACKING
 function toggleLiveTrackingBox(reqId) {
   const mapBox = document.getElementById(`trackMap_${reqId}`);
   if(!mapBox) return;
@@ -2535,10 +2818,10 @@ function toggleLiveTrackingBox(reqId) {
 
       passengerTrackMaps[reqId] = mapInstance;
     }, () => {
-      const mapInstance = L.map(`trackMap_${reqId}`).setView([21.1458, 79.0882], 13);
+      const mapInstance = L.map(`trackMap_${reqId}`).setView([21.4588, 80.1961], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(mapInstance);
       const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28, 28] });
-      L.marker([21.1458, 79.0882], { icon: carIcon }).addTo(mapInstance).bindPopup('🚗 Transporter Approaching').openPopup();
+      L.marker([21.4588, 80.1961], { icon: carIcon }).addTo(mapInstance).bindPopup('🚗 Transporter Approaching').openPopup();
       passengerTrackMaps[reqId] = mapInstance;
     });
   }
@@ -2548,11 +2831,18 @@ function toggleLiveTrackingBox(reqId) {
 function renderRequests(){
   const user = window.getCurrentUser();
   if(!user) { document.getElementById("myRequests").innerHTML = empty("📋", "Please login with Google to view requests"); return; }
-  const q = window.getRequests().filter(x => x.passengerUid === user.uid || x.driverUid === user.uid);
+  
+  let q = window.getRequests().filter(x => x.passengerUid === user.uid || x.driverUid === user.uid);
+  
+  q.sort((a, b) => {
+    const order = { "Pending": 1, "Counter Offered": 2, "Accepted": 3, "Confirmed": 4, "In-Transit": 5, "Completed": 6, "Cancelled": 7 };
+    return (order[a.status] || 99) - (order[b.status] || 99);
+  });
+
   const box = document.getElementById("myRequests");
   if(!q.length){ box.innerHTML = empty("📋", "No active requests"); return; }
 
-  box.innerHTML = q.slice().reverse().map(x => {
+  box.innerHTML = q.map(x => {
     const isDriver = (x.driverUid === user.uid);
     const isUnlocked = ["Accepted", "Confirmed", "In-Transit", "Paid"].includes(x.status);
     const isRunning = (x.status === "In-Transit" || x.status === "Confirmed");
@@ -2621,7 +2911,6 @@ function renderRequests(){
     const chatBtn = (isUnlocked && !isCompleted) ? `<button class="secondary" onclick="openChat('${x.id}', '${x.driverPhone}')">💬 Live Chat / Call</button>` : `<span class="small">🔒 Contact & chat locked</span>`;
     const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}')">📲 Share Live Trip</button>` : "";
 
-    // 📦 PARCEL RECEIVER DETAILS PERMANENT DISPLAY FOR DRIVER
     const parcelReceiverInfo = (!isPassengerBooking) ? `
       <div style="background:#f1f5f9; padding:8px 10px; border-radius:10px; margin:6px 0; font-size:12px; border:1px solid #e2e8f0;">
         📦 <b>Receiver Name:</b> ${esc(x.recName || 'N/A')}<br>
@@ -2669,7 +2958,7 @@ function renderTrips(){
     adminCard.style.display = "block";
     const completed = list.filter(r => r.status === "Completed");
     document.getElementById("adminCompletedCount").textContent = completed.length;
-    const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
+    const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.earnedAmount || r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
     document.getElementById("adminRevenueCount").textContent = totalRev.toFixed(0);
   } else {
     adminCard.style.display = "none";
@@ -2688,6 +2977,8 @@ function renderTrips(){
     const hasActiveBooking = allReqs.some(q => q.rideId === x.id && ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
     const showEditBtn = (x.status === 'Active' && !hasActiveBooking);
 
+    const earningsDisplay = (x.status === 'Completed') ? `<div class="small" style="color:var(--success); font-weight:700; margin-top:4px;">💰 Earned Amount: ₹${safeNumber(x.earnedAmount || x.seatPrice || 0)}</div>` : '';
+
     return `
     <div class="request">
       <div style="display:flex; justify-content:space-between;">
@@ -2696,6 +2987,7 @@ function renderTrips(){
       </div>
       <p style="margin:4px 0;">📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel' : `💺 ${x.seats} seats left`} (${x.vehicle}) ${x.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family</span>' : (x.isLadiesOnly ? '<span class="badge pink">🌸 Ladies</span>' : '')}</p>
       ${x.pickupSpot ? `<p class="small" style="color:var(--primary); margin:2px 0;">📍 <b>Pickup Spot:</b> ${esc(x.pickupSpot)}</p>` : ''}
+      ${earningsDisplay}
       ${x.cancelReason ? `<div class="small" style="color:var(--danger);"><b>Cancellation Reason:</b> ${esc(x.cancelReason)}</div>` : ''}
       <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
         ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
@@ -2706,6 +2998,22 @@ function renderTrips(){
   }).join("");
 }
 window.renderTrips = renderTrips;
+
+function updateWalletLedger() {
+  const user = window.getCurrentUser();
+  const ledgerEl = document.getElementById("userTotalEarnings");
+  if(!ledgerEl) return;
+  
+  if(!user) {
+    ledgerEl.textContent = "0";
+    return;
+  }
+
+  const myCompletedRides = ALL_RIDES.filter(r => r.driverUid === user.uid && r.status === "Completed");
+  const totalEarned = myCompletedRides.reduce((sum, r) => sum + safeNumber(r.earnedAmount || r.seatPrice || 0), 0);
+  ledgerEl.textContent = totalEarned;
+}
+window.updateWalletLedger = updateWalletLedger;
 
 function filterAdminTrips(mode) {
   currentAdminFilter = mode;
@@ -2787,6 +3095,7 @@ function stats(){
   }, 0);
 
   document.getElementById("sKg").textContent = `${totalParcelKg} Kg`;
+  updateWalletLedger();
 }
 window.stats = stats;
 
@@ -2800,29 +3109,11 @@ document.addEventListener("DOMContentLoaded", function(){
   const d = new Date().toISOString().split('T')[0];
   ["pDate", "fDate", "xDate"].forEach(id => { const el = document.getElementById(id); if(el) el.value = d; });
 
-  driverMap = L.map('driverPostMap').setView([21.1458, 79.0882], 8);
+  driverMap = L.map('driverPostMap').setView([21.4588, 80.1961], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(driverMap);
   driverRouteLayers = L.layerGroup().addTo(driverMap);
 
-  driverMap.on('click', async function(e) {
-    const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
-      const data = await res.json();
-      if(data && data.display_name) {
-        const parts = data.display_name.split(',').map(s => s.trim());
-        const cleanLoc = [...new Set(parts.slice(0, 3))].join(', ');
-        document.getElementById("pFrom").value = cleanLoc;
-        saveLocationToFirestore(cleanLoc);
-        window.showToast("📍 Exact Map Pin Locked: " + cleanLoc);
-      }
-    } catch(err) {
-      window.showToast("📍 Pin selected successfully!");
-    }
-  });
-
-  detectCurrentLocation();
+  setupParcelAutoCheck();
   renderVehicleDropdown();
 });
 </script>
