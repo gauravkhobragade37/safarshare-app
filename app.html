@@ -241,10 +241,10 @@ button{ font-family:inherit; }
 .toast { background: var(--text-main); color: white; padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: space-between; pointer-events: auto; border-left: 4px solid var(--primary); }
 
 .suggestions-dropdown {
-  position: absolute; top: 100%; left: 0; right: 0; background: #ffffff;
-  border: 1px solid #cbd5e1; border-radius: 12px; z-index: 99999;
+  position: absolute; top: 100%; left: 0; right: 0; background: #ffffff !important;
+  border: 1px solid #cbd5e1; border-radius: 12px; z-index: 999999 !important;
   max-height: 180px; overflow-y: auto; display: none;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 /* 🗺️ LIVE PASSENGER TRACKING MAP */
@@ -346,6 +346,22 @@ button{ font-family:inherit; }
 
     <div id="selectedPinAddress" class="notice" style="margin-bottom:10px; font-size:12px;">📍 Pinned: Detecting location...</div>
     <button class="primary full" onclick="confirmMapPinSelection()">✅ Confirm & Use This Location</button>
+  </div>
+</div>
+
+<!-- 🔍 USER DEEP INSPECT MODAL (LIVE MAP + ALL SERVICES) -->
+<div id="deepInspectModal" class="modal" style="display:none; z-index:100005;">
+  <div class="modal-box" style="max-width:540px; padding:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0; font-size:16px;" id="deepInspectTitle">🔍 User Deep Inspection</h3>
+      <button style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b;" onclick="closeDeepInspectModal()">✖</button>
+    </div>
+
+    <!-- USER LIVE ROUTE MAP -->
+    <div id="deepInspectMap" style="width:100%; height:200px; border-radius:12px; border:1px solid #cbd5e1; margin-bottom:12px;"></div>
+    
+    <!-- USER SERVICES DETAILS -->
+    <div id="deepInspectDetails"></div>
   </div>
 </div>
 
@@ -1581,6 +1597,8 @@ button{ font-family:inherit; }
           });
         }
         window.showToast("🎉 Drop PIN verified! Trip completed.");
+        window.updateWalletLedger();
+        window.renderTrips();
         
         if(currentUser && reqData && reqData.passengerUid === currentUser.uid) {
           window.openRatingModal();
@@ -2090,12 +2108,22 @@ function handleVehicleSelectChange() {
   }
 }
 
+// 🧹 CLEAN SHORT LOCATION FORMATTER (Area, District, State - No Hindi/Long Strings)
+function cleanLocationName(rawName) {
+  if (!rawName) return "";
+  let parts = rawName.split(',').map(s => s.trim()).filter(s => s.length > 0 && !/[^\x00-\x7F]/.test(s) && !/\d{6}/.test(s));
+  if(parts.length === 0) {
+    parts = rawName.split(',').map(s => s.trim());
+  }
+  return [...new Set(parts.slice(0, 3))].join(', ');
+}
+window.cleanLocationName = cleanLocationName;
+
+// 👑 CLEAN ADMIN USER LIST (DP, Name, Email, Phone, Active Dot, Deep Inspect, Block/Unblock)
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
   const users = window.getUsers ? window.getUsers() : [];
-  const allRides = window.getRides ? window.getRides() : [];
-  const allReqs = window.getRequests ? window.getRequests() : [];
 
   if (!users.length) {
     box.innerHTML = "<div class='small muted' style='text-align:center; padding:15px;'>No users recorded yet in database.</div>";
@@ -2103,23 +2131,7 @@ function renderAdminUsersList() {
   }
 
   box.innerHTML = users.map(u => {
-    const userPostedTrips = allRides.filter(r => r.driverUid === u.uid);
-    const activeTripsCount = userPostedTrips.filter(r => r.status === "Active").length;
-    
-    const userBookings = allReqs.filter(q => q.passengerUid === u.uid || q.driverUid === u.uid);
-    const activeBookingsCount = userBookings.filter(q => ["Pending", "Accepted", "Confirmed", "In-Transit"].includes(q.status)).length;
-    
-    let activeRouteText = "No active route currently";
-    if(userPostedTrips.length > 0) {
-      const activeTrip = userPostedTrips.find(r => r.status === "Active") || userPostedTrips[userPostedTrips.length - 1];
-      activeRouteText = `🚗 Route: ${esc(activeTrip.from)} ➔ ${esc(activeTrip.to)} [${activeTrip.vehicle}]`;
-    } else if(userBookings.length > 0) {
-      const activeBook = userBookings[userBookings.length - 1];
-      activeRouteText = `${activeBook.type === 'passenger' ? '🧑 Ride Booking' : '📦 Parcel Logistics'}: ${esc(activeBook.from)} ➔ ${esc(activeBook.to)}`;
-    }
-
     const isBlocked = !!u.isBlocked;
-
     return `
     <div class="card" style="border:1px solid ${isBlocked ? '#fca5a5' : '#cbd5e1'}; background:${isBlocked ? '#fff5f5' : '#fff'}; padding:12px; margin-bottom:10px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -2127,7 +2139,7 @@ function renderAdminUsersList() {
           <img src="${esc(u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
           <div>
             <b>${esc(u.name || u.displayName)}</b> ${isBlocked ? '<span class="badge red">🚫 Blocked</span>' : '<span class="badge g">🟢 Active</span>'}
-            <div class="small">${esc(u.email)} • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a> • Gender: ${esc(u.gender || 'N/A')}</div>
+            <div class="small">${esc(u.email)} • 📞 <a href="tel:${esc(u.phone)}">${esc(u.phone || 'No Phone')}</a></div>
           </div>
         </div>
         <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 10px; font-size:11px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
@@ -2135,23 +2147,90 @@ function renderAdminUsersList() {
         </button>
       </div>
 
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; margin-top:8px; font-size:12px;">
-        📡 <b>Current Live Activity / Route:</b> <span style="color:var(--primary); font-weight:700;">${activeRouteText}</span>
-        <div style="margin-top:4px; display:flex; gap:12px;">
-          <span>🚗 Trips Posted: <b>${userPostedTrips.length}</b> (Active: ${activeTripsCount})</span>
-          <span>📦 Bookings/Deliveries: <b>${userBookings.length}</b> (Active: ${activeBookingsCount})</span>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:6px; margin-top:8px;">
-        <button class="wa-btn" style="padding:4px 8px; font-size:11px;" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}', '_blank')">💬 Direct WhatsApp Chat</button>
+      <div style="display:flex; gap:6px; margin-top:10px;">
+        <button class="primary full" style="padding:7px; font-size:12px;" onclick="openDeepInspectModal('${u.uid}')">🔍 Deep Inspect</button>
+        <button class="wa-btn" style="padding:7px 10px; font-size:12px;" onclick="window.open('https://wa.me/91${esc(u.phone)}?text=Hello%20${encodeURIComponent(u.name||'User')}', '_blank')">💬 WhatsApp</button>
       </div>
     </div>`;
   }).join("");
 }
 window.renderAdminUsersList = renderAdminUsersList;
 
-// ⚡ 500MS DEBOUNCE LOCATIONIQ + LOCAL CACHING
+// 🔍 DEEP INSPECT MODAL OPEN & RENDER LOGIC
+let deepInspectMapInstance = null;
+
+function openDeepInspectModal(userUid) {
+  const users = window.getUsers ? window.getUsers() : [];
+  const allRides = window.getRides ? window.getRides() : [];
+  const allReqs = window.getRequests ? window.getRequests() : [];
+
+  const u = users.find(x => x.uid === userUid);
+  if (!u) return;
+
+  document.getElementById("deepInspectTitle").innerHTML = `🔍 Deep Inspection: <b>${esc(u.name || u.displayName)}</b>`;
+  document.getElementById("deepInspectModal").style.display = "flex";
+
+  const userPostedTrips = allRides.filter(r => r.driverUid === userUid);
+  const userBookings = allReqs.filter(q => q.passengerUid === userUid || q.driverUid === userUid);
+
+  let detailsHtml = `
+    <div style="margin-bottom:10px; font-size:13px;">
+      <b>Email:</b> ${esc(u.email)} | <b>Phone:</b> ${esc(u.phone || 'N/A')}
+    </div>
+    <h4 style="margin:8px 0 4px; font-size:13px;">🚗 Posted Trips (${userPostedTrips.length}):</h4>`;
+
+  if(userPostedTrips.length === 0) {
+    detailsHtml += `<div class="small muted" style="margin-bottom:8px;">No trips posted.</div>`;
+  } else {
+    detailsHtml += userPostedTrips.map(r => `
+      <div style="background:#f8fafc; padding:6px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; border:1px solid #e2e8f0;">
+        <b>${cleanLocationName(r.from)} ➔ ${cleanLocationName(r.to)}</b> [${esc(r.vehicle)}]
+        <div class="small">Status: <b>${r.status}</b> | Fare: ₹${r.seatPrice || 0}/seat | Date: ${r.date} ${r.time}</div>
+      </div>
+    `).join("");
+  }
+
+  detailsHtml += `<h4 style="margin:8px 0 4px; font-size:13px;">📋 Bookings & Deliveries (${userBookings.length}):</h4>`;
+
+  if(userBookings.length === 0) {
+    detailsHtml += `<div class="small muted">No bookings or parcel requests.</div>`;
+  } else {
+    detailsHtml += userBookings.map(q => `
+      <div style="background:#f8fafc; padding:6px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; border:1px solid #e2e8f0;">
+        <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
+        <div class="small">Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}</div>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("deepInspectDetails").innerHTML = detailsHtml;
+
+  setTimeout(async () => {
+    if(!deepInspectMapInstance) {
+      deepInspectMapInstance = L.map('deepInspectMap').setView([21.4588, 80.1961], 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(deepInspectMapInstance);
+    } else {
+      deepInspectMapInstance.invalidateSize();
+    }
+
+    const activeTrip = userPostedTrips.find(r => r.status === "Active") || userPostedTrips[0];
+    if(activeTrip && activeTrip.geometry) {
+      try {
+        let geom = typeof activeTrip.geometry === "string" ? JSON.parse(activeTrip.geometry) : activeTrip.geometry;
+        const line = L.geoJSON(geom, { style: { color: "#1261ff", weight: 5 } }).addTo(deepInspectMapInstance);
+        deepInspectMapInstance.fitBounds(line.getBounds(), { padding: [20, 20] });
+      } catch(e){}
+    }
+  }, 200);
+}
+
+function closeDeepInspectModal() {
+  document.getElementById("deepInspectModal").style.display = "none";
+}
+window.openDeepInspectModal = openDeepInspectModal;
+window.closeDeepInspectModal = closeDeepInspectModal;
+
+// ⚡ 500MS DEBOUNCE LOCATIONIQ WITH ENGLISH ACCEPT LANGUAGE
 function handleLocationInput(inputId, suggestionBoxId) {
   const query = document.getElementById(inputId).value.trim();
   const box = document.getElementById(suggestionBoxId);
@@ -2171,7 +2250,7 @@ function handleLocationInput(inputId, suggestionBoxId) {
 
   debounceTimers[inputId] = setTimeout(async () => {
     try {
-      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&limit=5&format=json`;
+      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&accept-language=en&limit=5&format=json`;
       const res = await fetch(url);
       const data = await res.json();
 
@@ -2206,10 +2285,10 @@ function renderSuggestionsHtml(inputId, suggestionBoxId, data) {
   const box = document.getElementById(suggestionBoxId);
   box.style.display = "block";
   box.innerHTML = data.slice(0, 5).map(item => {
-    const displayName = item.display_name;
+    const cleanName = cleanLocationName(item.display_name);
     const lat = parseFloat(item.lat);
     const lon = parseFloat(item.lon);
-    return `<div style="padding:9px 12px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="selectSuggestedLocation('${inputId}', '${suggestionBoxId}', '${escape(displayName)}', ${lat}, ${lon})">📍 ${esc(displayName)}</div>`;
+    return `<div style="padding:9px 12px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="selectSuggestedLocation('${inputId}', '${suggestionBoxId}', '${escape(cleanName)}', ${lat}, ${lon})">📍 ${esc(cleanName)}</div>`;
   }).join("");
 }
 
@@ -2304,15 +2383,15 @@ function handleMapInternalSearch(val) {
   clearTimeout(debounceTimers["mapInternal"]);
   debounceTimers["mapInternal"] = setTimeout(async () => {
     try {
-      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(val)}&countrycodes=in&limit=4&format=json`;
+      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(val)}&countrycodes=in&accept-language=en&limit=4&format=json`;
       const res = await fetch(url);
       const data = await res.json();
       if(data && data.length > 0) {
         box.style.display = "block";
         box.innerHTML = data.map(item => `
           <div style="padding:8px 10px; font-size:12px; border-bottom:1px solid #f1f5f9; cursor:pointer;"
-               onclick="selectInternalMapSearch(${item.lat}, ${item.lon}, '${escape(item.display_name)}')">
-            📍 ${esc(item.display_name)}
+               onclick="selectInternalMapSearch(${item.lat}, ${item.lon}, '${escape(cleanLocationName(item.display_name))}')">
+            📍 ${esc(cleanLocationName(item.display_name))}
           </div>
         `).join("");
       }
@@ -2337,11 +2416,11 @@ window.closeMapPinPicker = closeMapPinPicker;
 
 async function reverseGeocodeAndSet(lat, lng) {
   try {
-    const url = `https://api.locationiq.com/v1/reverse?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&format=json`;
+    const url = `https://api.locationiq.com/v1/reverse?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&accept-language=en&format=json`;
     const res = await fetch(url);
     const data = await res.json();
     if(data && data.display_name) {
-      tempSelectedLocationText = data.display_name;
+      tempSelectedLocationText = cleanLocationName(data.display_name);
       document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned: <b>${esc(tempSelectedLocationText)}</b>`;
       return;
     }
@@ -2351,8 +2430,7 @@ async function reverseGeocodeAndSet(lat, lng) {
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
     const data = await res.json();
     if(data && data.display_name) {
-      const parts = data.display_name.split(',').map(s => s.trim());
-      tempSelectedLocationText = [...new Set(parts.slice(0, 3))].join(', ');
+      tempSelectedLocationText = cleanLocationName(data.display_name);
       document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned: <b>${esc(tempSelectedLocationText)}</b>`;
     }
   } catch(e) {
@@ -2381,7 +2459,7 @@ async function geocode(query) {
   }
 
   try {
-    const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=1`;
+    const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&accept-language=en&format=json&limit=1`;
     const res = await fetch(url);
     const data = await res.json();
     if(data && data.length > 0) {
@@ -2677,7 +2755,7 @@ async function findRides(){
           <div><strong>${esc(r.name)}</strong> ⭐ 5.0<div class="small">${esc(r.carModel)} (${esc(r.carNumber)})</div></div>
         </div>
         <div class="ride-top">
-          <div><div class="route">${esc(r.from)} → ${esc(r.to)}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup: ${esc(r.pickupSpot)}</div>`:''}</div>
+          <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup: ${esc(r.pickupSpot)}</div>`:''}</div>
           <div class="price">₹${r.fare}/seat</div>
         </div>
         <div class="pricing-preview">💰 Fair Distance Fare: ₹${r.fare} (${r.fareNote})</div>
@@ -2765,7 +2843,7 @@ async function findParcel(){
           </div>
         </div>
         <div class="ride-top">
-          <div><div class="route">${esc(r.from)} → ${esc(r.to)}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup Spot: ${esc(r.pickupSpot)}</div>`:''}</div>
+          <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup Spot: ${esc(r.pickupSpot)}</div>`:''}</div>
           <div class="price">₹${r.price}</div>
         </div>
         <div class="badges">
@@ -2920,7 +2998,7 @@ function renderRequests(){
     return `
     <div class="request">
       <strong>${x.type === "passenger" ? `🧑 Seat Request (${x.numSeats} Seats)` : `📦 Parcel (${x.slab === 'full_vehicle' ? 'Full Space' : x.slab}) ${x.paymentSettlement === 'receiver_cod' ? '<span class="badge o">🚚 COD Receiver</span>' : '<span class="badge g">📦 Sender Paid</span>'}`}</strong>
-      <p style="margin:4px 0;"><b>${esc(x.from)} → ${esc(x.to)}</b></p>
+      <p style="margin:4px 0;"><b>${esc(cleanLocationName(x.from))} → ${esc(cleanLocationName(x.to))}</b></p>
       ${parcelReceiverInfo}
       ${x.pickupSpot ? `<p class="small" style="color:var(--primary); margin:2px 0;">📍 <b>Pickup Spot:</b> ${esc(x.pickupSpot)}</p>` : ''}
       <div class="offerbox">Fare: <b>₹${x.currentPrice}</b> | Status: <b>${x.status}</b> ${x.cancelReason ? `<span style="color:var(--danger);display:block;margin-top:4px;">Reason: ${esc(x.cancelReason)} (by ${x.cancelledBy})</span>` : ''}</div>
@@ -2935,7 +3013,7 @@ function renderRequests(){
 window.renderRequests = renderRequests;
 
 function shareLiveWhatsapp(from, to, driver, phone){
-  const t = `🚗 *SafarShare Live Trip Update!*%0AMain travel kar raha hoon.%0A📍 Route: ${from} ➔ ${to}%0A👤 Driver: ${driver} (📞 ${phone})`;
+  const t = `🚗 *SafarShare Live Trip Update!*%0AMain travel kar raha hoon.%0A📍 Route: ${cleanLocationName(from)} ➔ ${cleanLocationName(to)}%0A👤 Driver: ${driver} (📞 ${phone})`;
   window.open(`https://api.whatsapp.com/send?text=${t}`, '_blank');
 }
 
@@ -2945,23 +3023,23 @@ function choosePayment(qid){
   if(qObj) window.reserveCapacity(qObj, selectedMode);
 }
 
-/* 🛣️ MY TRIPS TAB */
+/* 🛣️ MY TRIPS TAB (WITH 2-CATEGORY EARNINGS BREAKDOWN: SEAT & PARCEL) */
 function renderTrips(){
   const user = window.getCurrentUser();
-  const list = window.getRides();
+  const list = window.getRides ? window.getRides() : [];
   const allReqs = window.getRequests ? window.getRequests() : [];
   const box = document.getElementById("myTrips");
   const adminCard = document.getElementById("adminPanel");
-  const adminEmail = window.getAdminEmail();
+  const adminEmail = window.getAdminEmail ? window.getAdminEmail() : "";
 
   if (user && user.email === adminEmail) {
-    adminCard.style.display = "block";
+    if(adminCard) adminCard.style.display = "block";
     const completed = list.filter(r => r.status === "Completed");
     document.getElementById("adminCompletedCount").textContent = completed.length;
     const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.earnedAmount || r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
     document.getElementById("adminRevenueCount").textContent = totalRev.toFixed(0);
   } else {
-    adminCard.style.display = "none";
+    if(adminCard) adminCard.style.display = "none";
   }
 
   if(!user) { box.innerHTML = empty("🚗", "Please login with Google to view your trips"); return; }
@@ -2974,20 +3052,56 @@ function renderTrips(){
   if(!filtered.length){ box.innerHTML = empty("🚗", "No trips found in this category"); return; }
 
   box.innerHTML = filtered.slice().reverse().map(x => {
-    const hasActiveBooking = allReqs.some(q => q.rideId === x.id && ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
+    const tripReqs = allReqs.filter(q => q.rideId === x.id);
+    const hasActiveBooking = tripReqs.some(q => ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
     const showEditBtn = (x.status === 'Active' && !hasActiveBooking);
 
-    const earningsDisplay = (x.status === 'Completed') ? `<div class="small" style="color:var(--success); font-weight:700; margin-top:4px;">💰 Earned Amount: ₹${safeNumber(x.earnedAmount || x.seatPrice || 0)}</div>` : '';
+    const completedTripReqs = tripReqs.filter(q => q.status === "Completed" || q.status === "Paid");
+    
+    let seatTotal = 0;
+    let seatCount = 0;
+    let parcelTotal = 0;
+    let parcelCount = 0;
+
+    completedTripReqs.forEach(q => {
+      const price = safeNumber(q.currentPrice || q.originalPrice || 0);
+      if (q.type === 'passenger') {
+        seatTotal += price;
+        seatCount += (q.numSeats || 1);
+      } else {
+        parcelTotal += price;
+        parcelCount += 1;
+      }
+    });
+
+    const totalTripEarned = seatTotal + parcelTotal;
+
+    let servicesBreakdownHtml = "";
+    if (completedTripReqs.length > 0) {
+      servicesBreakdownHtml = `
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:8px 10px; margin:6px 0; font-size:12px;">
+          <b style="color:#166534;">💰 Earned Amount: ₹${totalTripEarned}</b>
+          <div style="margin-top:4px; display:flex; flex-direction:column; gap:2px; color:#334155;">
+            ${seatTotal > 0 ? `<span>• 🧑 <b>Seat Booking:</b> ₹${seatTotal} (${seatCount} Seat${seatCount > 1 ? 's' : ''})</span>` : ''}
+            ${parcelTotal > 0 ? `<span>• 📦 <b>Parcel Delivery:</b> ₹${parcelTotal} (${parcelCount} Parcel${parcelCount > 1 ? 's' : ''})</span>` : ''}
+          </div>
+        </div>
+      `;
+    } else if (x.status === 'Completed') {
+      servicesBreakdownHtml = `<div class="small" style="color:#64748b; margin-top:4px;">💰 Earned Amount: ₹0 (No bookings completed)</div>`;
+    }
 
     return `
     <div class="request">
-      <div style="display:flex; justify-content:space-between;">
-        <strong>🚗 ${esc(x.from)} → ${esc(x.to)}</strong>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <strong>🚗 ${esc(cleanLocationName(x.from))} → ${esc(cleanLocationName(x.to))}</strong>
         <span class="badge ${x.status==='Completed'?'g':x.status==='Cancelled'?'red':'purple'}">${x.status}</span>
       </div>
       <p style="margin:4px 0;">📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel' : `💺 ${x.seats} seats left`} (${x.vehicle}) ${x.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family</span>' : (x.isLadiesOnly ? '<span class="badge pink">🌸 Ladies</span>' : '')}</p>
       ${x.pickupSpot ? `<p class="small" style="color:var(--primary); margin:2px 0;">📍 <b>Pickup Spot:</b> ${esc(x.pickupSpot)}</p>` : ''}
-      ${earningsDisplay}
+      
+      ${servicesBreakdownHtml}
+      
       ${x.cancelReason ? `<div class="small" style="color:var(--danger);"><b>Cancellation Reason:</b> ${esc(x.cancelReason)}</div>` : ''}
       <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
         ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
@@ -3009,8 +3123,13 @@ function updateWalletLedger() {
     return;
   }
 
-  const myCompletedRides = ALL_RIDES.filter(r => r.driverUid === user.uid && r.status === "Completed");
-  const totalEarned = myCompletedRides.reduce((sum, r) => sum + safeNumber(r.earnedAmount || r.seatPrice || 0), 0);
+  const allReqs = window.getRequests ? window.getRequests() : [];
+  const myCompletedReqs = allReqs.filter(q => 
+    q.driverUid === user.uid && 
+    (q.status === "Completed" || q.status === "Paid")
+  );
+
+  const totalEarned = myCompletedReqs.reduce((sum, q) => sum + safeNumber(q.currentPrice || q.originalPrice || 0), 0);
   ledgerEl.textContent = totalEarned;
 }
 window.updateWalletLedger = updateWalletLedger;
@@ -3027,14 +3146,14 @@ function filterAdminTrips(mode) {
     const logsList = document.getElementById("rejectionLogsList");
     let logsHtml = ridesCancelled.map(r => `
       <div class="log-card">
-        <b>🚗 Trip Cancelled:</b> ${esc(r.from)} → ${esc(r.to)}
+        <b>🚗 Trip Cancelled:</b> ${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}
         <div class="small"><b>Driver:</b> ${esc(r.name)} | <b>Reason:</b> ${esc(r.cancelReason || 'N/A')}</div>
       </div>
     `).join("");
 
     logsHtml += reqsCancelled.map(q => `
       <div class="log-card">
-        <b>📋 Request Rejected:</b> ${esc(q.from)} → ${esc(q.to)}
+        <b>📋 Request Rejected:</b> ${esc(cleanLocationName(q.from))} → ${esc(cleanLocationName(q.to))}
         <div class="small"><b>By:</b> ${esc(q.cancelledBy || 'User')} | <b>Reason:</b> ${esc(q.cancelReason || 'N/A')} | <b>Fare:</b> ₹${q.currentPrice}</div>
       </div>
     `).join("");
@@ -3070,7 +3189,7 @@ function shareOnWhatsApp(r){
 
   const textMessage = 
 `🚗 *SafarShare Trip & Logistics Update!*
-📍 *Route:* ${r.from} ➔ ${r.to}
+📍 *Route:* ${cleanLocationName(r.from)} ➔ ${cleanLocationName(r.to)}
 ${r.pickupSpot ? `📌 *Pickup Spot:* ${r.pickupSpot}\n` : ''}📅 *Date:* ${r.date} at ${r.time}
 🚘 *Vehicle:* ${r.carModel || r.vehicle} (${r.carNumber || ''})
 ${r.isFamilyOnBoard ? '👨‍👩‍👧 *Family on Board:* Safe for Women & Families\n' : (r.isLadiesOnly ? '🌸 *Note:* 100% Women Driven Ride\n' : '')}
