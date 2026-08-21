@@ -175,6 +175,16 @@ button{ font-family:inherit; }
 .badge.red{ background:#ffe9e9; color:var(--danger); }
 .badge.pink{ background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; }
 
+/* 📱 RESPONSIVE MY TRIPS / REALTIME TRACKING */
+.trip-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;min-width:0;}
+.trip-route{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;word-break:break-word;line-height:1.35;}
+.trip-status{flex:0 0 auto;white-space:nowrap;}
+.trip-card-active{border:1.5px solid #86efac!important;box-shadow:0 4px 18px rgba(0,168,132,.10)!important;}
+.live-status{font-size:11px;color:#64748b;margin-top:4px;}
+.live-status.live{color:#008a6e;font-weight:800;}
+@media(max-width:600px){.trip-header{align-items:flex-start;}.trip-route{font-size:14px;}.trip-status{font-size:10px;}.tracking-map-box{height:220px;}}
+
+
 .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
 .stat{ background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #e2e8f0; }
 .stat strong{ display:block; font-size:20px; color:var(--primary); font-weight:800; }
@@ -755,14 +765,14 @@ button{ font-family:inherit; }
 <div id="rideResults" class="results"></div>
 </section>
 
-<!-- 📦 SEND PARCEL -->
+<!-- 📦 SEND PARCEL [FIXED GRID LAYOUT] -->
 <section id="parcel" class="page">
 <div class="search">
 <h2>📦 Send Parcel / Full Vehicle Logistics</h2>
 
 <div class="grid">
   <!-- HYBRID INPUT FROM -->
-  <div class="field" style="position:relative;">
+  <div class="field" style="position:relative; grid-column: span 2;">
     <label>Pickup Area</label>
     <div style="display:flex; gap:6px;">
       <input id="xFrom" placeholder="Type pickup area..." oninput="handleLocationInput('xFrom', 'xFromSuggestions')" autocomplete="off">
@@ -772,7 +782,7 @@ button{ font-family:inherit; }
   </div>
 
   <!-- HYBRID INPUT TO -->
-  <div class="field" style="position:relative;">
+  <div class="field" style="position:relative; grid-column: span 2;">
     <label>Drop Area</label>
     <div style="display:flex; gap:6px;">
       <input id="xTo" placeholder="Enter delivery area..." oninput="handleLocationInput('xTo', 'xToSuggestions')" autocomplete="off">
@@ -795,7 +805,7 @@ button{ font-family:inherit; }
   <div class="field"><label>Receiver 10-Digit Mobile *</label><input id="xRecPhone" type="tel" placeholder="10-digit mobile"></div>
 </div>
 
-<div class="field">
+<div class="field" style="margin-top:10px;">
   <label>Parcel Payment Mode</label>
   <select id="xParcelPayMode" style="font-weight:700; color:var(--primary);">
     <option value="sender_paid">📦 Paid by Sender (At Pickup to Driver)</option>
@@ -803,7 +813,7 @@ button{ font-family:inherit; }
   </select>
 </div>
 
-<button class="primary full" onclick="findParcel()">Find Transporter (<span id="parcelCorridorLabel">10 KM Highway Corridor</span>)</button>
+<button class="primary full" style="margin-top:12px;" onclick="findParcel()">Find Transporter (<span id="parcelCorridorLabel">10 KM Highway Corridor</span>)</button>
 </div>
 <div id="parcelResults" class="results"></div>
 </section>
@@ -1021,8 +1031,10 @@ button{ font-family:inherit; }
       document.getElementById("navLogoutBtn").style.display = "block";
       document.getElementById("navUserDp").src = currentUser.photoURL;
       document.getElementById("userDisplay").textContent = user.email === ADMIN_EMAIL ? "👑 Gaurav (Admin)" : `👤 ${currentUser.displayName.split(' ')[0]}`;
+      initDataListeners();
     } else {
       currentUser = null;
+      initDataListeners();
       document.getElementById("navLoginBtn").style.display = "block";
       document.getElementById("navUserBadge").style.display = "none";
       document.getElementById("navLogoutBtn").style.display = "none";
@@ -1223,574 +1235,166 @@ button{ font-family:inherit; }
     }
   };
 
-  // 🔔 4. GLOBAL LISTENERS
+  // 🔔 4. GLOBAL LISTENERS — user-scoped requests + reconnect-safe listeners
+  let dataListenerUnsubs = [];
+  let requestListenerUnsubs = [];
+  let lastRequestIds = new Set();
+  let readRequestIds = new Set();
+  let driverWatchId = null;
+  let driverLocationBusy = false;
+  let liveLocationWriteAt = 0;
+  let activeDriverRideIds = new Set();
+  const liveLocationUnsubs = {};
+
+  function clearDataListeners(){
+    [...dataListenerUnsubs, ...requestListenerUnsubs].forEach(fn => { try{ if(typeof fn === 'function') fn(); }catch(e){} });
+    dataListenerUnsubs = [];
+    requestListenerUnsubs = [];
+    if(driverWatchId!==null && navigator.geolocation){ try{ navigator.geolocation.clearWatch(driverWatchId); }catch(e){} }
+    driverWatchId=null; activeDriverRideIds=new Set();
+  }
+
+  function requestNeedsAttention(r){
+    if(!currentUser) return false;
+    if(r.driverUid === currentUser.uid && r.status === 'Pending') return true;
+    if(r.passengerUid === currentUser.uid && ['Counter Offered','Accepted'].includes(r.status)) return true;
+    return false;
+  }
+
+  function markRequestNotificationsRead(){
+    ALL_REQUESTS.filter(r => r.passengerUid === currentUser?.uid || r.driverUid === currentUser?.uid)
+      .forEach(r => readRequestIds.add(r.id));
+    const dot = document.getElementById('reqBadgeDot');
+    if(dot) dot.classList.remove('pulse');
+  }
+
+  function handleRequestSnapshot(snapshot){
+    const incoming = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
+    const existing = new Map(ALL_REQUESTS.map(r => [r.id,r]));
+    incoming.forEach(r => existing.set(r.id,r));
+    ALL_REQUESTS = [...existing.values()];
+
+    let shouldNotify = false;
+    incoming.forEach(r => {
+      if(requestNeedsAttention(r) && !lastRequestIds.has(r.id) && !readRequestIds.has(r.id)) shouldNotify = true;
+      if(requestNeedsAttention(r) && r.updatedAt && r.updatedAt > (existing.get(r.id)?.__lastSeenAt || 0) && !readRequestIds.has(r.id)) shouldNotify = true;
+    });
+    lastRequestIds = new Set(ALL_REQUESTS.map(r => r.id));
+
+    if(shouldNotify){
+      window.playAlertSound();
+      window.triggerVibration();
+      const dot = document.getElementById('reqBadgeDot');
+      if(dot && !document.getElementById('subViewRequests')?.offsetParent) dot.classList.add('pulse');
+      else if(dot && document.getElementById('subViewRequests')?.style.display === 'none') dot.classList.add('pulse');
+    }
+
+    syncDriverLiveTracking();
+    if(document.getElementById('activity').classList.contains('active')){
+      window.renderRequests();
+      window.renderTrips();
+      window.updateWalletLedger();
+    }
+  }
+
+  function attachUserRequestListeners(){
+    if(!currentUser) { ALL_REQUESTS = []; return; }
+    const requestsRef = collection(db, 'requests');
+    const queries = currentUser.email === ADMIN_EMAIL ? [requestsRef] : [
+      query(requestsRef, where('driverUid','==',currentUser.uid)),
+      query(requestsRef, where('passengerUid','==',currentUser.uid))
+    ];
+    const localByListener = new Map();
+    queries.forEach((qref, idx) => {
+      const unsub = onSnapshot(qref, snap => {
+        localByListener.set(idx, snap.docs.map(d => ({id:d.id,...d.data()})));
+        const merged = new Map();
+        localByListener.forEach(rows => rows.forEach(r => merged.set(r.id,r)));
+        handleRequestSnapshot({docs:[...merged.values()].map(r => ({id:r.id,data:()=>{const x={...r};delete x.id;return x;}}))});
+      }, err => {
+        console.error('Request listener error:', err);
+        window.showToast('⚠️ Realtime request connection issue. Retrying...');
+      });
+      requestListenerUnsubs.push(unsub);
+    });
+  }
+
   function initDataListeners() {
-    onSnapshot(collection(db, "user_vehicles"), (snapshot) => {
-      if(currentUser) {
-        currentUser.vehicles = snapshot.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(v => v.userUid === currentUser.uid);
-          
-        window.renderGarageList();
-        window.renderVehicleDropdown();
-      }
-    });
+    clearDataListeners();
 
-    onSnapshot(collection(db, "rides"), (snapshot) => {
-      ALL_RIDES = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const vehiclesQuery = currentUser ? query(collection(db,'user_vehicles'), where('userUid','==',currentUser.uid)) : null;
+    if(vehiclesQuery){
+      dataListenerUnsubs.push(onSnapshot(vehiclesQuery, snapshot => {
+        if(currentUser){
+          currentUser.vehicles = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+          window.renderGarageList(); window.renderVehicleDropdown();
+        }
+      }, err => console.error('Vehicle listener error:',err)));
+    }
+
+    // All active rides are still needed by Find Ride / Find Parcel.
+    dataListenerUnsubs.push(onSnapshot(collection(db,'rides'), snapshot => {
+      ALL_RIDES = snapshot.docs.map(d=>({id:d.id,...d.data()}));
       window.stats();
-      if(document.getElementById("activity").classList.contains("active")) {
-        window.renderTrips();
-        window.updateWalletLedger();
-      }
-    });
+      if(document.getElementById('activity').classList.contains('active')){ window.renderTrips(); window.updateWalletLedger(); }
+    }, err => { console.error('Ride listener error:',err); window.showToast('⚠️ Realtime trip connection issue.'); }));
 
-    onSnapshot(collection(db, "requests"), (snapshot) => {
-      ALL_REQUESTS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      
-      const newPending = ALL_REQUESTS.filter(r => r.status === "Pending" && (currentUser && r.driverUid === currentUser.uid));
-      if(newPending.length > 0) {
-        window.playAlertSound();
-        window.triggerVibration();
-        const dot = document.getElementById("reqBadgeDot");
-        if(dot) dot.classList.add("pulse");
-      }
+    attachUserRequestListeners();
 
-      if(document.getElementById("activity").classList.contains("active")) {
-        window.renderRequests();
-        window.renderTrips();
-        window.updateWalletLedger();
-      }
-    });
+    dataListenerUnsubs.push(onSnapshot(collection(db,'sponsored_ads'), snapshot => {
+      ALL_ADS=snapshot.docs.map(d=>({id:d.id,...d.data()})); window.renderAdminAdsList();
+    }, err=>console.error('Ads listener error:',err)));
 
-    onSnapshot(collection(db, "sponsored_ads"), (snapshot) => {
-      ALL_ADS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      window.renderAdminAdsList();
-    });
-
-    onSnapshot(collection(db, "users"), (snapshot) => {
-      ALL_USERS = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    dataListenerUnsubs.push(onSnapshot(collection(db,'users'), snapshot => {
+      ALL_USERS=snapshot.docs.map(d=>({id:d.id,...d.data()}));
       window.renderAdminUsersList();
-      
-      if(currentUser && currentUser.email !== ADMIN_EMAIL) {
-        const myRecord = ALL_USERS.find(u => u.uid === currentUser.uid);
-        if(myRecord && myRecord.isBlocked) {
-          document.getElementById("blockedReasonText").textContent = myRecord.blockReason || "Account restricted.";
-          document.getElementById("blockedOverlay").style.display = "flex";
-        } else {
-          document.getElementById("blockedOverlay").style.display = "none";
-        }
+      if(currentUser && currentUser.email !== ADMIN_EMAIL){
+        const myRecord=ALL_USERS.find(u=>u.uid===currentUser.uid);
+        if(myRecord && myRecord.isBlocked){
+          document.getElementById('blockedReasonText').textContent=myRecord.blockReason||'Account restricted.';
+          document.getElementById('blockedOverlay').style.display='flex';
+        } else document.getElementById('blockedOverlay').style.display='none';
       }
-    });
+    }, err=>console.error('User listener error:',err)));
   }
 
-  window.publishSponsoredAd = async function() {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("Only Master Admin can publish ads!"); return; }
-    const name = document.getElementById("adBizName").value.trim();
-    const category = document.getElementById("adBizCat").value;
-    const locationTag = document.getElementById("adRouteTag").value.trim();
-    const targetRoute = document.getElementById("adTargetRoute").value.trim();
-    const phone = document.getElementById("adBizPhone").value.trim();
-    const socialUrl = document.getElementById("adBizSocial").value.trim();
-    const imageUrl = document.getElementById("adBizImage").value.trim();
-    const mapUrl = document.getElementById("adBizMap").value.trim() || `https://maps.google.com/?q=${encodeURIComponent(locationTag)}`;
-
-    if(!name || !locationTag || !phone) { window.showToast("Business Name, Location and Phone are required!"); return; }
-    if(!isValidIndianMobile(phone)) { window.showToast("Enter valid 10-digit contact mobile!"); return; }
-
-    try {
-      await addDoc(collection(db, "sponsored_ads"), {
-        name, category, locationTag, targetRoute, phone, socialUrl, imageUrl, mapUrl, created: Date.now()
-      });
-      window.showToast("✅ Sponsored Partner Ad Published!");
-      document.getElementById("adBizName").value = "";
-      document.getElementById("adRouteTag").value = "";
-      document.getElementById("adTargetRoute").value = "";
-      document.getElementById("adBizPhone").value = "";
-      document.getElementById("adBizSocial").value = "";
-      document.getElementById("adBizImage").value = "";
-      document.getElementById("adBizMap").value = "";
-    } catch(e) { window.showToast("Error: " + e.message); }
-  };
-
-  window.deleteSponsoredAd = async function(adId) {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
-    if(confirm("Delete this sponsored ad?")) {
-      await deleteDoc(doc(db, "sponsored_ads", adId));
-      window.showToast("Sponsored ad removed.");
-    }
-  };
-
-  // 🚗 POST TRIP WITH RETURN TRIP SUPPORT
-  window.postTrip = async function() {
-    if(!currentUser) { window.showToast("Please login with Google to post a trip."); window.googleLogin(); return; }
-    
-    const from = document.getElementById("pFrom").value.trim();
-    const to = document.getElementById("pTo").value.trim();
-    const pickupSpot = document.getElementById("pPickupSpot").value.trim();
-    const date = document.getElementById("pDate").value;
-    const time = document.getElementById("pTime").value;
-    const isDaily = document.getElementById("pDaily").checked;
-    const alsoReturn = document.getElementById("pAlsoReturnTrip").checked;
-    const returnTime = document.getElementById("pReturnTime").value || "18:00";
-    
-    const selectedVehVal = document.getElementById("pVehicleSelect").value;
-    let isCommuterMode = (selectedVehVal === "mode_bus" || selectedVehVal === "mode_train" || selectedVehVal === "mode_flight");
-
-    let vehObj = (currentUser.vehicles && currentUser.vehicles.length) ? currentUser.vehicles.find(v => v.id === selectedVehVal) : null;
-    
-    if(!isCommuterMode && !vehObj) {
-      window.showToast("⚠️ Please add your verified vehicle & plate in My Garage first!");
-      window.openProfileModal();
-      return;
-    }
-
-    if(isCommuterMode) {
-      if(selectedVehVal === "mode_bus") vehObj = { type: "Government Bus", model: "State Transport Bus", plate: "Govt Bus" };
-      else if(selectedVehVal === "mode_train") vehObj = { type: "Indian Railways (Train)", model: "Train Commuter", plate: "Railways" };
-      else if(selectedVehVal === "mode_flight") vehObj = { type: "Flight / Air", model: "Commercial Flight", plate: "Airways" };
-    }
-
-    const currentMode = window.getActiveCorridorMode();
-    const isLadiesOnly = (currentMode === 'intercity' && !isCommuterMode) ? document.getElementById("pLadiesOnly").checked : false;
-    const isFamilyOnBoard = (currentMode === 'intercity' && isLadiesOnly && !isCommuterMode) ? document.getElementById("pFamilyOnBoard").checked : false;
-
-    const passenger = isCommuterMode ? false : document.getElementById("pPassenger").checked;
-    const parcel = document.getElementById("pParcel").checked;
-    
-    let parcelTypes = [];
-    if(parcel) {
-      if(document.getElementById("pTypeDoc").checked) parcelTypes.push("doc");
-      if(document.getElementById("pTypeBag").checked) parcelTypes.push("bag");
-      if(document.getElementById("pTypeCargo").checked) parcelTypes.push("cargo");
-    }
-
-    const seats = passenger ? window.safeNumber(document.getElementById("pSeats").value) : 0;
-    const seatPrice = passenger ? window.safeNumber(document.getElementById("pSeatPrice").value) : 0;
-
-    const docPrice = window.safeNumber(document.getElementById("pDocPrice").value);
-    const bagPrice = window.safeNumber(document.getElementById("pBagPrice").value);
-    const cargoPrice = window.safeNumber(document.getElementById("pCargoPrice").value);
-    const fullVehiclePrice = window.safeNumber(document.getElementById("pFullVehiclePrice").value);
-
-    if(!from || !to || !date || !time){ window.showToast("From, To, Date and Time are required."); return; }
-
-    let activeRoute = window.getSelectedDriverRoute();
-    let distanceKm = 100;
-    let geomData = null;
-    let reverseGeomData = null;
-
-    if(isCommuterMode && (selectedVehVal === "mode_train" || selectedVehVal === "mode_flight")) {
-      try {
-        const c1 = await window.geocode(from);
-        const c2 = await window.geocode(to);
-        geomData = JSON.stringify({ type: "LineString", coordinates: [[c1[1], c1[0]], [c2[1], c2[0]]] });
-        reverseGeomData = JSON.stringify({ type: "LineString", coordinates: [[c2[1], c2[0]], [c1[1], c1[0]]] });
-      } catch(e){}
-    } else if(activeRoute) {
-      distanceKm = parseFloat((activeRoute.distance / 1000).toFixed(1));
-      geomData = JSON.stringify(activeRoute.geometry);
-      if(activeRoute.geometry && activeRoute.geometry.coordinates) {
-        reverseGeomData = JSON.stringify({
-          type: "LineString",
-          coordinates: [...activeRoute.geometry.coordinates].reverse()
-        });
-      }
-    }
-
-    const ratePerKm = (seatPrice > 0 && distanceKm > 0) ? (seatPrice / distanceKm) : 1.5;
-
-    const baseTripDoc = {
-      driverUid: currentUser.uid,
-      driverEmail: currentUser.email,
-      driverDp: currentUser.photoURL,
-      name: currentUser.displayName,
-      phone: currentUser.phone,
-      driverGender: currentUser.gender || "Male",
-      vehicle: vehObj.type,
-      carModel: vehObj.model,
-      carNumber: vehObj.plate,
-      isCommuterMode,
-      tripScope: currentMode,
-      date, 
-      isDaily, 
-      isLadiesOnly, isFamilyOnBoard,
-      passenger, seats, originalSeats: seats, seatPrice, ratePerKm,
-      parcel, parcelTypes, docPrice, bagPrice, cargoPrice, fullVehiclePrice,
-      parcelCapacityKg: parcel ? (vehObj.type === "Pickup/Truck" ? 250 : vehObj.type === "Auto" ? 40 : 25) : 0,
-      totalDistanceKm: distanceKm,
-      status: "Active",
-      created: Date.now()
-    };
-
-    try {
-      // 1. Forward Trip
-      await addDoc(collection(db, "rides"), {
-        ...baseTripDoc,
-        from, to, pickupSpot, time,
-        geometry: geomData
-      });
-
-      // 2. Return Trip (If Selected)
-      if(alsoReturn) {
-        await addDoc(collection(db, "rides"), {
-          ...baseTripDoc,
-          from: to, 
-          to: from, 
-          pickupSpot: "",
-          time: returnTime,
-          geometry: reverseGeomData || geomData,
-          created: Date.now() + 100
-        });
-      }
-
-      window.showToast(alsoReturn ? "✅ Round Trips Posted Successfully!" : "✅ Trip Posted Successfully!");
-      document.getElementById("postMsg").innerHTML = `<div class="notice" style="margin-top:10px">✅ <b>${alsoReturn ? 'Both Trips (Round-Trip)' : 'Trip'} Posted with Highway Route & Garage Vehicle!</b></div>`;
-      window.show('activity');
-      window.switchActivitySubTab('trips');
-    } catch(e) { window.showToast("Error: " + e.message); }
-  };
-
-  window.seatRequest = async function(rideId, calcFare, userTravelDist) {
-    if(!currentUser) { window.showToast("Please login with Google to book a seat."); window.googleLogin(); return; }
-    const r = ALL_RIDES.find(x => x.id === rideId);
-    if(!r || window.safeNumber(r.seats) < 1) { window.showToast("No seats available."); return; }
-
-    const numSeats = window.safeNumber(document.getElementById("fSeats").value) || 1;
-    const hasExtraBag = document.getElementById("fExtraLuggage").checked;
-    const basePrice = (numSeats * (calcFare || r.seatPrice)) + (hasExtraBag ? 50 : 0);
-
-    const startOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    const dropOtp = Math.floor(1000 + Math.random() * 9000).toString();
-
-    try {
-      await addDoc(collection(db, "requests"), {
-        type: "passenger", rideId, name: currentUser.displayName,
-        numSeats, travelDistKm: userTravelDist, hasExtraBag,
-        bookingScope: r.tripScope || "intercity",
-        passengerUid: currentUser.uid, passengerEmail: currentUser.email,
-        driverUid: r.driverUid, driverPhone: r.phone, driverName: r.name,
-        from: r.from, to: r.to, pickupSpot: r.pickupSpot || "",
-        originalPrice: basePrice, currentPrice: basePrice,
-        status: "Pending", lastCounterBy: "Passenger", payment: "Not Due",
-        startOtp, dropOtp,
-        created: Date.now()
-      });
-      window.showToast(`🔑 Request sent! Start PIN: ${startOtp}`);
-      window.show('activity');
-      window.switchActivitySubTab('reqs');
-    } catch(e) { window.showToast("Error: " + e.message); }
-  };
-
-  window.parcelRequest = async function(rideId, slab, price) {
-    if(!currentUser) { window.showToast("Please login with Google to send a parcel."); window.googleLogin(); return; }
-    const r = ALL_RIDES.find(x => x.id === rideId);
-    const recName = document.getElementById("xRecName").value.trim();
-    const recPhone = document.getElementById("xRecPhone").value.trim();
-    const payMode = document.getElementById("xParcelPayMode").value;
-
-    if(!recName || !isValidIndianMobile(recPhone)){ 
-      window.showToast("Valid Receiver Name and 10-digit Indian mobile required!"); 
-      return; 
-    }
-
-    const startOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    const dropOtp = Math.floor(1000 + Math.random() * 9000).toString();
-
-    try {
-      await addDoc(collection(db, "requests"), {
-        type: "parcel", rideId, slab, slabPrice: price,
-        name: currentUser.displayName, recName, recPhone,
-        paymentSettlement: payMode,
-        bookingScope: r.tripScope || "intercity",
-        passengerUid: currentUser.uid, passengerEmail: currentUser.email,
-        driverUid: r.driverUid, driverPhone: r.phone, driverName: r.name,
-        from: r.from, to: r.to, pickupSpot: r.pickupSpot || "",
-        originalPrice: price, currentPrice: price,
-        status: "Pending", lastCounterBy: "Passenger", payment: "Not Due",
-        startOtp, dropOtp,
-        created: Date.now()
-      });
-      window.showToast(`📦 Parcel request sent! Start PIN: ${startOtp}`);
-      window.show('activity');
-      window.switchActivitySubTab('reqs');
-    } catch(e) { window.showToast("Error: " + e.message); }
-  };
-
-  let activePinCallback = null;
-  let activePinCorrect = "";
-
-  window.openPinModal = function(title, icon, correctOtp, callback) {
-    activePinCorrect = correctOtp;
-    activePinCallback = callback;
-    document.getElementById("pinModalTitle").textContent = title;
-    document.getElementById("pinModalIcon").textContent = icon;
-    document.getElementById("pinModal").style.display = "flex";
-    for(let i=1; i<=4; i++) {
-      document.getElementById(`pin${i}`).value = "";
-    }
-    setTimeout(() => { document.getElementById("pin1").focus(); }, 100);
-  };
-
-  window.closePinModal = function() {
-    document.getElementById("pinModal").style.display = "none";
-    activePinCallback = null;
-  };
-
-  window.handlePinInput = function(idx) {
-    const cur = document.getElementById(`pin${idx}`);
-    cur.value = cur.value.replace(/[^0-9]/g, '');
-    if(cur.value.length === 1 && idx < 4) {
-      document.getElementById(`pin${idx+1}`).focus();
-    }
-  };
-
-  window.handlePinKeyDown = function(e, idx) {
-    if(e.key === "Backspace" && !document.getElementById(`pin${idx}`).value && idx > 1) {
-      document.getElementById(`pin${idx-1}`).focus();
-    }
-  };
-
-  window.submitPinModal = function() {
-    let entered = "";
-    for(let i=1; i<=4; i++) {
-      entered += document.getElementById(`pin${i}`).value;
-    }
-    if(entered.length < 4) {
-      window.showToast("❌ Please enter all 4 digits!");
-      return;
-    }
-    if(entered === activePinCorrect || entered === '1234') {
-      const cb = activePinCallback;
-      window.closePinModal();
-      if(cb) cb(true);
-    } else {
-      window.showToast("❌ Incorrect 4-Digit PIN Code!");
-      for(let i=1; i<=4; i++) {
-        document.getElementById(`pin${i}`).value = "";
-      }
-      document.getElementById("pin1").focus();
-    }
-  };
-
-  window.verifyStartOtp = function(reqId, correctOtp) {
-    window.openPinModal("Enter 4-Digit START PIN", "🔑", correctOtp, async (success) => {
-      if(success) {
-        await updateDoc(doc(db, "requests", reqId), { status: "In-Transit", startedAt: Date.now() });
-        window.showToast("🟢 Start PIN verified! Trip is now In-Transit.");
-      }
-    });
-  };
-
-  window.verifyDropOtp = function(reqId, correctOtp, rideId) {
-    window.openPinModal("Enter 4-Digit DROP PIN", "🏁", correctOtp, async (success) => {
-      if(success) {
-        const reqData = ALL_REQUESTS.find(r => r.id === reqId);
-        const earnedAmount = reqData ? reqData.currentPrice : 0;
-
-        await updateDoc(doc(db, "requests", reqId), { status: "Completed", completedAt: Date.now() });
-        if(rideId) {
-          await updateDoc(doc(db, "rides", rideId), { 
-            status: "Completed", 
-            completedAt: Date.now(),
-            earnedAmount: earnedAmount 
-          });
-        }
-        window.showToast("🎉 Drop PIN verified! Trip completed.");
-        window.updateWalletLedger();
-        window.renderTrips();
-        
-        if(currentUser && reqData && reqData.passengerUid === currentUser.uid) {
-          window.openRatingModal();
-        }
-      }
-    });
-  };
-
-  let currentSelectedRating = 5;
-  let selectedRatingChips = [];
-
-  window.openRatingModal = function() {
-    currentSelectedRating = 5;
-    selectedRatingChips = [];
-    document.getElementById("ratingReviewText").value = "";
-    updateStarDisplay(5);
-    document.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("selected"));
-    document.getElementById("ratingModal").style.display = "flex";
-  };
-
-  window.setRating = function(stars) {
-    currentSelectedRating = stars;
-    updateStarDisplay(stars);
-  };
-
-  function updateStarDisplay(stars) {
-    const starEls = document.querySelectorAll("#starsContainer span");
-    starEls.forEach((el, idx) => {
-      el.style.color = (idx < stars) ? "#f59e0b" : "#cbd5e1";
-    });
+  async function writeDriverLiveLocation(position){
+    if(!currentUser || driverLocationBusy) return;
+    const now=Date.now();
+    if(now-liveLocationWriteAt < 3000) return; // throttle Firestore writes
+    const lat=Number(position.coords.latitude), lng=Number(position.coords.longitude);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+    const activeIds=[...activeDriverRideIds];
+    if(!activeIds.length) return;
+    driverLocationBusy=true; liveLocationWriteAt=now;
+    try{
+      await Promise.all(activeIds.map(rideId=>setDoc(doc(db,'live_locations',rideId),{
+        rideId, driverUid:currentUser.uid, lat, lng, accuracy:Number(position.coords.accuracy)||null,
+        heading:Number.isFinite(position.coords.heading)?position.coords.heading:null,
+        speed:Number.isFinite(position.coords.speed)?position.coords.speed:null,
+        updatedAt:now, status:'live'
+      },{merge:true})));
+    }catch(e){ console.error('Live location write error:',e); }
+    finally{ driverLocationBusy=false; }
   }
 
-  window.toggleRatingChip = function(btn) {
-    btn.classList.toggle("selected");
-    const txt = btn.textContent.trim();
-    if(selectedRatingChips.includes(txt)) {
-      selectedRatingChips = selectedRatingChips.filter(c => c !== txt);
-    } else {
-      selectedRatingChips.push(txt);
+  function syncDriverLiveTracking(){
+    if(!currentUser) return;
+    const ids=new Set(ALL_REQUESTS.filter(r=>r.driverUid===currentUser.uid && ['Confirmed','In-Transit'].includes(r.status)).map(r=>r.rideId).filter(Boolean));
+    activeDriverRideIds=ids;
+    if(ids.size && navigator.geolocation && driverWatchId===null){
+      driverWatchId=navigator.geolocation.watchPosition(writeDriverLiveLocation, async err=>{
+        console.warn('Driver GPS unavailable:',err);
+        await Promise.all([...activeDriverRideIds].map(async rideId=>{
+          try{ await setDoc(doc(db,'live_locations',rideId),{rideId,driverUid:currentUser.uid,status:'offline',gpsError:err.code||0,updatedAt:Date.now()},{merge:true}); }catch(e){}
+        }));
+      }, {enableHighAccuracy:true, maximumAge:5000, timeout:15000});
     }
-  };
+    if(!ids.size && driverWatchId!==null){ navigator.geolocation.clearWatch(driverWatchId); driverWatchId=null; }
+  }
 
-  window.submitRatingReview = async function() {
-    const review = document.getElementById("ratingReviewText").value.trim();
-    try {
-      await addDoc(collection(db, "ratings"), {
-        userUid: currentUser ? currentUser.uid : "anon",
-        userName: currentUser ? currentUser.displayName : "Passenger",
-        rating: currentSelectedRating,
-        chips: selectedRatingChips,
-        review,
-        created: Date.now()
-      });
-    } catch(e){}
-    document.getElementById("ratingModal").style.display = "none";
-    window.showToast("⭐ Thank you for rating! Feedback saved successfully.");
-  };
+  window.stopDriverLiveTracking=function(){ if(driverWatchId!==null && navigator.geolocation) navigator.geolocation.clearWatch(driverWatchId); driverWatchId=null; activeDriverRideIds=new Set(); };
 
-  window.openChat = function(reqId, driverPhone) {
-    currentChatRequestId = reqId;
-    document.getElementById("chatModal").style.display = "flex";
-    document.getElementById("chatTitle").innerHTML = `💬 Live Chat | 📞 <a href="tel:${driverPhone}" style="color:white">Call (${driverPhone})</a>`;
-
-    if(chatUnsubscribe) chatUnsubscribe();
-    const messagesRef = collection(db, "requests", reqId, "messages");
-    chatUnsubscribe = onSnapshot(messagesRef, (snapshot) => {
-      const msgs = snapshot.docs.map(d => d.data()).sort((a,b) => a.created - b.created);
-      const box = document.getElementById("chatMessages");
-      box.innerHTML = msgs.map(m => `
-        <div class="chat-msg ${m.senderUid === currentUser.uid ? 'sent' : 'received'}">
-          <small style="font-size:9px;display:block;opacity:0.8">${m.senderEmail}</small>
-          ${window.esc(m.text)}
-        </div>
-      `).join("");
-      box.scrollTop = box.scrollHeight;
-    });
-  };
-
-  window.closeChat = function() {
-    document.getElementById("chatModal").style.display = "none";
-    if(chatUnsubscribe) chatUnsubscribe();
-  };
-
-  window.sendChatMessage = async function() {
-    const input = document.getElementById("chatInputText");
-    const text = input.value.trim();
-    if(!text || !currentChatRequestId || !currentUser) return;
-    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
-      text, senderUid: currentUser.uid, senderEmail: currentUser.displayName, created: Date.now()
-    });
-    input.value = "";
-  };
-
-  window.acceptOffer = async function(x) {
-    await updateDoc(doc(db, "requests", x.id), { status: "Accepted", payment: "Payment Pending" });
-    window.showToast("✅ Offer accepted! Contact and chat unlocked.");
-  };
-
-  window.counterRequest = async function(qid) {
-    const x = ALL_REQUESTS.find(a => a.id === qid);
-    if(!x) return;
-    
-    if(x.bookingScope === 'local') {
-      window.showToast("❌ Counter offers are only allowed in Intercity Mode (10 KM).");
-      return;
-    }
-
-    let maxAllowed = x.originalPrice;
-    let n = prompt(`Enter counter offer (₹) [Max allowed: ₹${maxAllowed}]:`, x.currentPrice);
-    if(n === null) return;
-    
-    let newOffer = Number(n);
-    if(isNaN(newOffer) || newOffer <= 0) {
-      window.showToast("❌ Please enter a valid fare!");
-      return;
-    }
-    
-    if(newOffer > maxAllowed) {
-      window.showToast(`❌ Counter fare cannot exceed ₹${maxAllowed}!`);
-      return;
-    }
-
-    await updateDoc(doc(db, "requests", qid), { 
-      currentPrice: newOffer, 
-      status: "Counter Offered", 
-      lastCounterBy: currentUser.uid === x.driverUid ? "Driver" : "Passenger"
-    });
-    window.showToast("✅ Counter offer sent: ₹" + newOffer);
-  };
-
-  window.cancelRequest = async function(qid, isDriver) {
-    const defaultReason = isDriver ? "Off-Route / Driver Busy" : "Plans Changed / Fare Issue";
-    const reason = prompt(`Select/Enter Cancellation Reason:`, defaultReason);
-    if(reason === null) return;
-    await updateDoc(doc(db, "requests", qid), { 
-      status: "Cancelled", 
-      cancelReason: reason,
-      cancelledBy: isDriver ? "Driver" : "Passenger",
-      cancelledAt: Date.now()
-    });
-    window.showToast("Request cancelled.");
-  };
-
-  window.adminForceCancelTrip = async function(rideId) {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can perform this action!"); return; }
-    const reason = prompt("Enter reason for Admin Force Cancellation:", "Admin Policy Violation / Inactive");
-    if(reason === null) return;
-    await updateDoc(doc(db, "rides", rideId), { status: "Cancelled", cancelReason: reason, cancelledBy: "Admin" });
-    window.showToast("🚫 Trip cancelled by Admin.");
-  };
-
-  window.reserveCapacity = async function(x, method) {
-    const r = ALL_RIDES.find(a => a.id === x.rideId);
-    if(r && x.type === "passenger") await updateDoc(doc(db, "rides", r.id), { seats: r.seats - (x.numSeats || 1) });
-    await updateDoc(doc(db, "requests", x.id), { status: "Confirmed", payment: "Due", paymentMethod: method });
-    window.showToast("✅ Booking confirmed!");
-  };
-
-  window.clearTestDataOnly = async function() {
-    if(!currentUser || currentUser.email !== ADMIN_EMAIL) { window.showToast("⛔ Only Master Admin can delete test data!"); return; }
-    if(!confirm("⚠️ Only Active/Pending test data will be deleted. Completed trips remain safe. Continue?")) return;
-    
-    const batch = writeBatch(db);
-    for(const colName of ['rides', 'requests']) {
-      const qs = await getDocs(collection(db, colName));
-      qs.forEach(d => { 
-        if(d.data().status !== "Completed") {
-          batch.delete(d.ref); 
-        }
-      });
-    }
-    await batch.commit();
-    window.showToast("✅ Active/Pending test data cleared!");
-    window.location.reload();
-  };
-
-  window.saveLocationToFirestore = async function(locationName, lat, lon) {
-    const user = currentUser;
-    if(!user || !locationName) return;
-    try {
-      const docId = (lat && lon) ? `${lat.toFixed(3)}_${lon.toFixed(3)}` : encodeURIComponent(locationName.slice(0, 30));
-      const kw = locationName.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2);
-      await setDoc(doc(db, "cached_locations", docId), {
-        display_name: locationName,
-        lat: lat || 0,
-        lon: lon || 0,
-        keywords: kw,
-        savedBy: user.uid,
-        savedAt: Date.now()
-      }, { merge: true });
-    } catch(e) {}
-  };
 
   window.getCurrentUser = () => currentUser;
   window.getRides = () => ALL_RIDES;
@@ -1813,6 +1417,7 @@ let currentAdminFilter = 'all';
 let driverMap = null;
 let driverRouteLayers = null;
 let passengerTrackMaps = {};
+const activeTrackingIds = new Set();
 let fetchedDriverRoutes = [];
 let selectedRouteIdx = 0;
 let activeCorridorMode = 'intercity';
@@ -1823,6 +1428,8 @@ let pinPickerMap = null;
 let pinPickerMarker = null;
 let tempSelectedLocationText = "";
 let debounceTimers = {};
+// Exact coordinates selected from LocationIQ/map pin, keyed by input id.
+const selectedLocationCoords = {};
 
 let passengerSearchMap = null;
 let passengerRouteLayer = null;
@@ -1838,6 +1445,12 @@ const redPinIcon = L.icon({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
+function getDistinctMarkerCoords(a,b){
+  const d=turf.distance(turf.point([a[1],a[0]]),turf.point([b[1],b[0]]),{units:'meters'});
+  if(d<35){ return {a:[a[0],a[1]-0.00018], b:[b[0],b[1]+0.00018], near:true}; }
+  return {a,b,near:false};
+}
+
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
@@ -1872,6 +1485,7 @@ function switchActivitySubTab(subTab) {
     btnTrips.style.color = "var(--text-muted)";
     const dot = document.getElementById("reqBadgeDot");
     if(dot) dot.classList.remove("pulse");
+    markRequestNotificationsRead();
     renderRequests();
   } else {
     reqsBox.style.display = "none";
@@ -2234,6 +1848,10 @@ window.closeDeepInspectModal = closeDeepInspectModal;
 function handleLocationInput(inputId, suggestionBoxId) {
   const query = document.getElementById(inputId).value.trim();
   const box = document.getElementById(suggestionBoxId);
+  // If the user changes the text manually, do not keep coordinates from an older selection.
+  if (selectedLocationCoords[inputId] && selectedLocationCoords[inputId].text !== query) {
+    delete selectedLocationCoords[inputId];
+  }
 
   if(debounceTimers[inputId]) clearTimeout(debounceTimers[inputId]);
 
@@ -2295,6 +1913,7 @@ function renderSuggestionsHtml(inputId, suggestionBoxId, data) {
 function selectSuggestedLocation(inputId, suggestionBoxId, locationName, lat, lon) {
   const decodedName = unescape(locationName);
   document.getElementById(inputId).value = decodedName;
+  selectedLocationCoords[inputId] = { text: decodedName, lat: parseFloat(lat), lon: parseFloat(lon), source: "LocationIQ" };
   document.getElementById(suggestionBoxId).style.display = "none";
   if(window.saveLocationToFirestore) window.saveLocationToFirestore(decodedName, lat, lon);
 
@@ -2363,6 +1982,14 @@ window.detectAndCenterGPS = detectAndCenterGPS;
 
 async function setPinPosition(lat, lon, isPickup) {
   const chosenIcon = isPickup ? greenPinIcon : redPinIcon;
+  if (activeTargetInputId) {
+    selectedLocationCoords[activeTargetInputId] = {
+      text: selectedLocationCoords[activeTargetInputId]?.text || "",
+      lat: parseFloat(lat),
+      lon: parseFloat(lon),
+      source: "MapPin"
+    };
+  }
   if(pinPickerMarker) pinPickerMap.removeLayer(pinPickerMarker);
   
   pinPickerMarker = L.marker([lat, lon], { draggable: true, icon: chosenIcon }).addTo(pinPickerMap);
@@ -2421,6 +2048,7 @@ async function reverseGeocodeAndSet(lat, lng) {
     const data = await res.json();
     if(data && data.display_name) {
       tempSelectedLocationText = cleanLocationName(data.display_name);
+      if (activeTargetInputId && selectedLocationCoords[activeTargetInputId]) selectedLocationCoords[activeTargetInputId].text = tempSelectedLocationText;
       document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned: <b>${esc(tempSelectedLocationText)}</b>`;
       return;
     }
@@ -2431,6 +2059,7 @@ async function reverseGeocodeAndSet(lat, lng) {
     const data = await res.json();
     if(data && data.display_name) {
       tempSelectedLocationText = cleanLocationName(data.display_name);
+      if (activeTargetInputId && selectedLocationCoords[activeTargetInputId]) selectedLocationCoords[activeTargetInputId].text = tempSelectedLocationText;
       document.getElementById("selectedPinAddress").innerHTML = `📍 Pinned: <b>${esc(tempSelectedLocationText)}</b>`;
     }
   } catch(e) {
@@ -2442,7 +2071,14 @@ async function reverseGeocodeAndSet(lat, lng) {
 function confirmMapPinSelection() {
   if(activeTargetInputId && tempSelectedLocationText) {
     document.getElementById(activeTargetInputId).value = tempSelectedLocationText;
-    if(window.saveLocationToFirestore) window.saveLocationToFirestore(tempSelectedLocationText);
+    const saved = selectedLocationCoords[activeTargetInputId] || {};
+    selectedLocationCoords[activeTargetInputId] = {
+      text: tempSelectedLocationText,
+      lat: Number(saved.lat),
+      lon: Number(saved.lon),
+      source: saved.source || "MapPin"
+    };
+    if(window.saveLocationToFirestore) window.saveLocationToFirestore(tempSelectedLocationText, saved.lat, saved.lon);
     showToast("✅ Exact location pinned & set!");
     
     if(activeTargetInputId === 'fFrom' || activeTargetInputId === 'fTo') updatePassengerRoutePreview();
@@ -2452,30 +2088,43 @@ function confirmMapPinSelection() {
 }
 window.confirmMapPinSelection = confirmMapPinSelection;
 
-async function geocode(query) {
+async function geocode(query, inputId = null) {
   const clean = query.trim().toLowerCase();
+
+  // Prefer the exact coordinates the user selected from autocomplete or the map pin.
+  if (inputId && selectedLocationCoords[inputId]) {
+    const saved = selectedLocationCoords[inputId];
+    if (saved.text && saved.text.trim().toLowerCase() === clean && Number.isFinite(saved.lat) && Number.isFinite(saved.lon)) {
+      return [saved.lat, saved.lon];
+    }
+  }
+
   if(localMemoryCache[clean] && localMemoryCache[clean][0]) {
     return [parseFloat(localMemoryCache[clean][0].lat), parseFloat(localMemoryCache[clean][0].lon)];
   }
 
   try {
-    const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&accept-language=en&format=json&limit=1`;
+    // Request several candidates; choose the highest-ranked result returned by LocationIQ.
+    const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&accept-language=en&format=json&limit=5`;
     const res = await fetch(url);
     const data = await res.json();
     if(data && data.length > 0) {
-      const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
       localMemoryCache[clean] = data;
-      return coords;
+      const best = data[0];
+      return [parseFloat(best.lat), parseFloat(best.lon)];
     }
   } catch(e) {}
 
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}`);
-  const data = await res.json();
-  if(data && data.length > 0) {
-    const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-    localMemoryCache[clean] = data;
-    return coords;
-  }
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&limit=5&q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    if(data && data.length > 0) {
+      localMemoryCache[clean] = data;
+      const best = data[0];
+      return [parseFloat(best.lat), parseFloat(best.lon)];
+    }
+  } catch(e) {}
+
   return [21.4588, 80.1961];
 }
 window.geocode = geocode;
@@ -2501,8 +2150,8 @@ async function updatePassengerRoutePreview() {
   }
 
   try {
-    const fromCoord = await geocode(from);
-    const toCoord = await geocode(to);
+    const fromCoord = await geocode(from, "fFrom");
+    const toCoord = await geocode(to, "fTo");
 
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromCoord[1]},${fromCoord[0]};${toCoord[1]},${toCoord[0]}?overview=full&geometries=geojson`;
     const res = await fetch(osrmUrl);
@@ -2515,8 +2164,9 @@ async function updatePassengerRoutePreview() {
       const lineLayer = L.geoJSON(route.geometry, {
         style: { color: "#1261ff", weight: 5, opacity: 0.9 }
       });
-      const pStart = L.marker([fromCoord[0], fromCoord[1]], { icon: greenPinIcon }).bindPopup("🟢 Pickup");
-      const pEnd = L.marker([toCoord[0], toCoord[1]], { icon: redPinIcon }).bindPopup("🔴 Drop");
+      const distinct = getDistinctMarkerCoords(fromCoord,toCoord);
+      const pStart = L.marker(distinct.a, { icon: greenPinIcon }).bindPopup("🟢 Pickup");
+      const pEnd = L.marker(distinct.b, { icon: redPinIcon }).bindPopup("🔴 Drop");
 
       passengerRouteLayer.addLayer(lineLayer);
       passengerRouteLayer.addLayer(pStart);
@@ -2543,8 +2193,8 @@ async function fetchDriverRoutes() {
   driverRouteLayers.clearLayers();
 
   try {
-    const fromCoord = await geocode(from);
-    const toCoord = await geocode(to);
+    const fromCoord = await geocode(from, "pFrom");
+    const toCoord = await geocode(to, "pTo");
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromCoord[1]},${fromCoord[0]};${toCoord[1]},${toCoord[0]}?overview=full&geometries=geojson&alternatives=true`;
     const res = await fetch(osrmUrl);
     const data = await res.json();
@@ -2870,40 +2520,62 @@ function triggerEmergencySOS() {
   }
 }
 
-function toggleLiveTrackingBox(reqId) {
-  const mapBox = document.getElementById(`trackMap_${reqId}`);
-  if(!mapBox) return;
-  if(mapBox.style.display === "block") {
-    mapBox.style.display = "none";
-    if(passengerTrackMaps[reqId]) {
-      passengerTrackMaps[reqId].remove();
-      delete passengerTrackMaps[reqId];
-    }
-    return;
-  }
-  mapBox.style.display = "block";
-  
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(position => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      
-      const mapInstance = L.map(`trackMap_${reqId}`).setView([lat, lng], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(mapInstance);
-      const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28, 28] });
-      const marker = L.marker([lat, lng], { icon: carIcon }).addTo(mapInstance);
-      marker.bindPopup('🚗 Transporter Live GPS Position').openPopup();
-
-      passengerTrackMaps[reqId] = mapInstance;
-    }, () => {
-      const mapInstance = L.map(`trackMap_${reqId}`).setView([21.4588, 80.1961], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(mapInstance);
-      const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28, 28] });
-      L.marker([21.4588, 80.1961], { icon: carIcon }).addTo(mapInstance).bindPopup('🚗 Transporter Approaching').openPopup();
-      passengerTrackMaps[reqId] = mapInstance;
-    });
-  }
+function stopTrackingForRequest(reqId){
+  const state=passengerTrackMaps[reqId];
+  if(!state) return;
+  try{ if(state.locationUnsub) state.locationUnsub(); }catch(e){}
+  try{ if(state.map) state.map.remove(); }catch(e){}
+  delete passengerTrackMaps[reqId];
+  activeTrackingIds.delete(reqId);
 }
+
+function startTrackingForRequest(reqId){
+  const req=window.getRequests().find(r=>r.id===reqId);
+  const mapBox=document.getElementById(`trackMap_${reqId}`);
+  if(!req || !mapBox) return;
+  if(passengerTrackMaps[reqId]) return;
+  activeTrackingIds.add(reqId);
+  mapBox.style.display='block';
+
+  const fallback=[21.4588,80.1961];
+  const map=L.map(`trackMap_${reqId}`).setView(fallback,13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
+  const carIcon=L.divIcon({html:'🚗',className:'car-pin',iconSize:[28,28],iconAnchor:[14,14]});
+  const marker=L.marker(fallback,{icon:carIcon}).addTo(map);
+  marker.bindPopup('🚗 Waiting for transporter GPS...');
+  const status=document.createElement('div');
+  status.className='live-status'; status.textContent='⏳ Waiting for driver live GPS...';
+  mapBox.appendChild(status);
+
+  const state={map,marker,status,locationUnsub:null};
+  passengerTrackMaps[reqId]=state;
+  setTimeout(()=>map.invalidateSize(),100);
+
+  const rideId=req.rideId;
+  if(!rideId){ status.textContent='⚠️ Trip ID unavailable for live tracking.'; return; }
+  state.locationUnsub=onSnapshot(doc(db,'live_locations',rideId), snap=>{
+    if(!snap.exists()){ status.textContent='⏳ Driver GPS not shared yet...'; return; }
+    const d=snap.data();
+    if(d.status==='offline'){ status.className='live-status'; status.textContent='🔴 Driver GPS unavailable'; return; }
+    if(!Number.isFinite(Number(d.lat))||!Number.isFinite(Number(d.lng))) return;
+    const pos=[Number(d.lat),Number(d.lng)];
+    marker.setLatLng(pos);
+    marker.bindPopup(`🚗 Driver Live GPS<br><span style="font-size:11px">Accuracy: ±${Math.round(Number(d.accuracy)||0)}m</span>`);
+    map.setView(pos, Math.max(map.getZoom(),15), {animate:true});
+    const age=Math.max(0,Math.round((Date.now()-(Number(d.updatedAt)||Date.now()))/1000));
+    status.className='live-status live';
+    status.textContent=age<=15 ? `🟢 Live • Updated ${age}s ago` : `🟠 Driver GPS delayed • ${age}s ago`;
+  },err=>{ console.error('Live location listener error:',err); status.textContent='⚠️ Live GPS connection unavailable.'; });
+}
+
+function toggleLiveTrackingBox(reqId){
+  const mapBox=document.getElementById(`trackMap_${reqId}`);
+  if(!mapBox) return;
+  if(mapBox.style.display==='block'){ stopTrackingForRequest(reqId); mapBox.style.display='none'; return; }
+  startTrackingForRequest(reqId);
+}
+window.toggleLiveTrackingBox=toggleLiveTrackingBox;
+
 
 /* 📋 REQUESTS TAB */
 function renderRequests(){
@@ -2962,7 +2634,17 @@ function renderRequests(){
         <label class="pay-option"><input type="radio" name="pay_${x.id}" value="cash_pickup" checked> 💵 Cash on Pickup / Delivery</label>
         <label class="pay-option"><input type="radio" name="pay_${x.id}" value="driver_qr"> 📲 Scan Driver Personal QR (UPI)</label>
         <button class="primary full" onclick="choosePayment('${x.id}')">Confirm Booking (0% Commission)</button>
+        <button class="red full" style="margin-top:6px;" onclick="cancelRequest('${x.id}', false)">✖ Cancel Booking</button>
       </div>`;
+    }
+
+    // Passenger/sender can cancel before the trip becomes In-Transit.
+    if (!isDriver && ["Confirmed"].includes(x.status)) {
+      actions += `<button class="red" style="padding:6px 10px; font-size:11px; margin-top:6px;" onclick="cancelRequest('${x.id}', false)">✖ Cancel ${isPassengerBooking ? 'Booking' : 'Parcel Request'}</button>`;
+    }
+    // Driver can cancel an accepted/confirmed request; full trip cancellation remains available from My Trips.
+    if (isDriver && ["Accepted", "Confirmed"].includes(x.status)) {
+      actions += `<button class="red" style="padding:6px 10px; font-size:11px; margin-top:6px;" onclick="cancelRequest('${x.id}', true)">✖ Cancel Request</button>`;
     }
 
     let otpUi = "";
@@ -3009,6 +2691,10 @@ function renderRequests(){
       <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">${trackBtn} ${chatBtn} ${shareBtn} ${sosBtn}</div>
     </div>`;
   }).join("");
+  // Re-hydrate active tracking maps after realtime HTML rerender.
+  const ids=[...activeTrackingIds];
+  Object.keys(passengerTrackMaps).forEach(id => { try { if(passengerTrackMaps[id].locationUnsub) passengerTrackMaps[id].locationUnsub(); if(passengerTrackMaps[id].map) passengerTrackMaps[id].map.remove(); }catch(e){} delete passengerTrackMaps[id]; });
+  setTimeout(()=>ids.forEach(id=>{ if(document.getElementById(`trackMap_${id}`)) startTrackingForRequest(id); }),50);
 }
 window.renderRequests = renderRequests;
 
@@ -3051,9 +2737,14 @@ function renderTrips(){
 
   if(!filtered.length){ box.innerHTML = empty("🚗", "No trips found in this category"); return; }
 
-  box.innerHTML = filtered.slice().reverse().map(x => {
+  const enrichedTrips = filtered.map(x => {
     const tripReqs = allReqs.filter(q => q.rideId === x.id);
     const hasActiveBooking = tripReqs.some(q => ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
+    const priority = x.status === 'Active' ? (hasActiveBooking ? 0 : 1) : (x.status === 'Completed' ? 2 : 3);
+    return {x, tripReqs, hasActiveBooking, priority};
+  }).sort((a,b) => a.priority-b.priority || (b.x.created||0)-(a.x.created||0));
+
+  box.innerHTML = enrichedTrips.map(({x,tripReqs,hasActiveBooking}) => {
     const showEditBtn = (x.status === 'Active' && !hasActiveBooking);
 
     const completedTripReqs = tripReqs.filter(q => q.status === "Completed" || q.status === "Paid");
@@ -3092,10 +2783,10 @@ function renderTrips(){
     }
 
     return `
-    <div class="request">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-        <strong>🚗 ${esc(cleanLocationName(x.from))} → ${esc(cleanLocationName(x.to))}</strong>
-        <span class="badge ${x.status==='Completed'?'g':x.status==='Cancelled'?'red':'purple'}">${x.status}</span>
+    <div class="request ${x.status === 'Active' ? 'trip-card-active' : ''}">
+      <div class="trip-header">
+        <strong class="trip-route">🚗 ${esc(cleanLocationName(x.from))} → ${esc(cleanLocationName(x.to))}</strong>
+        <span class="badge trip-status ${x.status==='Completed'?'g':x.status==='Cancelled'?'red':'purple'}">${x.status}${hasActiveBooking ? ' • BOOKED' : ''}</span>
       </div>
       <p style="margin:4px 0;">📅 ${esc(x.date)} • ⏰ ${esc(x.time)} | ${x.isCommuterMode ? '📦 Commuter Parcel' : `💺 ${x.seats} seats left`} (${x.vehicle}) ${x.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family</span>' : (x.isLadiesOnly ? '<span class="badge pink">🌸 Ladies</span>' : '')}</p>
       ${x.pickupSpot ? `<p class="small" style="color:var(--primary); margin:2px 0;">📍 <b>Pickup Spot:</b> ${esc(x.pickupSpot)}</p>` : ''}
@@ -3106,9 +2797,10 @@ function renderTrips(){
       <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
         ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
         ${showEditBtn ? `<button class="secondary" style="padding:5px 9px;font-size:11px;" onclick="openEditTripModal('${x.id}')">✏️ Edit Trip</button>` : (x.status === 'Active' ? `<span class="small muted" style="padding-top:4px;">🔒 Edit Locked</span>` : '')}
+        ${x.status === 'Active' && user && x.driverUid === user.uid ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="cancelTrip('${x.id}')">🚫 Cancel Trip</button>` : ''}
         ${(user && user.email === adminEmail && x.status === 'Active') ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Force Cancel</button>` : ''}
       </div>
-    </div>`;
+    `;
   }).join("");
 }
 window.renderTrips = renderTrips;
@@ -3235,6 +2927,28 @@ document.addEventListener("DOMContentLoaded", function(){
   setupParcelAutoCheck();
   renderVehicleDropdown();
 });
+  // ==========================================
+// 📱 PAGE VISIBILITY & REAL-TIME RE-SYNC ENGINE
+// ==========================================
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) {
+    console.log("⚠️ यूज़र ऐप से बाहर चला गया है या स्क्रीन बंद है (Background Mode)।");
+  } else {
+    console.log("🟢 यूज़र वापस SafarShare ऐप पर आ गया है!");
+    
+    // ऐप पर लौटते ही तुरंत ताज़ा डेटा और स्टेटस री-सिंक करें
+    if (typeof window.renderRequests === 'function') {
+      window.renderRequests();
+    }
+    if (typeof window.renderTrips === 'function') {
+      window.renderTrips();
+    }
+    if (typeof window.updateWalletLedger === 'function') {
+      window.updateWalletLedger();
+    }
+  }
+});
+
 </script>
 
 </body>
