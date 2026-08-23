@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SafarShare V6.0 - Smart Travel & Logistics Platform</title>
+<title>SafarShare V6.2 - Smart Travel & Logistics Platform</title>
 
 <!-- PWA MANIFEST & THEME -->
 <link rel="manifest" href="./manifest.json">
@@ -267,13 +267,32 @@ button{ font-family:inherit; }
   justify-content: center; align-items: center; padding: 25px; text-align: center;
 }
 
-@media(max-width:750px){ .cards, .grid, .stats{ grid-template-columns:1fr; } .ride-top{ flex-direction:column; } }
+/* 👑 MASTER ADMIN TABS & DASHBOARD STYLES */
+.admin-tab-bar { display: flex; overflow-x: auto; gap: 6px; background: #e2e8f0; padding: 4px; border-radius: 12px; margin-bottom: 14px; white-space: nowrap; }
+.admin-tab-btn { border: 0; padding: 8px 14px; border-radius: 9px; font-weight: 700; font-size: 11px; cursor: pointer; background: none; color: var(--text-muted); }
+.admin-tab-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+.kpi-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.kpi-card .val { font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+
+.admin-sub-section { display: none; }
+.admin-sub-section.active { display: block; }
+
+#adminLiveMap { width: 100%; height: 350px; border-radius: 14px; border: 1px solid #cbd5e1; margin-top: 10px; }
+
+
+@media(max-width:750px){ .cards, .grid, .stats, .kpi-grid{ grid-template-columns:1fr; } .ride-top{ flex-direction:column; } }
 </style>
 </head>
 
 <body>
 
 <div id="toast-container"></div>
+<!-- 👁️ LIVE SYNC BADGE (NEW) -->
+<div id="liveSyncBadge" style="display:none; position:fixed; top:75px; left:50%; transform:translateX(-50%); background:#ffeb3b; color:#000; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; z-index:999999; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+  🔄 Live Syncing...
+</div>
 <audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <!-- 🚫 USER BLOCKED SCREEN -->
@@ -375,6 +394,17 @@ button{ font-family:inherit; }
   </div>
 </div>
 
+<!-- 🚘 ADMIN GARAGE & KYC MODAL -->
+<div id="adminGarageModal" class="modal" style="display:none; z-index:100006;">
+  <div class="modal-box" style="max-width:480px; padding:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="margin:0; font-size:16px;" id="adminGarageTitle">🚘 User Garage & KYC</h3>
+      <button style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b;" onclick="closeAdminGarageModal()">✖</button>
+    </div>
+    <div id="adminGarageDetails"></div>
+  </div>
+</div>
+
 <!-- 👤 USER PROFILE & MULTI-VEHICLE GARAGE MODAL -->
 <div id="profileModal" class="modal">
   <div class="modal-box">
@@ -458,7 +488,7 @@ button{ font-family:inherit; }
   </div>
 </div>
 
-<!-- 👥 REAL-TIME ONLINE USERS & DEEP INSPECT MODAL (ADMIN) -->
+<!-- 👥 REAL-TIME ONLINE USERS & DEEP INSPECT MODAL -->
 <div id="usersModal" class="modal">
   <div class="modal-box" style="max-width:560px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -596,11 +626,14 @@ button{ font-family:inherit; }
   <select id="pVehicleSelect" onchange="handleVehicleSelectChange()"></select>
 </div>
 
-<!-- HYBRID INPUT FROM -->
+<!-- 🎯 HYBRID INPUT FROM (Post Trip) UPDATED WITH AUTO-GPS -->
 <div class="field" style="position:relative;">
   <label>From / Departure City or Landmark</label>
   <div style="display:flex; gap:6px;">
-    <input id="pFrom" placeholder="Type city or area..." oninput="handleLocationInput('pFrom', 'pFromSuggestions')" autocomplete="off">
+    <div style="position:relative; flex:1;">
+      <input id="pFrom" placeholder="Type city or area..." oninput="handleLocationInput('pFrom', 'pFromSuggestions')" autocomplete="off" style="width:100%; padding-right:35px;">
+      <span onclick="autoDetectFromGPS('pFrom', this)" style="position:absolute; right:10px; top:11px; cursor:pointer; font-size:16px; z-index:10;" title="Auto Detect Location">🎯</span>
+    </div>
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('pFrom')" title="Adjust on Map">📍 Map</button>
   </div>
   <div id="pFromSuggestions" class="suggestions-dropdown"></div>
@@ -702,11 +735,14 @@ button{ font-family:inherit; }
   </label>
 </div>
 
-<!-- HYBRID INPUT FROM -->
+<!-- 🎯 HYBRID INPUT FROM (Find Ride) UPDATED WITH AUTO-GPS -->
 <div class="field" style="position:relative;">
   <label>From / Pickup Area</label>
   <div style="display:flex; gap:6px;">
-    <input id="fFrom" placeholder="Type pickup city or area..." oninput="handleLocationInput('fFrom', 'fFromSuggestions')" autocomplete="off">
+    <div style="position:relative; flex:1;">
+      <input id="fFrom" placeholder="Type pickup city or area..." oninput="handleLocationInput('fFrom', 'fFromSuggestions')" autocomplete="off" style="width:100%; padding-right:35px;">
+      <span onclick="autoDetectFromGPS('fFrom', this)" style="position:absolute; right:10px; top:11px; cursor:pointer; font-size:16px; z-index:10;" title="Auto Detect Location">🎯</span>
+    </div>
     <button type="button" class="secondary" style="padding:0 14px;" onclick="openMapPinPicker('fFrom')" title="Adjust on Map">📍 Map</button>
   </div>
   <div id="fFromSuggestions" class="suggestions-dropdown"></div>
@@ -765,24 +801,27 @@ button{ font-family:inherit; }
 <div id="rideResults" class="results"></div>
 </section>
 
-<!-- 📦 SEND PARCEL [FIXED GRID LAYOUT] -->
+<!-- 📦 SEND PARCEL -->
 <section id="parcel" class="page">
 <div class="search">
 <h2>📦 Send Parcel / Full Vehicle Logistics</h2>
 
 <div class="grid">
-  <!-- HYBRID INPUT FROM -->
-  <div class="field" style="position:relative; grid-column: span 2;">
+  <!-- 🎯 HYBRID INPUT FROM (Send Parcel) UPDATED WITH AUTO-GPS -->
+  <div class="field" style="position:relative;">
     <label>Pickup Area</label>
     <div style="display:flex; gap:6px;">
-      <input id="xFrom" placeholder="Type pickup area..." oninput="handleLocationInput('xFrom', 'xFromSuggestions')" autocomplete="off">
+      <div style="position:relative; flex:1;">
+        <input id="xFrom" placeholder="Type pickup area..." oninput="handleLocationInput('xFrom', 'xFromSuggestions')" autocomplete="off" style="width:100%; padding-right:35px;">
+        <span onclick="autoDetectFromGPS('xFrom', this)" style="position:absolute; right:10px; top:11px; cursor:pointer; font-size:16px; z-index:10;" title="Auto Detect Location">🎯</span>
+      </div>
       <button type="button" class="secondary" style="padding:0 12px;" onclick="openMapPinPicker('xFrom')" title="Adjust on Map">📍 Map</button>
     </div>
     <div id="xFromSuggestions" class="suggestions-dropdown"></div>
   </div>
 
   <!-- HYBRID INPUT TO -->
-  <div class="field" style="position:relative; grid-column: span 2;">
+  <div class="field" style="position:relative;">
     <label>Drop Area</label>
     <div style="display:flex; gap:6px;">
       <input id="xTo" placeholder="Enter delivery area..." oninput="handleLocationInput('xTo', 'xToSuggestions')" autocomplete="off">
@@ -805,7 +844,7 @@ button{ font-family:inherit; }
   <div class="field"><label>Receiver 10-Digit Mobile *</label><input id="xRecPhone" type="tel" placeholder="10-digit mobile"></div>
 </div>
 
-<div class="field" style="margin-top:10px;">
+<div class="field">
   <label>Parcel Payment Mode</label>
   <select id="xParcelPayMode" style="font-weight:700; color:var(--primary);">
     <option value="sender_paid">📦 Paid by Sender (At Pickup to Driver)</option>
@@ -813,7 +852,7 @@ button{ font-family:inherit; }
   </select>
 </div>
 
-<button class="primary full" style="margin-top:12px;" onclick="findParcel()">Find Transporter (<span id="parcelCorridorLabel">10 KM Highway Corridor</span>)</button>
+<button class="primary full" onclick="findParcel()">Find Transporter (<span id="parcelCorridorLabel">10 KM Highway Corridor</span>)</button>
 </div>
 <div id="parcelResults" class="results"></div>
 </section>
@@ -832,36 +871,93 @@ button{ font-family:inherit; }
 
   <!-- SUB-VIEW 2: MY TRIPS & MASTER ADMIN -->
   <div id="subViewTrips" style="display:none;">
-    <!-- 👑 MASTER ADMIN CONTROL CENTER -->
+    
+    <!-- 👑 NEW ADVANCED MASTER ADMIN DASHBOARD (8 MODULES) -->
     <div id="adminPanel" class="admin-card" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h3 style="margin:0; font-size:17px;">👑 Master Admin Control Center</h3>
         <span class="badge g">LIVE ADMIN</span>
       </div>
-      
-      <div style="font-size:14px; margin-bottom:4px;">🚗 <strong>Completed Trips:</strong> <span id="adminCompletedCount">0</span></div>
-      <div style="font-size:14px; margin-bottom:12px;">💰 <strong>Projected 5% Platform Revenue:</strong> ₹<span id="adminRevenueCount">0</span></div>
-      
-      <button class="secondary full" style="margin-bottom:8px;" onclick="openUsersModal()">👥 View Real-Time Active Users & Route Inspection</button>
 
-      <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:8px; margin-bottom:8px;">
-        <button class="orange full" onclick="openAdsModal()">📢 Manage Local Sponsored Ads</button>
-        <button class="secondary full" onclick="filterAdminTrips('all')">Show All</button>
+      <!-- ADMIN SUB-TABS NAVIGATION -->
+      <div class="admin-tab-bar">
+        <button class="admin-tab-btn active" onclick="switchAdminTab('overview')">📊 1. Overview</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('users')">👥 2. Users</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('trips')">🚗 3. Trips</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('payments')">💳 4. Payments</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('parcels')">📦 5. Parcels</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('live')">📍 6. Live Map</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('reports')">⚠️ 7. Reports</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('ads')">📢 8. Ads</button>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-        <button class="secondary full" onclick="filterAdminTrips('active')">Show Active Only</button>
-        <button class="secondary full" onclick="filterAdminTrips('completed')">Show Completed Only</button>
+      <!-- TAB 1: OVERVIEW & KPIS -->
+      <div id="admTabOverview" class="admin-sub-section active">
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="small muted">Total Users</div><div class="val" id="kpiTotalUsers">0</div></div>
+          <div class="kpi-card"><div class="small muted">Active Trips</div><div class="val" id="kpiActiveTrips">0</div></div>
+          <div class="kpi-card"><div class="small muted">Total Requests</div><div class="val" id="kpiTotalReqs">0</div></div>
+          <div class="kpi-card"><div class="small muted">Parcel Bookings</div><div class="val" id="kpiParcels">0</div></div>
+          <div class="kpi-card"><div class="small muted">Completed Trips</div><div class="val" id="kpiCompleted">0</div></div>
+          <div class="kpi-card"><div class="small muted">Platform Rev (5%)</div><div class="val" id="kpiRevenue">₹0</div></div>
+          <div class="kpi-card"><div class="small muted">Total Paid Volume</div><div class="val" id="kpiPaidVol">₹0</div></div>
+          <div class="kpi-card"><div class="small muted">Pending Payments</div><div class="val" id="kpiPendingVol">₹0</div></div>
+        </div>
       </div>
 
-      <button class="secondary full" style="margin-bottom:8px;" onclick="filterAdminTrips('cancelled')">Show Rejections with Reason</button>
-      
-      <button class="red full" onclick="clearTestDataOnly()">🗑️ Clear ALL Test Data</button>
-
-      <div id="adminRejectionLogs" style="display:none; margin-top:10px;">
-        <h4 style="margin:0 0 6px; color:var(--danger);">🚫 Rejection & Cancellation Logs:</h4>
-        <div id="rejectionLogsList"></div>
+      <!-- TAB 2: USERS MANAGEMENT (GARAGE + INSPECT) -->
+      <div id="admTabUsers" class="admin-sub-section">
+        <div class="field"><input id="adminUserSearch" placeholder="🔍 Search user by name, email, phone..." oninput="renderAdminUsersManagement()"></div>
+        <div id="adminUsersListContainer"></div>
       </div>
+
+      <!-- TAB 3: TRIPS MONITORING -->
+      <div id="admTabTrips" class="admin-sub-section">
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('all')">All</button>
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Active')">Active</button>
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Completed')">Completed</button>
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Cancelled')">Cancelled</button>
+        </div>
+        <div id="adminTripsListContainer"></div>
+      </div>
+
+      <!-- TAB 4: PAYMENTS FINANCE TRACKING -->
+      <div id="admTabPayments" class="admin-sub-section">
+        <h4 style="margin:0 0 8px;">💳 Transactions Ledger</h4>
+        <div id="adminPaymentsContainer"></div>
+      </div>
+
+      <!-- TAB 5: PARCEL LOGISTICS TRACKING -->
+      <div id="admTabParcels" class="admin-sub-section">
+        <h4 style="margin:0 0 8px;">📦 Active Parcel Shipments</h4>
+        <div id="adminParcelsContainer"></div>
+      </div>
+
+      <!-- TAB 6: LIVE GOD'S EYE TRACKING MAP -->
+      <div id="admTabLive" class="admin-sub-section">
+        <h4 style="margin:0 0 4px;">📍 God's Eye Live Radar</h4>
+        <div class="small muted">Real-time driver tracking via Leaflet.js</div>
+        <div id="adminLiveMap"></div>
+      </div>
+
+      <!-- TAB 7: REPORTS (SOS & COMPLAINTS) -->
+      <div id="admTabReports" class="admin-sub-section">
+        <h4 style="margin:0 0 8px;">⚠️ SOS Alerts & Complaints</h4>
+        <div id="adminReportsContainer"></div>
+      </div>
+
+      <!-- TAB 8: ADS & SPONSORED MARKETING -->
+      <div id="admTabAds" class="admin-sub-section">
+        <button class="primary full" onclick="openAdsModal()">📢 Manage Local Sponsored Ads</button>
+        
+        <!-- Old generic control buttons kept inside Ads tab for safety -->
+        <div style="margin-top:15px; border-top:1px solid #cbd5e1; padding-top:10px;">
+          <h4 style="margin:0 0 8px; color:var(--danger);">System Danger Zone</h4>
+          <button class="red full" onclick="clearTestDataOnly()">🗑️ Clear ALL Test Data</button>
+        </div>
+      </div>
+
     </div>
 
     <!-- 📊 MY WALLET & EARNINGS LEDGER -->
@@ -949,6 +1045,8 @@ button{ font-family:inherit; }
   let ALL_REQUESTS = [];
   let ALL_ADS = [];
   let ALL_USERS = [];
+  let ALL_VEHICLES = [];
+  let ALL_REPORTS = []; // <--- NEW: For SOS & Reports
   let currentChatRequestId = null;
   let chatUnsubscribe = null;
 
@@ -1125,18 +1223,19 @@ button{ font-family:inherit; }
 
     const cleanPlate = plateRaw.replace(/[\s-]/g, '').toUpperCase();
 
-    const newVeh = {
+        const newVeh = {
       type, model, plate: cleanPlate,
       userUid: currentUser.uid,
       userEmail: currentUser.email,
-      created: Date.now()
+      created: Date.now(),
+      kycStatus: 'pending' // 🟡 KYC स्टेटस यहाँ जुड़ गया है
     };
 
     try {
       await addDoc(collection(db, "user_vehicles"), newVeh);
       document.getElementById("newVehModel").value = "";
       document.getElementById("newVehPlate").value = "";
-      window.showToast("✅ Vehicle saved to Cloud Garage!");
+      window.showToast("✅ Vehicle saved! Waiting for Admin KYC."); // 🟡 मैसेज अपडेट कर दिया गया है
     } catch(e) {
       window.showToast("Error saving vehicle: " + e.message);
     }
@@ -1244,7 +1343,7 @@ button{ font-family:inherit; }
   let driverLocationBusy = false;
   let liveLocationWriteAt = 0;
   let activeDriverRideIds = new Set();
-  const liveLocationUnsubs = {};
+  let ALL_LIVE_LOCATIONS = {}; // <--- NEW: For Admin Map
 
   function clearDataListeners(){
     [...dataListenerUnsubs, ...requestListenerUnsubs].forEach(fn => { try{ if(typeof fn === 'function') fn(); }catch(e){} });
@@ -1295,6 +1394,10 @@ button{ font-family:inherit; }
       window.renderTrips();
       window.updateWalletLedger();
     }
+    // Update Admin Dash
+    if(window.updateAdminDashboardMetrics) window.updateAdminDashboardMetrics();
+    if(window.renderAdminPaymentsLedger) window.renderAdminPaymentsLedger();
+    if(window.renderAdminParcelsLogistics) window.renderAdminParcelsLogistics();
   }
 
   function attachUserRequestListeners(){
@@ -1322,32 +1425,38 @@ button{ font-family:inherit; }
   function initDataListeners() {
     clearDataListeners();
 
-    const vehiclesQuery = currentUser ? query(collection(db,'user_vehicles'), where('userUid','==',currentUser.uid)) : null;
-    if(vehiclesQuery){
-      dataListenerUnsubs.push(onSnapshot(vehiclesQuery, snapshot => {
-        if(currentUser){
-          currentUser.vehicles = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-          window.renderGarageList(); window.renderVehicleDropdown();
-        }
-      }, err => console.error('Vehicle listener error:',err)));
-    }
+    // Vehicles
+    dataListenerUnsubs.push(onSnapshot(collection(db,'user_vehicles'), snapshot => {
+      ALL_VEHICLES = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+      if(currentUser){
+        currentUser.vehicles = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
+        window.renderGarageList(); window.renderVehicleDropdown();
+      }
+    }, err => console.error('Vehicle listener error:',err)));
 
-    // All active rides are still needed by Find Ride / Find Parcel.
+    // Rides
     dataListenerUnsubs.push(onSnapshot(collection(db,'rides'), snapshot => {
       ALL_RIDES = snapshot.docs.map(d=>({id:d.id,...d.data()}));
       window.stats();
       if(document.getElementById('activity').classList.contains('active')){ window.renderTrips(); window.updateWalletLedger(); }
+      // Update Admin Dash
+      if(window.updateAdminDashboardMetrics) window.updateAdminDashboardMetrics();
+      if(window.renderAdminTripsManagement) window.renderAdminTripsManagement();
     }, err => { console.error('Ride listener error:',err); window.showToast('⚠️ Realtime trip connection issue.'); }));
 
     attachUserRequestListeners();
 
+    // Ads
     dataListenerUnsubs.push(onSnapshot(collection(db,'sponsored_ads'), snapshot => {
       ALL_ADS=snapshot.docs.map(d=>({id:d.id,...d.data()})); window.renderAdminAdsList();
     }, err=>console.error('Ads listener error:',err)));
 
+    // Users
     dataListenerUnsubs.push(onSnapshot(collection(db,'users'), snapshot => {
       ALL_USERS=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-      window.renderAdminUsersList();
+      window.renderAdminUsersList(); // For safety
+      if(window.renderAdminUsersManagement) window.renderAdminUsersManagement();
+      if(window.updateAdminDashboardMetrics) window.updateAdminDashboardMetrics();
       if(currentUser && currentUser.email !== ADMIN_EMAIL){
         const myRecord=ALL_USERS.find(u=>u.uid===currentUser.uid);
         if(myRecord && myRecord.isBlocked){
@@ -1356,6 +1465,19 @@ button{ font-family:inherit; }
         } else document.getElementById('blockedOverlay').style.display='none';
       }
     }, err=>console.error('User listener error:',err)));
+
+    // 🚨 NEW: Reports Listener
+    dataListenerUnsubs.push(onSnapshot(collection(db,'reports'), snapshot => {
+      ALL_REPORTS = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+      if(window.renderAdminReports) window.renderAdminReports();
+    }));
+
+    // 📍 NEW: Admin Live Locations Listener
+    dataListenerUnsubs.push(onSnapshot(collection(db,'live_locations'), snapshot => {
+      ALL_LIVE_LOCATIONS = {};
+      snapshot.docs.forEach(d => { ALL_LIVE_LOCATIONS[d.id] = d.data(); });
+      if(window.refreshAdminLiveMap) window.refreshAdminLiveMap();
+    }));
   }
 
   async function writeDriverLiveLocation(position){
@@ -1401,6 +1523,9 @@ button{ font-family:inherit; }
   window.getRequests = () => ALL_REQUESTS;
   window.getAds = () => ALL_ADS;
   window.getUsers = () => ALL_USERS;
+  window.getAllVehicles = () => ALL_VEHICLES;
+  window.getAllLiveLocations = () => ALL_LIVE_LOCATIONS;
+  window.getAllReports = () => ALL_REPORTS;
   window.getAdminEmail = () => ADMIN_EMAIL;
 
   initDataListeners();
@@ -1606,17 +1731,127 @@ function openUsersModal(){
 }
 function closeUsersModal(){ document.getElementById("usersModal").style.display = "none"; }
 
-function renderGarageList() {
+// 2. USER GARAGE LIST (SHOWING PENDING/VERIFIED BADGES)
+window.renderGarageList = function() {
   const u = window.getCurrentUser();
   const box = document.getElementById("userGarageList");
   if(!u || !u.vehicles || !u.vehicles.length) { box.innerHTML = "<div class='small muted'>No vehicles added yet in your garage. Add a vehicle below!</div>"; return; }
-  box.innerHTML = u.vehicles.map(v => `
-    <div class="vehicle-card">
-      <div><b>${esc(v.type)}:</b> ${esc(v.model)} <span class="badge">${esc(v.plate)}</span></div>
+  
+  box.innerHTML = u.vehicles.map(v => {
+    // Determine KYC Badge
+    const kycBadge = v.kycStatus === 'verified' 
+      ? '<span class="badge g">✅ KYC Verified</span>' 
+      : (v.kycStatus === 'rejected' ? '<span class="badge red">🚫 Rejected</span>' : '<span class="badge o">⏳ Pending (Admin Check)</span>');
+      
+    return `
+    <div class="vehicle-card" style="${v.kycStatus === 'rejected' ? 'border-color:#fca5a5; background:#fff5f5;' : ''}">
+      <div>
+        <b>${esc(v.type)}:</b> ${esc(v.model)} <span class="badge" style="font-family:monospace;">${esc(v.plate)}</span>
+        <div style="margin-top:4px;">${kycBadge}</div>
+      </div>
       <button class="red" style="padding:4px 8px; font-size:11px;" onclick="removeVehicleFromGarage('${v.id}')">🗑️</button>
     </div>
-  `).join("");
-}
+  `}).join("");
+};
+// ==========================================
+// 🚘 ADMIN GARAGE & KYC VERIFICATION LOGIC
+// ==========================================
+
+window.openAdminGarageModal = function(userUid) {
+  const users = window.getUsers ? window.getUsers() : [];
+  const allVehicles = window.getAllVehicles ? window.getAllVehicles() : [];
+  
+  const u = users.find(x => x.uid === userUid);
+  if(!u) return;
+
+  document.getElementById("adminGarageTitle").innerHTML = `🚘 Garage KYC: <b>${esc(u.name || u.displayName)}</b>`;
+  const userVehicles = allVehicles.filter(v => v.userUid === userUid);
+  
+  let html = `
+    <div style="background:#f1f5f9; padding:10px; border-radius:8px; margin-bottom:12px; font-size:13px; border:1px solid #cbd5e1;">
+      <b>👤 User KYC Details:</b><br>
+      📧 Email: ${esc(u.email)}<br>
+      📞 Phone: <a href="tel:${esc(u.phone)}" style="color:var(--primary); font-weight:600;">${esc(u.phone || 'N/A')}</a><br>
+      🚻 Gender: ${esc(u.gender || 'N/A')}
+    </div>
+    <h4 style="margin:0 0 8px;">🚗 Registered Vehicles & mParivahan Status:</h4>
+  `;
+
+  if(userVehicles.length === 0) {
+    html += `<div class="small muted" style="padding:10px; background:#fff5f5; border:1px solid #fca5a5; border-radius:8px; color:#b91c1c;">⚠️ No vehicles registered.</div>`;
+  } else {
+    html += userVehicles.map(v => {
+      const addDate = v.created ? new Date(v.created).toLocaleDateString('en-IN') : 'Unknown Date';
+      
+      const statusBadge = v.kycStatus === 'verified' ? '<span class="badge g">✅ Verified</span>' : (v.kycStatus === 'rejected' ? '<span class="badge red">🚫 Rejected</span>' : '<span class="badge o">⏳ Pending</span>');
+
+      // Action Buttons for Admin
+      let actionBtns = '';
+      if (v.kycStatus !== 'verified') {
+        actionBtns += `<button class="green" style="padding:5px 8px; font-size:11px;" onclick="adminVerifyVehicle('${v.id}', '${userUid}')">✅ Approve (mParivahan OK)</button>`;
+      }
+      if (v.kycStatus !== 'rejected') {
+        actionBtns += `<button class="red" style="padding:5px 8px; font-size:11px;" onclick="adminRejectVehicle('${v.id}', '${userUid}')">🚫 Reject & Suspend User</button>`;
+      }
+
+      return `
+      <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid ${v.kycStatus === 'verified' ? 'var(--success)' : (v.kycStatus === 'rejected' ? 'var(--danger)' : 'var(--accent)')}; padding:10px; border-radius:8px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:15px; font-weight:800; letter-spacing:0.5px;">${esc(v.plate)}</div>
+          <span class="badge o" style="font-size:10px;">${esc(v.type)}</span>
+        </div>
+        <div class="small" style="color:#475569; margin-top:2px;"><b>Model:</b> ${esc(v.model)}</div>
+        <div class="small muted" style="margin-top:4px; font-size:11px;">📅 Added: ${addDate} | Status: ${statusBadge}</div>
+        
+        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+           ${actionBtns}
+        </div>
+      </div>
+      `;
+    }).join("");
+  }
+
+  document.getElementById("adminGarageDetails").innerHTML = html;
+  document.getElementById("adminGarageModal").style.display = "flex";
+};
+
+window.closeAdminGarageModal = function() {
+  document.getElementById("adminGarageModal").style.display = "none";
+};
+
+// 🟢 APPROVE VEHICLE
+window.adminVerifyVehicle = async function(vehicleId, userUid) {
+  if(!confirm("Are you sure this vehicle details match exactly with mParivahan?")) return;
+  try {
+    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    await updateDoc(doc(db, "user_vehicles", vehicleId), { kycStatus: 'verified' });
+    window.showToast("✅ Vehicle Approved!");
+    setTimeout(() => window.openAdminGarageModal(userUid), 500); // Auto-refresh modal
+  } catch(e) { window.showToast("Error: " + e.message); }
+};
+
+// 🚫 REJECT VEHICLE & BLOCK USER
+window.adminRejectVehicle = async function(vehicleId, userUid) {
+  if(!confirm("🚨 SECURITY ALERT: Do you want to Reject this vehicle and SUSPEND the user account?")) return;
+  try {
+    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    
+    // 1. Mark vehicle as rejected
+    await updateDoc(doc(db, "user_vehicles", vehicleId), { kycStatus: 'rejected' });
+    
+    // 2. Suspend the user account
+    await updateDoc(doc(db, "users", userUid), {
+      isBlocked: true,
+      blockReason: "Account suspended: Vehicle KYC verification failed (mParivahan check) or suspicious activity detected."
+    });
+    
+    window.showToast("🚫 Vehicle rejected and User Suspended!");
+    window.closeAdminGarageModal(); // Close modal after blocking
+  } catch(e) { window.showToast("Error: " + e.message); }
+};
+
 window.renderGarageList = renderGarageList;
 
 function renderVehicleDropdown() {
@@ -1733,7 +1968,7 @@ function cleanLocationName(rawName) {
 }
 window.cleanLocationName = cleanLocationName;
 
-// 👑 CLEAN ADMIN USER LIST (DP, Name, Email, Phone, Active Dot, Deep Inspect, Block/Unblock)
+// 👑 CLEAN ADMIN USER LIST (OLD - RETAINED FOR SAFETY)
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
@@ -1806,13 +2041,17 @@ function openDeepInspectModal(userUid) {
 
   detailsHtml += `<h4 style="margin:8px 0 4px; font-size:13px;">📋 Bookings & Deliveries (${userBookings.length}):</h4>`;
 
+  // 🕒 3. ADMIN DATE/TIME UPDATE IS HERE
   if(userBookings.length === 0) {
     detailsHtml += `<div class="small muted">No bookings or parcel requests.</div>`;
   } else {
     detailsHtml += userBookings.map(q => `
       <div style="background:#f8fafc; padding:6px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; border:1px solid #e2e8f0;">
         <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
-        <div class="small">Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}</div>
+        <div class="small" style="margin-top:3px;">
+          Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
+          <span style="color:#64748b;">📅 Date: ${q.date || 'N/A'} • ⏰ ${q.time || 'N/A'}</span>
+        </div>
       </div>
     `).join("");
   }
@@ -2721,9 +2960,7 @@ function renderTrips(){
   if (user && user.email === adminEmail) {
     if(adminCard) adminCard.style.display = "block";
     const completed = list.filter(r => r.status === "Completed");
-    document.getElementById("adminCompletedCount").textContent = completed.length;
     const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.earnedAmount || r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
-    document.getElementById("adminRevenueCount").textContent = totalRev.toFixed(0);
   } else {
     if(adminCard) adminCard.style.display = "none";
   }
@@ -2800,7 +3037,7 @@ function renderTrips(){
         ${x.status === 'Active' && user && x.driverUid === user.uid ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="cancelTrip('${x.id}')">🚫 Cancel Trip</button>` : ''}
         ${(user && user.email === adminEmail && x.status === 'Active') ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Force Cancel</button>` : ''}
       </div>
-    `;
+    </div>`;
   }).join("");
 }
 window.renderTrips = renderTrips;
@@ -2828,32 +3065,6 @@ window.updateWalletLedger = updateWalletLedger;
 
 function filterAdminTrips(mode) {
   currentAdminFilter = mode;
-  const rejectionsBox = document.getElementById("adminRejectionLogs");
-  
-  if(mode === 'cancelled') {
-    rejectionsBox.style.display = "block";
-    const reqsCancelled = window.getRequests().filter(r => r.status === "Cancelled");
-    const ridesCancelled = window.getRides().filter(r => r.status === "Cancelled");
-    
-    const logsList = document.getElementById("rejectionLogsList");
-    let logsHtml = ridesCancelled.map(r => `
-      <div class="log-card">
-        <b>🚗 Trip Cancelled:</b> ${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}
-        <div class="small"><b>Driver:</b> ${esc(r.name)} | <b>Reason:</b> ${esc(r.cancelReason || 'N/A')}</div>
-      </div>
-    `).join("");
-
-    logsHtml += reqsCancelled.map(q => `
-      <div class="log-card">
-        <b>📋 Request Rejected:</b> ${esc(cleanLocationName(q.from))} → ${esc(cleanLocationName(q.to))}
-        <div class="small"><b>By:</b> ${esc(q.cancelledBy || 'User')} | <b>Reason:</b> ${esc(q.cancelReason || 'N/A')} | <b>Fare:</b> ₹${q.currentPrice}</div>
-      </div>
-    `).join("");
-
-    logsList.innerHTML = logsHtml || "<div class='small muted'>No rejection logs recorded yet.</div>";
-  } else {
-    rejectionsBox.style.display = "none";
-  }
   renderTrips();
 }
 
@@ -2927,25 +3138,266 @@ document.addEventListener("DOMContentLoaded", function(){
   setupParcelAutoCheck();
   renderVehicleDropdown();
 });
-  // ==========================================
-// 📱 PAGE VISIBILITY & REAL-TIME RE-SYNC ENGINE
-// ==========================================
-document.addEventListener("visibilitychange", function() {
-  if (document.hidden) {
-    console.log("⚠️ यूज़र ऐप से बाहर चला गया है या स्क्रीन बंद है (Background Mode)।");
-  } else {
-    console.log("🟢 यूज़र वापस SafarShare ऐप पर आ गया है!");
+
+// -------------------------------------------------------------
+// 🔥 ADVANCED ADMIN DASHBOARD LOGIC START (NEW FUNCTIONS)
+// -------------------------------------------------------------
+
+window.switchAdminTab = function(tabName) {
+  document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".admin-sub-section").forEach(s => s.classList.remove("active"));
+  
+  event.target.classList.add("active");
+  document.getElementById("admTab" + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add("active");
+
+  if(tabName === 'users') window.renderAdminUsersManagement();
+  if(tabName === 'trips') window.renderAdminTripsManagement();
+  if(tabName === 'payments') window.renderAdminPaymentsLedger();
+  if(tabName === 'parcels') window.renderAdminParcelsLogistics();
+  if(tabName === 'live') window.initAdminLiveGodEyeMap();
+  if(tabName === 'reports') window.renderAdminReports();
+};
+
+window.updateAdminDashboardMetrics = function() {
+  const users = window.getUsers ? window.getUsers() : [];
+  const rides = window.getRides ? window.getRides() : [];
+  const reqs = window.getRequests ? window.getRequests() : [];
+
+  const elTotalUsers = document.getElementById("kpiTotalUsers");
+  if(!elTotalUsers) return; // Wait till UI loads
+
+  elTotalUsers.textContent = users.length;
+  document.getElementById("kpiActiveTrips").textContent = rides.filter(r => r.status === 'Active').length;
+  document.getElementById("kpiTotalReqs").textContent = reqs.length;
+  document.getElementById("kpiParcels").textContent = reqs.filter(q => q.type === 'parcel').length;
+  
+  const completed = rides.filter(r => r.status === 'Completed');
+  document.getElementById("kpiCompleted").textContent = completed.length;
+
+  let totalPaidVol = 0;
+  let pendingVol = 0;
+  reqs.forEach(q => {
+    const amt = Number(q.currentPrice || 0);
+    if(q.status === 'Paid' || q.status === 'Completed') totalPaidVol += amt;
+    else if(['Pending', 'Accepted', 'Confirmed', 'In-Transit'].includes(q.status)) pendingVol += amt;
+  });
+
+  document.getElementById("kpiPaidVol").textContent = `₹${totalPaidVol}`;
+  document.getElementById("kpiPendingVol").textContent = `₹${pendingVol}`;
+  document.getElementById("kpiRevenue").textContent = `₹${Math.round(totalPaidVol * 0.05)}`;
+};
+
+window.renderAdminUsersManagement = function() {
+  const queryText = (document.getElementById("adminUserSearch")?.value || "").toLowerCase();
+  const users = window.getUsers ? window.getUsers() : [];
+  const container = document.getElementById("adminUsersListContainer");
+  if(!container) return;
+
+  const filtered = users.filter(u => 
+    (u.name || "").toLowerCase().includes(queryText) ||
+    (u.email || "").toLowerCase().includes(queryText) ||
+    (u.phone || "").includes(queryText)
+  );
+
+  if(!filtered.length) { container.innerHTML = "<div class='small muted'>No users found.</div>"; return; }
+
+  container.innerHTML = filtered.map(u => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><b>${esc(u.name || u.displayName)}</b> ${u.isBlocked ? '<span class="badge red">Blocked</span>' : '<span class="badge g">Active</span>'}
+        <div class="small">${esc(u.email)} • ${esc(u.phone || 'No Phone')}</div></div>
+        <button class="${u.isBlocked ? 'green' : 'red'}" style="padding:4px 8px; font-size:11px;" onclick="adminToggleBlockUser('${u.uid}', ${!!u.isBlocked}, '${esc(u.name)}')">${u.isBlocked ? 'Unblock' : 'Block'}</button>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button class="primary" style="flex:1; padding:6px; font-size:11px;" onclick="openDeepInspectModal('${u.uid}')">🔍 Inspect Trips</button>
+        <button class="orange" style="flex:1; padding:6px; font-size:11px;" onclick="openAdminGarageModal('${u.uid}')">🚘 Garage / KYC</button>
+      </div>
+    </div>
+  `).join("");
+};
+
+window.filterAdminTripsList = function(status) {
+  currentAdminFilter = status;
+  window.renderAdminTripsManagement();
+};
+
+window.renderAdminTripsManagement = function() {
+  const rides = window.getRides ? window.getRides() : [];
+  const container = document.getElementById("adminTripsListContainer");
+  if(!container) return;
+
+  const filtered = currentAdminFilter === 'all' ? rides : rides.filter(r => r.status === currentAdminFilter);
+  if(!filtered.length) { container.innerHTML = "<div class='small muted'>No trips found.</div>"; return; }
+
+  container.innerHTML = filtered.map(r => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      <b>${cleanLocationName(r.from)} ➔ ${cleanLocationName(r.to)}</b> [${esc(r.vehicle)}]
+      <div class="small">Driver: ${esc(r.name)} | Status: <b>${r.status}</b> | Date: ${r.date}</div>
+      ${r.status === 'Active' ? `<button class="red" style="padding:4px 8px; font-size:11px; margin-top:6px;" onclick="adminForceCancelTrip('${r.id}')">🚫 Force Cancel Trip</button>` : ''}
+    </div>
+  `).join("");
+};
+
+window.adminForceCancelTrip = async function(rideId) {
+  if(!confirm("Are you sure you want to force cancel this active trip?")) return;
+  try {
+    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await updateDoc(doc(getFirestore(), "rides", rideId), { status: 'Cancelled', cancelReason: 'Force Cancelled by Master Admin' });
+    showToast("Trip Force Cancelled.");
+  } catch(e) { showToast("Error: " + e.message); }
+};
+
+window.renderAdminPaymentsLedger = function() {
+  const reqs = window.getRequests ? window.getRequests() : [];
+  const container = document.getElementById("adminPaymentsContainer");
+  if(!container) return;
+  const sorted = [...reqs].sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if(!sorted.length) { container.innerHTML = "<div class='small muted'>No payment records.</div>"; return; }
+
+  container.innerHTML = sorted.map(q => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel'}</b>: ₹${q.currentPrice}
+      <div class="small">Status: <span class="badge ${q.status==='Paid'?'g':'o'}">${q.status}</span> | Route: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}</div>
+      <div class="small">Driver ID: ${q.driverUid}</div>
+    </div>
+  `).join("");
+};
+
+window.renderAdminParcelsLogistics = function() {
+  const reqs = window.getRequests ? window.getRequests() : [];
+  const container = document.getElementById("adminParcelsContainer");
+  if(!container) return;
+  const parcels = reqs.filter(q => q.type === 'parcel');
+  if(!parcels.length) { container.innerHTML = "<div class='small muted'>No active parcel shipments.</div>"; return; }
+
+  container.innerHTML = parcels.map(q => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      📦 <b>Slab:</b> ${esc(q.slab || 'General')} | <b>Fare:</b> ₹${q.currentPrice}
+      <div class="small">Route: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}</div>
+      <div class="small">Receiver: ${esc(q.recName)} (${esc(q.recPhone)}) | Status: <b>${q.status}</b></div>
+    </div>
+  `).join("");
+};
+
+window.initAdminLiveGodEyeMap = function() {
+  setTimeout(() => {
+    if(!adminLiveMapInstance) {
+      adminLiveMapInstance = L.map('adminLiveMap').setView([21.4588, 80.1961], 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(adminLiveMapInstance);
+    } else {
+      adminLiveMapInstance.invalidateSize();
+    }
+    window.refreshAdminLiveMap();
+  }, 200);
+};
+
+window.refreshAdminLiveMap = function() {
+  if(!adminLiveMapInstance) return;
+  const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
+  Object.keys(liveLocs).forEach(rideId => {
+    const loc = liveLocs[rideId];
+    if(loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
+      const pos = [loc.lat, loc.lng];
+      if(adminMapMarkers[rideId]) {
+        adminMapMarkers[rideId].setLatLng(pos);
+      } else {
+        const marker = L.marker(pos, {icon: greenPinIcon}).addTo(adminLiveMapInstance);
+        marker.bindPopup(`🚗 Active Transporter<br>Speed: ${loc.speed || 0} m/s`);
+        adminMapMarkers[rideId] = marker;
+      }
+    } else {
+      if(adminMapMarkers[rideId]) {
+        adminLiveMapInstance.removeLayer(adminMapMarkers[rideId]);
+        delete adminMapMarkers[rideId];
+      }
+    }
+  });
+};
+
+window.renderAdminReports = function() {
+  const container = document.getElementById("adminReportsContainer");
+  if(!container) return;
+  const reports = window.getAllReports ? window.getAllReports() : [];
+  if(!reports.length) { container.innerHTML = "<div class='small muted'>No SOS alerts or complaints filed.</div>"; return; }
+
+  container.innerHTML = reports.map(rep => `
+    <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
+      <b>🚨 ${esc(rep.type || 'SOS Alert')}</b>
+      <div class="small">User: ${esc(rep.userName)} | Reason: ${esc(rep.reason || 'Emergency')}</div>
+    </div>
+  `).join("");
+};
+
+// 🎯 AUTO-DETECT GPS FOR 'FROM' INPUTS (NEW)
+async function autoDetectFromGPS(inputId, btnElement) {
+  if (!navigator.geolocation) {
+    window.showToast("GPS not supported on this device.");
+    return;
+  }
+  
+  const originalText = btnElement.innerHTML;
+  btnElement.innerHTML = "⏳"; // Change to loading icon
+  btnElement.style.pointerEvents = "none";
+  
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
     
-    // ऐप पर लौटते ही तुरंत ताज़ा डेटा और स्टेटस री-सिंक करें
-    if (typeof window.renderRequests === 'function') {
-      window.renderRequests();
+    try {
+      const url = `https://api.locationiq.com/v1/reverse?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lon}&accept-language=en&format=json`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (data && data.display_name) {
+        const cleanName = cleanLocationName(data.display_name); // Smart Address Cleaner logic
+        document.getElementById(inputId).value = cleanName;
+        
+        // 100% Match Logic - Save exact coordinates silently
+        selectedLocationCoords[inputId] = {
+          text: cleanName, lat: parseFloat(lat), lon: parseFloat(lon), source: "AutoGPS"
+        };
+        
+        window.showToast("✅ Auto-GPS Location Set!");
+        
+        // Auto-update map previews if applicable
+        if(inputId === 'fFrom') updatePassengerRoutePreview();
+        if(inputId === 'pFrom') fetchDriverRoutes();
+      }
+    } catch(e) {
+      window.showToast("Error fetching address.");
     }
-    if (typeof window.renderTrips === 'function') {
-      window.renderTrips();
+    
+    btnElement.innerHTML = originalText;
+    btnElement.style.pointerEvents = "auto";
+  }, (err) => {
+    window.showToast("⚠️ GPS Permission Denied or Failed.");
+    btnElement.innerHTML = originalText;
+    btnElement.style.pointerEvents = "auto";
+  }, { enableHighAccuracy: true });
+}
+window.autoDetectFromGPS = autoDetectFromGPS;
+
+// 👁️ MOBILE BACKGROUND RE-SYNC ENGINE (PAGE VISIBILITY API)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === 'visible') {
+    const badge = document.getElementById("liveSyncBadge");
+    if (badge) badge.style.display = "block";
+    
+    // Force UI re-render and state sync to catch missed Firebase events
+    if (typeof window.stats === 'function') window.stats();
+    if (document.getElementById('activity').classList.contains('active')) {
+      if (typeof window.renderRequests === 'function') window.renderRequests();
+      if (typeof window.renderTrips === 'function') window.renderTrips();
     }
-    if (typeof window.updateWalletLedger === 'function') {
-      window.updateWalletLedger();
+    if (document.getElementById('find').classList.contains('active')) {
+       // Optional: Auto re-trigger ride search if they are on find page
+       const from = document.getElementById("fFrom").value;
+       if(from) window.findRides(); 
     }
+    
+    setTimeout(() => {
+      if (badge) badge.style.display = "none";
+    }, 1200); // Hide badge after 1.2 seconds
   }
 });
 
