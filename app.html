@@ -2070,16 +2070,25 @@ function openDeepInspectModal(userUid) {
   if(userBookings.length === 0) {
     detailsHtml += `<div class="small muted">No bookings or parcel requests.</div>`;
   } else {
-    detailsHtml += userBookings.map(q => `
-      <div style="background:#f8fafc; padding:6px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; border:1px solid #e2e8f0;">
-        <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
-        <div class="small" style="margin-top:3px;">
-                  Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
-        <span style="color:#64748b;">📅 Date: ${q.date || 'N/A'} • ⏰ Time: ${q.time || q.departureTime || 'N/A'}</span>
-      </div>
-    </div>
-  `).join("");
+    detailsHtml += userBookings.map(q => {
+      let bookingTime = 'N/A';
+      if (q.time) {
+        bookingTime = q.time;
+      } else if (q.created || q.createdAt) {
+        const ts = q.created || q.createdAt;
+        bookingTime = new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      }
 
+      return `
+        <div style="background:#f8fafc; padding:6px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; border:1px solid #e2e8f0;">
+          <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
+          <div class="small" style="margin-top:3px;">
+            Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
+            <span style="color:#64748b;">📅 Date: ${q.date || 'N/A'} • ⏰ Time: ${bookingTime}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
   }
 
   document.getElementById("deepInspectDetails").innerHTML = detailsHtml;
