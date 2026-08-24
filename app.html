@@ -2066,7 +2066,7 @@ function openDeepInspectModal(userUid) {
 
   detailsHtml += `<h4 style="margin:8px 0 4px; font-size:13px;">📋 Bookings & Deliveries (${userBookings.length}):</h4>`;
 
-  // 🕒 3. ADMIN DATE/TIME UPDATE IS HERE
+  // 🕒 3. ADMIN DATE/TIME FIXED TO USE q.date
   if(userBookings.length === 0) {
     detailsHtml += `<div class="small muted">No bookings or parcel requests.</div>`;
   } else {
@@ -2075,7 +2075,7 @@ function openDeepInspectModal(userUid) {
         <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
         <div class="small" style="margin-top:3px;">
           Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
-          <span style="color:#64748b;">📅 Date: ${x.date || (x.created ? new Date(x.created).toLocaleDateString('en-IN') : 'N/A')}
+          <span style="color:#64748b;">📅 Date: ${q.date || (q.created ? new Date(q.created).toLocaleDateString('en-IN') : 'N/A')}</span>
         </div>
       </div>
     `).join("");
@@ -3453,34 +3453,36 @@ window.renderAdminParcelsLogistics = function() {
 
 window.initAdminLiveGodEyeMap = function() {
   setTimeout(() => {
-    if(!adminLiveMapInstance) {
-      adminLiveMapInstance = L.map('adminLiveMap').setView([21.4588, 80.1961], 11);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(adminLiveMapInstance);
+    if(!window.adminLiveMapInstance) {
+      window.adminLiveMapInstance = L.map('adminLiveMap').setView([21.4588, 80.1961], 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(window.adminLiveMapInstance);
     } else {
-      adminLiveMapInstance.invalidateSize(); // 👈 यह लाइन नक्शे की खाली स्क्रीन (blank screen) की समस्या को हमेशा के लिए ठीक कर देगी[span_0](start_span)[span_0](end_span)
+      window.adminLiveMapInstance.invalidateSize();
     }
     window.refreshAdminLiveMap();
   }, 200);
 };
 
 window.refreshAdminLiveMap = function() {
-  if(!adminLiveMapInstance) return;
+  if(!window.adminLiveMapInstance) return;
   const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
+  if(!window.adminMapMarkers) window.adminMapMarkers = {};
+  
   Object.keys(liveLocs).forEach(rideId => {
     const loc = liveLocs[rideId];
     if(loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
       const pos = [loc.lat, loc.lng];
-      if(adminMapMarkers[rideId]) {
-        adminMapMarkers[rideId].setLatLng(pos);
+      if(window.adminMapMarkers[rideId]) {
+        window.adminMapMarkers[rideId].setLatLng(pos);
       } else {
-        const marker = L.marker(pos, {icon: greenPinIcon}).addTo(adminLiveMapInstance);
+        const marker = L.marker(pos, {icon: greenPinIcon}).addTo(window.adminLiveMapInstance);
         marker.bindPopup(`🚗 Active Transporter<br>Speed: ${loc.speed || 0} m/s`);
-        adminMapMarkers[rideId] = marker;
+        window.adminMapMarkers[rideId] = marker;
       }
     } else {
-      if(adminMapMarkers[rideId]) {
-        adminLiveMapInstance.removeLayer(adminMapMarkers[rideId]);
-        delete adminMapMarkers[rideId];
+      if(window.adminMapMarkers[rideId]) {
+        window.adminLiveMapInstance.removeLayer(window.adminMapMarkers[rideId]);
+        delete window.adminMapMarkers[rideId];
       }
     }
   });
