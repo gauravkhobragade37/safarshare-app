@@ -19,6 +19,12 @@
 <!-- LEAFLET MAP CSS & JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+<!-- FIREBASE MESSAGING (PUSH NOTIFICATIONS) -->
+<script type="module">
+  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+</script>
+
 <!-- TURF.JS SPATIAL ENGINE -->
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 
@@ -303,7 +309,7 @@ button{ font-family:inherit; }
   <a href="https://wa.me/918668828542?text=Hello%20Admin,%20my%20account%20is%20suspended" target="_blank" class="wa-btn" style="text-decoration:none; margin-top:15px;">💬 WhatsApp Master Admin</a>
 </div>
 
-<!-- 🔐 PREMIUM 4-BOX PIN PAD MODAL WITH NUMERIC KEYBOARD -->
+<!-- 🔐 PREMIUM 4-BOX PIN PAD OVERLAY -->
 <div id="pinModal" class="otp-modal">
   <div class="otp-card">
     <div style="font-size:32px; margin-bottom:10px;" id="pinModalIcon">🔑</div>
@@ -423,7 +429,26 @@ button{ font-family:inherit; }
           <option value="Other">⚪ Other</option>
         </select>
       </div>
-      <div class="field"><label>Contact Phone (10-Digits)</label><input id="profPhone" type="tel" value="8668828542" placeholder="10-digit mobile"></div>
+      <div class="field">
+  <label>Contact Phone (10-Digits)</label>
+  <div style="display:flex; gap:6px;">
+    <input id="profPhone" type="tel" value="8668828542" placeholder="10-digit mobile" maxlength="10">
+    <button type="button" class="secondary" style="padding:0 12px; font-size:11px; white-space:nowrap;" onclick="sendPhoneOtp(document.getElementById('profPhone').value)">📲 Send OTP</button>
+  </div>
+</div>
+
+<!-- 🔑 OTP Verify Input (OTP भेजने के बाद दिखेगा) -->
+<div id="profileOtpVerifySection" style="display:none; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #cbd5e1; margin-bottom:12px;">
+  <div class="field" style="margin-bottom:6px;">
+    <label>Enter 6-Digit SMS OTP</label>
+    <input type="text" id="profileOtpCode" placeholder="Enter OTP" maxlength="6">
+  </div>
+  <button type="button" class="green full" style="padding:8px;" onclick="verifyPhoneOtpAndSave(document.getElementById('profileOtpCode').value)">✅ Verify OTP & Unlock Profile</button>
+</div>
+
+<!-- रीकैप्चा के लिए गुप्त कंटेनर -->
+<div id="recaptcha-container"></div>
+
     </div>
 
     <hr style="border:0; border-top:1px solid #e2e8f0; margin:14px 0;">
@@ -2816,6 +2841,153 @@ function toggleLiveTrackingBox(reqId){
 window.toggleLiveTrackingBox=toggleLiveTrackingBox;
 
 
+
+/* 🛠️ REQUEST / PAYMENT / START-DROP PIN FLOW FIX
+   Keeps the existing UI and Firebase schema, but adds the missing handlers. */
+(function(){
+  let pinAction = null;
+
+  function reqRef(id){ return doc(db, 'requests', id); }
+  function code4(){ return String(Math.floor(1000 + Math.random()*9000)); }
+  function clean4(v){ return String(v ?? '').replace(/\D/g,'').slice(0,4); }
+
+  window.handlePinInput = function(n){
+    const el=document.getElementById('pin'+n); if(!el) return;
+    el.value=clean4(el.value);
+    if(el.value && n<4) document.getElementById('pin'+(n+1))?.focus();
+  };
+  window.handlePinKeyDown = function(e,n){
+    if(e.key==='Backspace' && !document.getElementById('pin'+n)?.value && n>1)
+      document.getElementById('pin'+(n-1))?.focus();
+  };
+  window.closePinModal = function(){
+    const m=document.getElementById('pinModal'); if(m) m.style.display='none';
+    pinAction=null;
+    [1,2,3,4].forEach(i=>{const e=document.getElementById('pin'+i); if(e)e.value='';});
+  };
+  function openPin(title, icon, action){
+    pinAction=action;
+    const m=document.getElementById('pinModal');
+    if(!m){ window.showToast?.('PIN window unavailable'); return; }
+    document.getElementById('pinModalTitle').textContent=title;
+    document.getElementById('pinModalIcon').textContent=icon;
+    [1,2,3,4].forEach(i=>{const e=document.getElementById('pin'+i); if(e)e.value='';});
+    m.style.display='flex';
+    setTimeout(()=>document.getElementById('pin1')?.focus(),80);
+  }
+  window.submitPinModal = async function(){
+    const entered=[1,2,3,4].map(i=>document.getElementById('pin'+i)?.value||'').join('');
+    if(entered.length!==4){ window.showToast?.('❌ Enter all 4 digits'); return; }
+    const action=pinAction;
+    if(!action) return;
+    try{ await action(entered); }catch(e){ console.error(e); window.showToast?.('❌ '+(e.message||'Verification failed')); }
+  };
+
+  window.verifyStartOtp = function(qid, expectedFromUi){
+    openPin('Enter 4-Digit START PIN','🔑', async entered=>{
+      const snap=await getDoc(reqRef(qid));
+      if(!snap.exists()) throw new Error('Request not found');
+      const q={id:snap.id,...snap.data()};
+      if(!currentUser || q.driverUid!==currentUser.uid) throw new Error('Only the assigned driver can start this trip');
+      if(q.status!=='Confirmed') throw new Error('Trip is not in Confirmed status');
+      const expected=clean4(q.startOtp || expectedFromUi);
+      if(entered!==expected) throw new Error('Wrong Start PIN');
+      await updateDoc(reqRef(qid),{
+        status:'In-Transit',
+        startedAt:Date.now(),
+        startedBy:currentUser.uid,
+        paymentStatus:q.paymentStatus || 'Pending'
+      });
+      window.closePinModal();
+      window.showToast?.('🚗 Start PIN verified — Ride is now In-Transit');
+      window.renderRequests?.();
+    });
+  };
+
+  window.verifyDropOtp = function(qid, expectedFromUi, rideId){
+    openPin('Enter 4-Digit DROP PIN','🏁', async entered=>{
+      const snap=await getDoc(reqRef(qid));
+      if(!snap.exists()) throw new Error('Request not found');
+      const q={id:snap.id,...snap.data()};
+      if(!currentUser || q.driverUid!==currentUser.uid) throw new Error('Only the assigned driver can complete this trip');
+      if(q.status!=='In-Transit') throw new Error('Trip is not In-Transit');
+      const expected=clean4(q.dropOtp || expectedFromUi);
+      if(entered!==expected) throw new Error('Wrong Drop PIN');
+      await updateDoc(reqRef(qid),{
+        status:'Completed',
+        completedAt:Date.now(),
+        completedBy:currentUser.uid
+      });
+      window.closePinModal();
+      window.showToast?.('🏁 Drop PIN verified — Trip completed');
+      window.renderRequests?.();
+      window.renderTrips?.();
+    });
+  };
+
+  window.acceptOffer = async function(raw){
+    try{
+      const qid=raw?.id || raw;
+      const snap=await getDoc(reqRef(qid));
+      if(!snap.exists()) throw new Error('Request not found');
+      const q={id:snap.id,...snap.data()};
+      if(!currentUser) throw new Error('Please login first');
+      if(q.driverUid!==currentUser.uid && q.passengerUid!==currentUser.uid) throw new Error('Not authorized');
+      if(!['Pending','Counter Offered'].includes(q.status)) throw new Error('This offer is no longer active');
+      await updateDoc(reqRef(qid),{
+        status:'Accepted',
+        acceptedBy:currentUser.uid,
+        acceptedAt:Date.now(),
+        lastCounterBy:null
+      });
+      window.showToast?.('✅ Fare accepted. Passenger can now confirm the booking.');
+      window.renderRequests?.();
+    }catch(e){ window.showToast?.('❌ '+e.message); }
+  };
+
+  window.counterRequest = async function(qid){
+    try{
+      const snap=await getDoc(reqRef(qid));
+      if(!snap.exists()) throw new Error('Request not found');
+      const q={id:snap.id,...snap.data()};
+      if(!currentUser || (q.driverUid!==currentUser.uid && q.passengerUid!==currentUser.uid)) throw new Error('Not authorized');
+      if(!['Pending','Counter Offered'].includes(q.status)) throw new Error('Counter offer is closed after acceptance');
+      if(q.bookingScope && q.bookingScope!=='intercity') throw new Error('Counter offer is available for intercity bookings only');
+      const val=prompt('Enter your new fare (₹):', String(q.currentPrice || q.originalPrice || ''));
+      if(val===null) return;
+      const price=Number(String(val).replace(/[^0-9.]/g,''));
+      if(!Number.isFinite(price) || price<=0) throw new Error('Enter a valid fare');
+      const who=(q.driverUid===currentUser.uid)?'Driver':'Passenger';
+      await updateDoc(reqRef(qid),{status:'Counter Offered',currentPrice:Math.round(price),lastCounterBy:who,counterAt:Date.now(),counterBy:currentUser.uid});
+      window.showToast?.('🔄 New fare offered: ₹'+Math.round(price));
+      window.renderRequests?.();
+    }catch(e){ window.showToast?.('❌ '+e.message); }
+  };
+
+  window.reserveCapacity = async function(q, selectedMode){
+    try{
+      if(!currentUser) throw new Error('Please login first');
+      const snap=await getDoc(reqRef(q.id));
+      if(!snap.exists()) throw new Error('Request not found');
+      const fresh={id:snap.id,...snap.data()};
+      if(fresh.passengerUid!==currentUser.uid) throw new Error('Only the passenger can confirm this booking');
+      if(fresh.status!=='Accepted') throw new Error('Booking must be Accepted before confirmation');
+
+      const update={
+        status:'Confirmed',
+        paymentMode:selectedMode || 'cash_pickup',
+        paymentStatus:'Pending',
+        confirmedAt:Date.now(),
+        startOtp:clean4(fresh.startOtp)||code4(),
+        dropOtp:clean4(fresh.dropOtp)||code4()
+      };
+      await updateDoc(reqRef(q.id),update);
+      window.showToast?.('✅ Booking confirmed. Start PIN generated.');
+      window.renderRequests?.();
+    }catch(e){ window.showToast?.('❌ '+e.message); }
+  };
+})();
+
 /* 📋 REQUESTS TAB */
 function renderRequests(){
   const user = window.getCurrentUser();
@@ -2844,14 +3016,14 @@ function renderRequests(){
         actions = `
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="green" style="padding:6px 12px; font-size:12px;" onclick='acceptOffer(${JSON.stringify(x)})'>✅ Accept ₹${x.currentPrice}</button>
-          ${(x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:6px 12px; font-size:12px;" onclick="counterRequest('${x.id}')">🔄 Counter</button>` : ''}
+          ${(x.status === "Pending" && x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:6px 12px; font-size:12px;" onclick="counterRequest('${x.id}')">🔄 Counter</button>` : ''}
           <button class="red" style="padding:6px 12px; font-size:12px;" onclick="cancelRequest('${x.id}', true)">✖ Reject</button>
         </div>`;
       } else {
         actions = `
         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
           <span class="small">⏳ Waiting for driver response...</span>
-          ${(x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:4px 8px; font-size:11px;" onclick="counterRequest('${x.id}')">₹ Offer New Fare</button>` : ''}
+          ${(x.status === "Pending" && x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:4px 8px; font-size:11px;" onclick="counterRequest('${x.id}')">₹ Offer New Fare</button>` : ''}
           <button class="red" style="padding:4px 8px; font-size:11px;" onclick="cancelRequest('${x.id}', false)">Cancel</button>
         </div>`;
       }
@@ -3399,6 +3571,125 @@ document.addEventListener("visibilitychange", () => {
       if (badge) badge.style.display = "none";
     }, 1200); // Hide badge after 1.2 seconds
   }
+});
+  // ==========================================
+// 📱 PROFILE PHONE OTP VERIFICATION LOGIC
+// ==========================================
+
+async function setupRecaptcha() {
+  const { getAuth, RecaptchaVerifier } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+  if (!window.recaptchaVerifier) {
+    const auth = getAuth();
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible',
+      'callback': (response) => {}
+    });
+  }
+}
+
+window.sendPhoneOtp = async function(phoneNumber) {
+  try {
+    if (!phoneNumber || phoneNumber.length < 10) {
+      window.showToast("❌ Please enter a valid 10-digit mobile number!");
+      return;
+    }
+
+    await setupRecaptcha();
+    const { getAuth, signInWithPhoneNumber } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+    const auth = getAuth();
+    const appVerifier = window.recaptchaVerifier;
+    
+    const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+91' + phoneNumber;
+    window.showToast("⏳ Sending SMS OTP to " + formattedPhone + "...");
+    
+    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+    window.confirmationResult = confirmationResult;
+    
+    window.showToast("✅ SMS OTP sent successfully!");
+    const otpSection = document.getElementById("profileOtpVerifySection");
+    if(otpSection) otpSection.style.display = "block";
+
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    window.showToast("❌ Error sending OTP: " + error.message);
+  }
+};
+
+window.verifyPhoneOtpAndSave = async function(otpCode) {
+  try {
+    if (!window.confirmationResult) {
+      window.showToast("❌ Please click 'Send OTP' first!");
+      return;
+    }
+
+    const result = await window.confirmationResult.confirm(otpCode);
+    window.showToast("🎉 Mobile Number Verified Successfully!");
+    
+    const otpSection = document.getElementById("profileOtpVerifySection");
+    if(otpSection) otpSection.style.display = "none";
+    
+    if(window.saveUserProfile) window.saveUserProfile();
+
+  } catch (error) {
+    console.error("Invalid OTP:", error);
+    window.showToast("❌ Invalid OTP. Please check and try again.");
+  }
+};
+  // ==========================================
+// 🔔 PUSH NOTIFICATIONS (FCM) ADVANCED LOGIC
+// ==========================================
+
+async function initializePushNotifications() {
+  try {
+    const { getMessaging, getToken, onMessage } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js");
+    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    
+    // ब्राउज़र से नोटिफिकेशन की अनुमति लेना
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const messaging = getMessaging();
+      
+      // VAPID Key का उपयोग करके FCM टोकन जनरेट करना
+      const currentToken = await getToken(messaging, { 
+        vapidKey: "BFJtAYPAICOPY0n6d-QOPLI-MpDlD_n1Wyr1P91pEikkDYdohfaGyBVPe9CbqPw0BTn6Ccgq1j34aq-cEIb5Ugg" 
+      });
+      
+      const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
+      if (currentToken && currentUser) {
+        const db = getFirestore();
+        // यूज़र के डेटाबेस में उसका FCM टोकन सेव करना
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          fcmToken: currentToken,
+          notificationEnabled: true
+        });
+        console.log("FCM Token saved successfully:", currentToken);
+      }
+
+      // जब ऐप खुली हो (Foreground), तब नोटिफिकेशन मिलने पर क्या हो
+      onMessage(messaging, (payload) => {
+        console.log("Message received in foreground: ", payload);
+        const title = payload.notification?.title || "SafarShare Alert";
+        const body = payload.notification?.body || "You have a new update!";
+        window.showToast(`🔔 ${title}: ${body}`);
+      });
+
+    } else {
+      console.log("Notification permission denied.");
+    }
+  } catch (error) {
+    console.error("Error initializing push notifications:", error);
+  }
+}
+
+window.initializePushNotifications = initializePushNotifications;
+
+// यूज़र लॉगिन होने के बाद ऑटोमैटिक पुश नोटिफिकेशन शुरू करने के लिए
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if (window.getCurrentUser && window.getCurrentUser()) {
+      initializePushNotifications();
+    }
+  }, 3000);
 });
 
 </script>
