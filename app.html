@@ -2074,11 +2074,12 @@ function openDeepInspectModal(userUid) {
       <div style="background:#f8fafc; padding:6px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; border:1px solid #e2e8f0;">
         <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
         <div class="small" style="margin-top:3px;">
-          Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
-          <span style="color:#64748b;">📅 Date: ${q.date || (q.created ? new Date(q.created).toLocaleDateString('en-IN') : 'N/A')}</span>
-        </div>
+                  Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
+        <span style="color:#64748b;">📅 Date: ${q.date || 'N/A'} • ⏰ Time: ${q.time || q.departureTime || 'N/A'}</span>
       </div>
-    `).join("");
+    </div>
+  `).join("");
+
   }
 
   document.getElementById("deepInspectDetails").innerHTML = detailsHtml;
