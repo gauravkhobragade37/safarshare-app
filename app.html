@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
-<!-- FIREBASE MESSAGING (PUSH NOTIFICATIONS) -->
+  <!-- FIREBASE MESSAGING (PUSH NOTIFICATIONS) -->
 <script type="module">
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 </script>
@@ -56,7 +56,7 @@ color:#fff;
 padding:14px 16px;
 position:sticky;
 top:0;
-z-index: 9999;
+z-index: 999;
 box-shadow:0 4px 15px rgba(18,97,255,0.15);
 }
 #driverMapWrapper {
@@ -91,7 +91,7 @@ padding:5px 12px; border-radius:30px; border:1px solid rgba(255,255,255,0.4);
 cursor:pointer;
 }
 
-/* 📱 NATIVE BOTTOM NAVIGATION BAR */
+/* 📱 NATIVE BOTTOM NAVIGATION BAR - FIX OVERLAPPING */
 .bottom-nav {
 position:fixed; bottom:0; left:0; right:0; height:64px; background:#fff;
 display:flex; justify-content:space-around; align-items:center; border-top:1px solid #e2e8f0;
@@ -113,7 +113,7 @@ background:var(--danger); border-radius:50%; display:none;
 @keyframes pulseDot { 0%{transform:scale(0.95);opacity:1;} 50%{transform:scale(1.4);opacity:0.6;} 100%{transform:scale(0.95);opacity:1;} }
 .nav-item .badge-dot.pulse { display:block; animation:pulseDot 1.2s infinite; }
 
-main{ max-width:1100px; margin:auto; padding:16px 14px 40px; }
+main{ max-width:1100px; margin:auto; padding:16px 14px 90px; z-index: 1; position: relative; }
 
 .page{ display:none; }
 .page.active{ display:block; }
@@ -1253,14 +1253,14 @@ button{ font-family:inherit; }
       userUid: currentUser.uid,
       userEmail: currentUser.email,
       created: Date.now(),
-      kycStatus: 'pending' // 🟡 KYC स्टेटस यहाँ जुड़ गया है
+      kycStatus: 'pending'
     };
 
     try {
       await addDoc(collection(db, "user_vehicles"), newVeh);
       document.getElementById("newVehModel").value = "";
       document.getElementById("newVehPlate").value = "";
-      window.showToast("✅ Vehicle saved! Waiting for Admin KYC."); // 🟡 मैसेज अपडेट कर दिया गया है
+      window.showToast("✅ Vehicle saved! Waiting for Admin KYC.");
     } catch(e) {
       window.showToast("Error saving vehicle: " + e.message);
     }
@@ -1359,7 +1359,6 @@ button{ font-family:inherit; }
     }
   };
 
-  // 🔔 4. GLOBAL LISTENERS — user-scoped requests + reconnect-safe listeners
   let dataListenerUnsubs = [];
   let requestListenerUnsubs = [];
   let lastRequestIds = new Set();
@@ -1368,7 +1367,7 @@ button{ font-family:inherit; }
   let driverLocationBusy = false;
   let liveLocationWriteAt = 0;
   let activeDriverRideIds = new Set();
-  let ALL_LIVE_LOCATIONS = {}; // <--- NEW: For Admin Map
+  let ALL_LIVE_LOCATIONS = {};
 
   function clearDataListeners(){
     [...dataListenerUnsubs, ...requestListenerUnsubs].forEach(fn => { try{ if(typeof fn === 'function') fn(); }catch(e){} });
@@ -1419,7 +1418,6 @@ button{ font-family:inherit; }
       window.renderTrips();
       window.updateWalletLedger();
     }
-    // Update Admin Dash
     if(window.updateAdminDashboardMetrics) window.updateAdminDashboardMetrics();
     if(window.renderAdminPaymentsLedger) window.renderAdminPaymentsLedger();
     if(window.renderAdminParcelsLogistics) window.renderAdminParcelsLogistics();
@@ -1447,10 +1445,138 @@ button{ font-family:inherit; }
     });
   }
 
+  window.postTrip = async function(){
+    const msg = document.getElementById('postMsg');
+    const setMsg = (text, ok=false) => { if(msg){ msg.textContent=text; msg.style.color=ok?'#166534':'#dc2626'; } };
+    try {
+      if(!currentUser){ setMsg('❌ Please login first.'); return; }
+      if(currentUser.isBlocked){ setMsg('❌ Your account is restricted.'); return; }
+
+      const sel = document.getElementById('pVehicleSelect');
+      const selVal = sel?.value || '';
+      const from = document.getElementById('pFrom')?.value.trim() || '';
+      const to = document.getElementById('pTo')?.value.trim() || '';
+      const date = document.getElementById('pDate')?.value || '';
+      const time = document.getElementById('pTime')?.value || '';
+      const pickupSpot = document.getElementById('pPickupSpot')?.value.trim() || '';
+      const daily = !!document.getElementById('pDaily')?.checked;
+      const passenger = !!document.getElementById('pPassenger')?.checked;
+      const parcel = !!document.getElementById('pParcel')?.checked;
+      const ladiesOnly = !!document.getElementById('pLadiesOnly')?.checked;
+      const familyOnBoard = !!document.getElementById('pFamilyOnBoard')?.checked;
+      const alsoReturn = !!document.getElementById('pAlsoReturnTrip')?.checked;
+      const returnTime = document.getElementById('pReturnTime')?.value || '';
+
+      if(!selVal) { setMsg('❌ Select a vehicle/transport mode.'); return; }
+      if(!from || !to) { setMsg('❌ Enter From and To locations.'); return; }
+      if(from.toLowerCase() === to.toLowerCase()) { setMsg('❌ From and To cannot be the same.'); return; }
+      if(!date) { setMsg('❌ Select travel date.'); return; }
+      if(!time) { setMsg('❌ Select departure time.'); return; }
+      if(!passenger && !parcel) { setMsg('❌ Select at least Passengers or Parcels.'); return; }
+      if(alsoReturn && !returnTime) { setMsg('❌ Select return departure time.'); return; }
+
+      const isCommuter = ['mode_bus','mode_train','mode_flight'].includes(selVal);
+      const vehicle = isCommuter ? null : (currentUser.vehicles || []).find(v => v.id === selVal);
+      if(!isCommuter && !vehicle){ setMsg('❌ Selected vehicle was not found in your garage.'); return; }
+      if(!isCommuter && vehicle.kycStatus && vehicle.kycStatus !== 'verified'){
+        setMsg('❌ This vehicle is not verified yet. Please complete vehicle verification.'); return;
+      }
+
+      const seats = passenger && !isCommuter ? Math.max(0, Number(document.getElementById('pSeats')?.value || 0)) : 0;
+      const seatPrice = passenger && !isCommuter ? Math.max(0, Number(document.getElementById('pSeatPrice')?.value || 0)) : 0;
+      const docPrice = parcel ? Math.max(0, Number(document.getElementById('pDocPrice')?.value || 0)) : 0;
+      const bagPrice = parcel ? Math.max(0, Number(document.getElementById('pBagPrice')?.value || 0)) : 0;
+      const cargoPrice = parcel ? Math.max(0, Number(document.getElementById('pCargoPrice')?.value || 0)) : 0;
+      const fullVehiclePrice = (!isCommuter && parcel && ['Pickup/Truck','Van','Private Bus'].includes(vehicle?.type))
+        ? Math.max(0, Number(document.getElementById('pFullVehiclePrice')?.value || 0)) : 0;
+      const typeDoc = parcel && !!document.getElementById('pTypeDoc')?.checked && docPrice > 0;
+      const typeBag = parcel && !!document.getElementById('pTypeBag')?.checked && bagPrice > 0;
+      const typeCargo = parcel && !!document.getElementById('pTypeCargo')?.checked && cargoPrice > 0;
+
+      if(passenger && !isCommuter && seats < 1){ setMsg('❌ Available seats must be at least 1.'); return; }
+      if(passenger && !isCommuter && seatPrice < 1){ setMsg('❌ Enter a valid seat price.'); return; }
+      if(parcel && !typeDoc && !typeBag && !typeCargo && !fullVehiclePrice){ setMsg('❌ Add at least one active parcel price.'); return; }
+
+      setMsg('⏳ Posting trip...');
+
+      let route = window.getSelectedDriverRoute ? window.getSelectedDriverRoute() : null;
+      if(!route && !['mode_train','mode_flight'].includes(selVal)){
+        try { await window.fetchDriverRoutes?.(); route = window.getSelectedDriverRoute?.(); } catch(e) {}
+      }
+
+      const routeCoords = route?.geometry?.coordinates || null;
+      const routeDistanceKm = route?.distance ? Number((route.distance/1000).toFixed(2)) : null;
+      const routeDurationMin = route?.duration ? Math.round(route.duration/60000) : null;
+
+      const base = {
+        driverUid: currentUser.uid,
+        driverName: currentUser.displayName || currentUser.name || 'SafarShare Driver',
+        driverEmail: currentUser.email || '',
+        from, to, pickupSpot, date, time,
+        status: 'Active',
+        created: Date.now(),
+        passenger: passenger && !isCommuter,
+        parcel,
+        seats,
+        seatPrice,
+        docPrice,
+        bagPrice,
+        cargoPrice,
+        typeDoc, typeBag, typeCargo,
+        fullVehiclePrice,
+        isCommuterMode: isCommuter,
+        commuterMode: isCommuter ? selVal : null,
+        isDaily: daily,
+        isLadiesOnly: ladiesOnly && !isCommuter,
+        isFamilyOnBoard: familyOnBoard && !isCommuter,
+        vehicle: isCommuter ? (selVal==='mode_bus'?'Government / State Transport Bus':selVal==='mode_train'?'Indian Railways':'Flight / Air Luggage') : vehicle.type,
+        carModel: isCommuter ? '' : (vehicle.model || ''),
+        carNumber: isCommuter ? '' : (vehicle.plate || ''),
+        vehicleId: isCommuter ? selVal : vehicle.id,
+        routeCoords,
+        routeDistanceKm,
+        routeDurationMin,
+        routeSource: route ? 'OSRM' : null,
+        paymentGateway: false,
+        commissionRate: 0,
+        updatedAt: Date.now()
+      };
+
+      const firstRef = await addDoc(collection(db,'rides'), base);
+
+      if(alsoReturn){
+        const returnData = {
+          ...base,
+          from: to,
+          to: from,
+          time: returnTime,
+          pickupSpot: '',
+          returnOf: firstRef.id,
+          isReturnTrip: true,
+          created: Date.now()+1,
+          updatedAt: Date.now()+1
+        };
+        await addDoc(collection(db,'rides'), returnData);
+      }
+
+      setMsg(`✅ Trip posted successfully${alsoReturn ? ' + return trip' : ''}!`, true);
+      window.showToast?.(`🚗 Trip posted: ${from} → ${to}`);
+      document.getElementById('pFrom').value='';
+      document.getElementById('pTo').value='';
+      document.getElementById('pPickupSpot').value='';
+      document.getElementById('pAlsoReturnTrip').checked=false;
+      if(document.getElementById('returnTimeWrapper')) document.getElementById('returnTimeWrapper').style.display='none';
+      if(window.show) setTimeout(()=>window.show('activity'), 700);
+    } catch(e) {
+      console.error('postTrip error:', e);
+      setMsg('❌ Trip post failed: ' + (e?.message || 'Unknown error'));
+      window.showToast?.('❌ Trip post failed. Check Firebase permissions.');
+    }
+  };
+
   function initDataListeners() {
     clearDataListeners();
 
-    // Vehicles
     dataListenerUnsubs.push(onSnapshot(collection(db,'user_vehicles'), snapshot => {
       ALL_VEHICLES = snapshot.docs.map(d=>({id:d.id,...d.data()}));
       if(currentUser){
@@ -1459,27 +1585,23 @@ button{ font-family:inherit; }
       }
     }, err => console.error('Vehicle listener error:',err)));
 
-    // Rides
     dataListenerUnsubs.push(onSnapshot(collection(db,'rides'), snapshot => {
       ALL_RIDES = snapshot.docs.map(d=>({id:d.id,...d.data()}));
       window.stats();
       if(document.getElementById('activity').classList.contains('active')){ window.renderTrips(); window.updateWalletLedger(); }
-      // Update Admin Dash
       if(window.updateAdminDashboardMetrics) window.updateAdminDashboardMetrics();
       if(window.renderAdminTripsManagement) window.renderAdminTripsManagement();
     }, err => { console.error('Ride listener error:',err); window.showToast('⚠️ Realtime trip connection issue.'); }));
 
     attachUserRequestListeners();
 
-    // Ads
     dataListenerUnsubs.push(onSnapshot(collection(db,'sponsored_ads'), snapshot => {
       ALL_ADS=snapshot.docs.map(d=>({id:d.id,...d.data()})); window.renderAdminAdsList();
     }, err=>console.error('Ads listener error:',err)));
 
-    // Users
     dataListenerUnsubs.push(onSnapshot(collection(db,'users'), snapshot => {
       ALL_USERS=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-      window.renderAdminUsersList(); // For safety
+      window.renderAdminUsersList();
       if(window.renderAdminUsersManagement) window.renderAdminUsersManagement();
       if(window.updateAdminDashboardMetrics) window.updateAdminDashboardMetrics();
       if(currentUser && currentUser.email !== ADMIN_EMAIL){
@@ -1491,13 +1613,11 @@ button{ font-family:inherit; }
       }
     }, err=>console.error('User listener error:',err)));
 
-    // 🚨 NEW: Reports Listener
     dataListenerUnsubs.push(onSnapshot(collection(db,'reports'), snapshot => {
       ALL_REPORTS = snapshot.docs.map(d=>({id:d.id,...d.data()}));
       if(window.renderAdminReports) window.renderAdminReports();
     }));
 
-    // 📍 NEW: Admin Live Locations Listener
     dataListenerUnsubs.push(onSnapshot(collection(db,'live_locations'), snapshot => {
       ALL_LIVE_LOCATIONS = {};
       snapshot.docs.forEach(d => { ALL_LIVE_LOCATIONS[d.id] = d.data(); });
@@ -1508,7 +1628,7 @@ button{ font-family:inherit; }
   async function writeDriverLiveLocation(position){
     if(!currentUser || driverLocationBusy) return;
     const now=Date.now();
-    if(now-liveLocationWriteAt < 3000) return; // throttle Firestore writes
+    if(now-liveLocationWriteAt < 3000) return;
     const lat=Number(position.coords.latitude), lng=Number(position.coords.longitude);
     if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
     const activeIds=[...activeDriverRideIds];
@@ -1541,7 +1661,6 @@ button{ font-family:inherit; }
   }
 
   window.stopDriverLiveTracking=function(){ if(driverWatchId!==null && navigator.geolocation) navigator.geolocation.clearWatch(driverWatchId); driverWatchId=null; activeDriverRideIds=new Set(); };
-
 
   window.getCurrentUser = () => currentUser;
   window.getRides = () => ALL_RIDES;
@@ -1578,7 +1697,6 @@ let pinPickerMap = null;
 let pinPickerMarker = null;
 let tempSelectedLocationText = "";
 let debounceTimers = {};
-// Exact coordinates selected from LocationIQ/map pin, keyed by input id.
 const selectedLocationCoords = {};
 
 let passengerSearchMap = null;
@@ -1595,12 +1713,31 @@ const redPinIcon = L.icon({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
+
 function getDistinctMarkerCoords(a,b){
   const d=turf.distance(turf.point([a[1],a[0]]),turf.point([b[1],b[0]]),{units:'meters'});
   if(d<35){ return {a:[a[0],a[1]-0.00018], b:[b[0],b[1]+0.00018], near:true}; }
   return {a,b,near:false};
 }
 
+// 🛡️ ULTRA-CLEAN LOCATION FORMATTER (Removes Pin Codes, District, State & Non-English/Hindi Kachra)
+function cleanLocationName(rawName) {
+  if (!rawName) return "";
+  let parts = rawName.split(',').map(s => s.trim()).filter(s => {
+    if (!s) return false;
+    // Strip Hindi/Unicode characters, pin codes (6 digits), or administrative fluff like "District", "Taluka", "Division"
+    if (/[^\x00-\x7F]/.test(s)) return false;
+    if (/^\d{6}$/.test(s)) return false;
+    if (/district|taluka|tehsil|division|pin|code|india/i.test(s)) return false;
+    return true;
+  });
+  if (parts.length === 0) {
+    parts = rawName.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  // Return top 2 precise granular parts (e.g., Landmark/Area, City)
+  return [...new Set(parts.slice(0, 2))].join(', ');
+}
+window.cleanLocationName = cleanLocationName;
 
 function esc(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function safeNumber(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
@@ -1756,14 +1893,12 @@ function openUsersModal(){
 }
 function closeUsersModal(){ document.getElementById("usersModal").style.display = "none"; }
 
-// 2. USER GARAGE LIST (SHOWING PENDING/VERIFIED BADGES)
 window.renderGarageList = function() {
   const u = window.getCurrentUser();
   const box = document.getElementById("userGarageList");
   if(!u || !u.vehicles || !u.vehicles.length) { box.innerHTML = "<div class='small muted'>No vehicles added yet in your garage. Add a vehicle below!</div>"; return; }
   
   box.innerHTML = u.vehicles.map(v => {
-    // Determine KYC Badge
     const kycBadge = v.kycStatus === 'verified' 
       ? '<span class="badge g">✅ KYC Verified</span>' 
       : (v.kycStatus === 'rejected' ? '<span class="badge red">🚫 Rejected</span>' : '<span class="badge o">⏳ Pending (Admin Check)</span>');
@@ -1778,9 +1913,6 @@ window.renderGarageList = function() {
     </div>
   `}).join("");
 };
-// ==========================================
-// 🚘 ADMIN GARAGE & KYC VERIFICATION LOGIC
-// ==========================================
 
 window.openAdminGarageModal = function(userUid) {
   const users = window.getUsers ? window.getUsers() : [];
@@ -1807,16 +1939,14 @@ window.openAdminGarageModal = function(userUid) {
   } else {
     html += userVehicles.map(v => {
       const addDate = v.created ? new Date(v.created).toLocaleDateString('en-IN') : 'Unknown Date';
-      
       const statusBadge = v.kycStatus === 'verified' ? '<span class="badge g">✅ Verified</span>' : (v.kycStatus === 'rejected' ? '<span class="badge red">🚫 Rejected</span>' : '<span class="badge o">⏳ Pending</span>');
 
-      // Action Buttons for Admin
       let actionBtns = '';
       if (v.kycStatus !== 'verified') {
-        actionBtns += `<button class="green" style="padding:5px 8px; font-size:11px;" onclick="adminVerifyVehicle('${v.id}', '${userUid}')">✅ Approve (mParivahan OK)</button>`;
+        actionBtns += `<button class="green" style="padding:5px 8px; font-size:11px;" onclick="adminVerifyVehicle('${v.id}', '${userUid}')">✅ Approve</button>`;
       }
       if (v.kycStatus !== 'rejected') {
-        actionBtns += `<button class="red" style="padding:5px 8px; font-size:11px;" onclick="adminRejectVehicle('${v.id}', '${userUid}')">🚫 Reject & Suspend User</button>`;
+        actionBtns += `<button class="red" style="padding:5px 8px; font-size:11px;" onclick="adminRejectVehicle('${v.id}', '${userUid}')">🚫 Reject & Suspend</button>`;
       }
 
       return `
@@ -1827,10 +1957,7 @@ window.openAdminGarageModal = function(userUid) {
         </div>
         <div class="small" style="color:#475569; margin-top:2px;"><b>Model:</b> ${esc(v.model)}</div>
         <div class="small muted" style="margin-top:4px; font-size:11px;">📅 Added: ${addDate} | Status: ${statusBadge}</div>
-        
-        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-           ${actionBtns}
-        </div>
+        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">${actionBtns}</div>
       </div>
       `;
     }).join("");
@@ -1844,7 +1971,6 @@ window.closeAdminGarageModal = function() {
   document.getElementById("adminGarageModal").style.display = "none";
 };
 
-// 🟢 APPROVE VEHICLE
 window.adminVerifyVehicle = async function(vehicleId, userUid) {
   if(!confirm("Are you sure this vehicle details match exactly with mParivahan?")) return;
   try {
@@ -1852,28 +1978,22 @@ window.adminVerifyVehicle = async function(vehicleId, userUid) {
     const db = getFirestore();
     await updateDoc(doc(db, "user_vehicles", vehicleId), { kycStatus: 'verified' });
     window.showToast("✅ Vehicle Approved!");
-    setTimeout(() => window.openAdminGarageModal(userUid), 500); // Auto-refresh modal
+    setTimeout(() => window.openAdminGarageModal(userUid), 500);
   } catch(e) { window.showToast("Error: " + e.message); }
 };
 
-// 🚫 REJECT VEHICLE & BLOCK USER
 window.adminRejectVehicle = async function(vehicleId, userUid) {
   if(!confirm("🚨 SECURITY ALERT: Do you want to Reject this vehicle and SUSPEND the user account?")) return;
   try {
     const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
     const db = getFirestore();
-    
-    // 1. Mark vehicle as rejected
     await updateDoc(doc(db, "user_vehicles", vehicleId), { kycStatus: 'rejected' });
-    
-    // 2. Suspend the user account
     await updateDoc(doc(db, "users", userUid), {
       isBlocked: true,
       blockReason: "Account suspended: Vehicle KYC verification failed (mParivahan check) or suspicious activity detected."
     });
-    
     window.showToast("🚫 Vehicle rejected and User Suspended!");
-    window.closeAdminGarageModal(); // Close modal after blocking
+    window.closeAdminGarageModal();
   } catch(e) { window.showToast("Error: " + e.message); }
 };
 
@@ -1885,7 +2005,6 @@ function renderVehicleDropdown() {
   if(!sel) return;
   
   let garageOpts = "";
-  
   if (u && u.vehicles && u.vehicles.length > 0) {
     garageOpts = u.vehicles.map(v => `
       <option value="${v.id}">${v.type === 'Car' ? '🚗' : v.type === 'Bike' ? '🏍️' : v.type === 'Auto' ? '🛺' : v.type === 'Pickup/Truck' ? '🛻' : '🚐'} ${esc(v.model)} (${esc(v.plate)})</option>
@@ -1931,7 +2050,6 @@ function handleVehicleSelectChange() {
   const u = window.getCurrentUser();
   const veh = (u && u.vehicles) ? u.vehicles.find(v => v.id === selVal) : null;
   const vType = veh ? veh.type : "";
-  
   const isGoodsVehicle = (vType === "Pickup/Truck" || vType === "Van" || vType === "Private Bus");
 
   if(isCommuter) {
@@ -1982,18 +2100,6 @@ function handleVehicleSelectChange() {
   }
 }
 
-// 🧹 CLEAN SHORT LOCATION FORMATTER (Area, District, State - No Hindi/Long Strings)
-function cleanLocationName(rawName) {
-  if (!rawName) return "";
-  let parts = rawName.split(',').map(s => s.trim()).filter(s => s.length > 0 && !/[^\x00-\x7F]/.test(s) && !/\d{6}/.test(s));
-  if(parts.length === 0) {
-    parts = rawName.split(',').map(s => s.trim());
-  }
-  return [...new Set(parts.slice(0, 3))].join(', ');
-}
-window.cleanLocationName = cleanLocationName;
-
-// 👑 CLEAN ADMIN USER LIST (OLD - RETAINED FOR SAFETY)
 function renderAdminUsersList() {
   const box = document.getElementById("adminUsersList");
   if (!box) return;
@@ -2030,7 +2136,6 @@ function renderAdminUsersList() {
 }
 window.renderAdminUsersList = renderAdminUsersList;
 
-// 🔍 DEEP INSPECT MODAL OPEN & RENDER LOGIC
 let deepInspectMapInstance = null;
 
 function openDeepInspectModal(userUid) {
@@ -2066,12 +2171,10 @@ function openDeepInspectModal(userUid) {
 
   detailsHtml += `<h4 style="margin:8px 0 4px; font-size:13px;">📋 Bookings & Deliveries (${userBookings.length}):</h4>`;
 
-  // 🕒 3. ADMIN DATE/TIME FIXED TO USE q.date
-    if(userBookings.length === 0) {
+  if(userBookings.length === 0) {
     detailsHtml += `<div class="small muted">No bookings or parcel requests.</div>`;
   } else {
     detailsHtml += userBookings.map(q => {
-      // 1. सही तारीख (Date) निकालने का लॉजिक
       let bookingDate = 'N/A';
       if (q.date) {
         bookingDate = q.date;
@@ -2080,7 +2183,6 @@ function openDeepInspectModal(userUid) {
         bookingDate = new Date(ts).toLocaleDateString('en-IN');
       }
 
-      // 2. सही समय (Time) निकालने का लॉजिक
       let bookingTime = 'N/A';
       if (q.time) {
         bookingTime = q.time;
@@ -2128,11 +2230,9 @@ function closeDeepInspectModal() {
 window.openDeepInspectModal = openDeepInspectModal;
 window.closeDeepInspectModal = closeDeepInspectModal;
 
-// ⚡ 500MS DEBOUNCE LOCATIONIQ WITH ENGLISH ACCEPT LANGUAGE
 function handleLocationInput(inputId, suggestionBoxId) {
   const query = document.getElementById(inputId).value.trim();
   const box = document.getElementById(suggestionBoxId);
-  // If the user changes the text manually, do not keep coordinates from an older selection.
   if (selectedLocationCoords[inputId] && selectedLocationCoords[inputId].text !== query) {
     delete selectedLocationCoords[inputId];
   }
@@ -2206,15 +2306,11 @@ function selectSuggestedLocation(inputId, suggestionBoxId, locationName, lat, lo
 }
 window.selectSuggestedLocation = selectSuggestedLocation;
 
-// 📍 SMART MAP PIN PICKER (DYNAMIC GREEN/RED PIN, GPS, IN-MAP SEARCH)
 function openMapPinPicker(targetInputId) {
   activeTargetInputId = targetInputId;
   const isPickup = targetInputId.toLowerCase().includes('from') || targetInputId.toLowerCase().includes('pickup');
   
-  document.getElementById("mapPinModalTitle").innerHTML = isPickup 
-    ? `🟢 Set Pickup Location` 
-    : `🔴 Set Drop Destination`;
-  
+  document.getElementById("mapPinModalTitle").innerHTML = isPickup ? `🟢 Set Pickup Location` : `🔴 Set Drop Destination`;
   document.getElementById("mapPinModal").style.display = "flex";
 
   const curVal = document.getElementById(targetInputId).value;
@@ -2375,7 +2471,6 @@ window.confirmMapPinSelection = confirmMapPinSelection;
 async function geocode(query, inputId = null) {
   const clean = query.trim().toLowerCase();
 
-  // Prefer the exact coordinates the user selected from autocomplete or the map pin.
   if (inputId && selectedLocationCoords[inputId]) {
     const saved = selectedLocationCoords[inputId];
     if (saved.text && saved.text.trim().toLowerCase() === clean && Number.isFinite(saved.lat) && Number.isFinite(saved.lon)) {
@@ -2388,7 +2483,6 @@ async function geocode(query, inputId = null) {
   }
 
   try {
-    // Request several candidates; choose the highest-ranked result returned by LocationIQ.
     const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&accept-language=en&format=json&limit=5`;
     const res = await fetch(url);
     const data = await res.json();
@@ -2413,7 +2507,7 @@ async function geocode(query, inputId = null) {
 }
 window.geocode = geocode;
 
-/* 🔵 PASSENGER ROUTE PREVIEW MAP */
+/* 🔵 PASSENGER ROUTE PREVIEW MAP WITH INVALIDATE SIZE FIX */
 async function updatePassengerRoutePreview() {
   const from = document.getElementById("fFrom").value.trim();
   const to = document.getElementById("fTo").value.trim();
@@ -2456,6 +2550,7 @@ async function updatePassengerRoutePreview() {
       passengerRouteLayer.addLayer(pStart);
       passengerRouteLayer.addLayer(pEnd);
 
+      passengerSearchMap.invalidateSize();
       passengerSearchMap.fitBounds(lineLayer.getBounds(), { padding: [20, 20] });
       statusEl.innerHTML = `📍 Travel Distance: <b>${distKm} km</b> (${activeCorridorMode === 'local' ? '2 KM' : '10 KM'} Corridor Connected)`;
     }
@@ -2464,7 +2559,7 @@ async function updatePassengerRoutePreview() {
   }
 }
 
-/* 🚗 DRIVER ROUTE ENGINE (OSRM BLUE PIPELINE) */
+/* 🚗 DRIVER ROUTE ENGINE WITH INVALIDATE SIZE FIX */
 async function fetchDriverRoutes() {
   const from = document.getElementById("pFrom").value.trim();
   const to = document.getElementById("pTo").value.trim();
@@ -2475,6 +2570,10 @@ async function fetchDriverRoutes() {
   statusEl.textContent = "⏳ Calculating driving highway route...";
   picker.innerHTML = "";
   driverRouteLayers.clearLayers();
+
+  if(driverMap) {
+    driverMap.invalidateSize();
+  }
 
   try {
     const fromCoord = await geocode(from, "pFrom");
@@ -2509,7 +2608,11 @@ function renderDriverMapRoutes() {
       
       driverRouteLayers.addLayer(L.marker(startPt, { icon: greenPinIcon }).bindPopup("🟢 Departure"));
       driverRouteLayers.addLayer(L.marker(endPt, { icon: redPinIcon }).bindPopup("🔴 Destination"));
-      driverMap.fitBounds(layer.getBounds(), { padding: [20, 20] });
+      
+      if(driverMap) {
+        driverMap.invalidateSize();
+        driverMap.fitBounds(layer.getBounds(), { padding: [20, 20] });
+      }
     }
   });
 }
@@ -2541,7 +2644,6 @@ function toggleParcelFields(){
   document.getElementById("parcelFieldsGroup").style.display = isParcel ? "block" : "none"; 
 }
 
-// 📦 SMART AUTO-CHECK PARCEL PRICING
 function setupParcelAutoCheck() {
   const pairs = [
     { input: 'pDocPrice', check: 'pTypeDoc' },
@@ -2560,7 +2662,6 @@ function setupParcelAutoCheck() {
   });
 }
 
-/* 🧭 NATIVE TAB NAVIGATION */
 function show(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   const target=document.getElementById(id);
@@ -2625,7 +2726,6 @@ function buildSponsoredAdCard(ad) {
   `;
 }
 
-/* 🔎 FIND RIDES */
 async function findRides(){
   const from=document.getElementById("fFrom").value.trim();
   const to=document.getElementById("fTo").value.trim();
@@ -2715,7 +2815,6 @@ async function findRides(){
 }
 window.findRides = findRides;
 
-/* 📦 FIND PARCEL */
 async function findParcel(){
   const from=document.getElementById("xFrom").value.trim();
   const to=document.getElementById("xTo").value.trim();
@@ -2860,10 +2959,6 @@ function toggleLiveTrackingBox(reqId){
 }
 window.toggleLiveTrackingBox=toggleLiveTrackingBox;
 
-
-
-/* 🛠️ REQUEST / PAYMENT / START-DROP PIN FLOW FIX
-   Keeps the existing UI and Firebase schema, but adds the missing handlers. */
 (function(){
   let pinAction = null;
 
@@ -3008,7 +3103,6 @@ window.toggleLiveTrackingBox=toggleLiveTrackingBox;
   };
 })();
 
-/* 📋 REQUESTS TAB */
 function renderRequests(){
   const user = window.getCurrentUser();
   if(!user) { document.getElementById("myRequests").innerHTML = empty("📋", "Please login with Google to view requests"); return; }
@@ -3036,14 +3130,14 @@ function renderRequests(){
         actions = `
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="green" style="padding:6px 12px; font-size:12px;" onclick='acceptOffer(${JSON.stringify(x)})'>✅ Accept ₹${x.currentPrice}</button>
-          ${(x.status === "Pending" && x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:6px 12px; font-size:12px;" onclick="counterRequest('${x.id}')">🔄 Counter</button>` : ''}
+          ${(x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:6px 12px; font-size:12px;" onclick="counterRequest('${x.id}')">🔄 Counter</button>` : ''}
           <button class="red" style="padding:6px 12px; font-size:12px;" onclick="cancelRequest('${x.id}', true)">✖ Reject</button>
         </div>`;
       } else {
         actions = `
         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
           <span class="small">⏳ Waiting for driver response...</span>
-          ${(x.status === "Pending" && x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:4px 8px; font-size:11px;" onclick="counterRequest('${x.id}')">₹ Offer New Fare</button>` : ''}
+          ${(x.bookingScope === 'intercity' && isPassengerBooking) ? `<button class="orange" style="padding:4px 8px; font-size:11px;" onclick="counterRequest('${x.id}')">₹ Offer New Fare</button>` : ''}
           <button class="red" style="padding:4px 8px; font-size:11px;" onclick="cancelRequest('${x.id}', false)">Cancel</button>
         </div>`;
       }
@@ -3069,11 +3163,9 @@ function renderRequests(){
       </div>`;
     }
 
-    // Passenger/sender can cancel before the trip becomes In-Transit.
     if (!isDriver && ["Confirmed"].includes(x.status)) {
       actions += `<button class="red" style="padding:6px 10px; font-size:11px; margin-top:6px;" onclick="cancelRequest('${x.id}', false)">✖ Cancel ${isPassengerBooking ? 'Booking' : 'Parcel Request'}</button>`;
     }
-    // Driver can cancel an accepted/confirmed request; full trip cancellation remains available from My Trips.
     if (isDriver && ["Accepted", "Confirmed"].includes(x.status)) {
       actions += `<button class="red" style="padding:6px 10px; font-size:11px; margin-top:6px;" onclick="cancelRequest('${x.id}', true)">✖ Cancel Request</button>`;
     }
@@ -3122,7 +3214,7 @@ function renderRequests(){
       <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">${trackBtn} ${chatBtn} ${shareBtn} ${sosBtn}</div>
     </div>`;
   }).join("");
-  // Re-hydrate active tracking maps after realtime HTML rerender.
+
   const ids=[...activeTrackingIds];
   Object.keys(passengerTrackMaps).forEach(id => { try { if(passengerTrackMaps[id].locationUnsub) passengerTrackMaps[id].locationUnsub(); if(passengerTrackMaps[id].map) passengerTrackMaps[id].map.remove(); }catch(e){} delete passengerTrackMaps[id]; });
   setTimeout(()=>ids.forEach(id=>{ if(document.getElementById(`trackMap_${id}`)) startTrackingForRequest(id); }),50);
@@ -3140,7 +3232,6 @@ function choosePayment(qid){
   if(qObj) window.reserveCapacity(qObj, selectedMode);
 }
 
-/* 🛣️ MY TRIPS TAB (WITH 2-CATEGORY EARNINGS BREAKDOWN: SEAT & PARCEL) */
 function renderTrips(){
   const user = window.getCurrentUser();
   const list = window.getRides ? window.getRides() : [];
@@ -3152,7 +3243,6 @@ function renderTrips(){
   if (user && user.email === adminEmail) {
     if(adminCard) adminCard.style.display = "block";
     const completed = list.filter(r => r.status === "Completed");
-    const totalRev = completed.reduce((sum, r) => sum + (safeNumber(r.earnedAmount || r.seatPrice || r.fullVehiclePrice || 100) * 0.05), 0);
   } else {
     if(adminCard) adminCard.style.display = "none";
   }
@@ -3175,7 +3265,6 @@ function renderTrips(){
 
   box.innerHTML = enrichedTrips.map(({x,tripReqs,hasActiveBooking}) => {
     const showEditBtn = (x.status === 'Active' && !hasActiveBooking);
-
     const completedTripReqs = tripReqs.filter(q => q.status === "Completed" || q.status === "Paid");
     
     let seatTotal = 0;
@@ -3265,7 +3354,6 @@ function shareOnWhatsApp(r){
   const tripBookingUrl = `${currentUrl}?tripId=${r.id}`;
   
   let detailsText = "";
-
   if (r.passenger && !r.isCommuterMode && r.seats > 0) {
     detailsText += `💺 *Available Seats:* ${r.seats} (₹${r.seatPrice}/seat)\n`;
   }
@@ -3331,10 +3419,6 @@ document.addEventListener("DOMContentLoaded", function(){
   renderVehicleDropdown();
 });
 
-// -------------------------------------------------------------
-// 🔥 ADVANCED ADMIN DASHBOARD LOGIC START (NEW FUNCTIONS)
-// -------------------------------------------------------------
-
 window.switchAdminTab = function(tabName) {
   document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".admin-sub-section").forEach(s => s.classList.remove("active"));
@@ -3356,7 +3440,7 @@ window.updateAdminDashboardMetrics = function() {
   const reqs = window.getRequests ? window.getRequests() : [];
 
   const elTotalUsers = document.getElementById("kpiTotalUsers");
-  if(!elTotalUsers) return; // Wait till UI loads
+  if(!elTotalUsers) return;
 
   elTotalUsers.textContent = users.length;
   document.getElementById("kpiActiveTrips").textContent = rides.filter(r => r.status === 'Active').length;
@@ -3487,7 +3571,7 @@ window.refreshAdminLiveMap = function() {
   if(!window.adminLiveMapInstance) return;
   const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
   if(!window.adminMapMarkers) window.adminMapMarkers = {};
-  
+
   Object.keys(liveLocs).forEach(rideId => {
     const loc = liveLocs[rideId];
     if(loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
@@ -3522,7 +3606,6 @@ window.renderAdminReports = function() {
   `).join("");
 };
 
-// 🎯 AUTO-DETECT GPS FOR 'FROM' INPUTS (NEW)
 async function autoDetectFromGPS(inputId, btnElement) {
   if (!navigator.geolocation) {
     window.showToast("GPS not supported on this device.");
@@ -3530,7 +3613,7 @@ async function autoDetectFromGPS(inputId, btnElement) {
   }
   
   const originalText = btnElement.innerHTML;
-  btnElement.innerHTML = "⏳"; // Change to loading icon
+  btnElement.innerHTML = "⏳";
   btnElement.style.pointerEvents = "none";
   
   navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -3543,17 +3626,14 @@ async function autoDetectFromGPS(inputId, btnElement) {
       const data = await res.json();
       
       if (data && data.display_name) {
-        const cleanName = cleanLocationName(data.display_name); // Smart Address Cleaner logic
+        const cleanName = cleanLocationName(data.display_name);
         document.getElementById(inputId).value = cleanName;
         
-        // 100% Match Logic - Save exact coordinates silently
         selectedLocationCoords[inputId] = {
           text: cleanName, lat: parseFloat(lat), lon: parseFloat(lon), source: "AutoGPS"
         };
         
         window.showToast("✅ Auto-GPS Location Set!");
-        
-        // Auto-update map previews if applicable
         if(inputId === 'fFrom') updatePassengerRoutePreview();
         if(inputId === 'pFrom') fetchDriverRoutes();
       }
@@ -3571,32 +3651,26 @@ async function autoDetectFromGPS(inputId, btnElement) {
 }
 window.autoDetectFromGPS = autoDetectFromGPS;
 
-// 👁️ MOBILE BACKGROUND RE-SYNC ENGINE (PAGE VISIBILITY API)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === 'visible') {
     const badge = document.getElementById("liveSyncBadge");
     if (badge) badge.style.display = "block";
     
-    // Force UI re-render and state sync to catch missed Firebase events
     if (typeof window.stats === 'function') window.stats();
     if (document.getElementById('activity').classList.contains('active')) {
       if (typeof window.renderRequests === 'function') window.renderRequests();
       if (typeof window.renderTrips === 'function') window.renderTrips();
     }
     if (document.getElementById('find').classList.contains('active')) {
-       // Optional: Auto re-trigger ride search if they are on find page
        const from = document.getElementById("fFrom").value;
        if(from) window.findRides(); 
     }
     
     setTimeout(() => {
       if (badge) badge.style.display = "none";
-    }, 1200); // Hide badge after 1.2 seconds
+    }, 1200);
   }
 });
-  // ==========================================
-// 📱 PROFILE PHONE OTP VERIFICATION LOGIC
-// ==========================================
 
 async function setupRecaptcha() {
   const { getAuth, RecaptchaVerifier } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
@@ -3649,7 +3723,6 @@ window.verifyPhoneOtpAndSave = async function(otpCode) {
     
     const otpSection = document.getElementById("profileOtpVerifySection");
     if(otpSection) otpSection.style.display = "none";
-    
     if(window.saveUserProfile) window.saveUserProfile();
 
   } catch (error) {
@@ -3657,21 +3730,15 @@ window.verifyPhoneOtpAndSave = async function(otpCode) {
     window.showToast("❌ Invalid OTP. Please check and try again.");
   }
 };
-  // ==========================================
-// 🔔 PUSH NOTIFICATIONS (FCM) ADVANCED LOGIC
-// ==========================================
 
 async function initializePushNotifications() {
   try {
     const { getMessaging, getToken, onMessage } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js");
     const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
     
-    // ब्राउज़र से नोटिफिकेशन की अनुमति लेना
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       const messaging = getMessaging();
-      
-      // VAPID Key का उपयोग करके FCM टोकन जनरेट करना
       const currentToken = await getToken(messaging, { 
         vapidKey: "BFJtAYPAICOPY0n6d-QOPLI-MpDlD_n1Wyr1P91pEikkDYdohfaGyBVPe9CbqPw0BTn6Ccgq1j34aq-cEIb5Ugg" 
       });
@@ -3679,24 +3746,17 @@ async function initializePushNotifications() {
       const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
       if (currentToken && currentUser) {
         const db = getFirestore();
-        // यूज़र के डेटाबेस में उसका FCM टोकन सेव करना
         await updateDoc(doc(db, "users", currentUser.uid), {
           fcmToken: currentToken,
           notificationEnabled: true
         });
-        console.log("FCM Token saved successfully:", currentToken);
       }
 
-      // जब ऐप खुली हो (Foreground), तब नोटिफिकेशन मिलने पर क्या हो
       onMessage(messaging, (payload) => {
-        console.log("Message received in foreground: ", payload);
         const title = payload.notification?.title || "SafarShare Alert";
         const body = payload.notification?.body || "You have a new update!";
         window.showToast(`🔔 ${title}: ${body}`);
       });
-
-    } else {
-      console.log("Notification permission denied.");
     }
   } catch (error) {
     console.error("Error initializing push notifications:", error);
@@ -3705,7 +3765,6 @@ async function initializePushNotifications() {
 
 window.initializePushNotifications = initializePushNotifications;
 
-// यूज़र लॉगिन होने के बाद ऑटोमैटिक पुश नोटिफिकेशन शुरू करने के लिए
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.getCurrentUser && window.getCurrentUser()) {
