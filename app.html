@@ -2075,7 +2075,7 @@ function openDeepInspectModal(userUid) {
         <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
         <div class="small" style="margin-top:3px;">
           Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
-          <span style="color:#64748b;">📅 Date: ${q.date || 'N/A'} • ⏰ ${q.time || 'N/A'}</span>
+          <span style="color:#64748b;">📅 Date: ${x.date || (x.created ? new Date(x.created).toLocaleDateString('en-IN') : 'N/A')}
         </div>
       </div>
     `).join("");
@@ -3457,7 +3457,7 @@ window.initAdminLiveGodEyeMap = function() {
       adminLiveMapInstance = L.map('adminLiveMap').setView([21.4588, 80.1961], 11);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(adminLiveMapInstance);
     } else {
-      adminLiveMapInstance.invalidateSize();
+      adminLiveMapInstance.invalidateSize(); // 👈 यह लाइन नक्शे की खाली स्क्रीन (blank screen) की समस्या को हमेशा के लिए ठीक कर देगी[span_0](start_span)[span_0](end_span)
     }
     window.refreshAdminLiveMap();
   }, 200);
