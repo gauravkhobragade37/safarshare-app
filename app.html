@@ -429,11 +429,11 @@ button{ font-family:inherit; }
           <option value="Other">⚪ Other</option>
         </select>
       </div>
-      <div class="field">
+   <div class="field">
   <label>Contact Phone (10-Digits)</label>
-  <div style="display:flex; gap:6px;">
-    <input id="profPhone" type="tel" value="8668828542" placeholder="10-digit mobile" maxlength="10">
-    <button type="button" class="secondary" style="padding:0 12px; font-size:11px; white-space:nowrap;" onclick="sendPhoneOtp(document.getElementById('profPhone').value)">📲 Send OTP</button>
+  <div style="display:flex; gap:6px; width:100%;">
+    <input id="profPhone" type="tel" value="" placeholder="10-digit mobile" maxlength="10" style="flex:1;">
+    <button type="button" class="secondary" style="padding:0 12px; font-size:11px; white-space:nowrap; height:42px;" onclick="sendPhoneOtp(document.getElementById('profPhone').value)">📲 Send OTP</button>
   </div>
 </div>
 
@@ -3192,7 +3192,7 @@ function renderRequests(){
     const trackBtn = (!isDriver && ["Confirmed", "In-Transit"].includes(x.status)) ? `<button class="secondary" style="background:#f8fafc;" onclick="toggleLiveTrackingBox('${x.id}')">📍 Track Driver Live</button>` : "";
     const sosBtn = (isRunning && !isDriver) ? `<button class="red" onclick="triggerEmergencySOS()">🚨 Emergency SOS (112)</button>` : "";
     const chatBtn = (isUnlocked && !isCompleted) ? `<button class="secondary" onclick="openChat('${x.id}', '${x.driverPhone}')">💬 Live Chat / Call</button>` : `<span class="small">🔒 Contact & chat locked</span>`;
-    const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}')">📲 Share Live Trip</button>` : "";
+    const shareBtn = (isRunning && !isDriver) ? `<button class="wa-btn" onclick="shareLiveWhatsapp('${x.from}','${x.to}','${x.driverName}','${x.driverPhone}','${x.carNumber}','${x.rideId}')">📲 Share Live Trip</button>` : "";
 
     const parcelReceiverInfo = (!isPassengerBooking) ? `
       <div style="background:#f1f5f9; padding:8px 10px; border-radius:10px; margin:6px 0; font-size:12px; border:1px solid #e2e8f0;">
@@ -3221,10 +3221,23 @@ function renderRequests(){
 }
 window.renderRequests = renderRequests;
 
-function shareLiveWhatsapp(from, to, driver, phone){
-  const t = `🚗 *SafarShare Live Trip Update!*%0AMain travel kar raha hoon.%0A📍 Route: ${cleanLocationName(from)} ➔ ${cleanLocationName(to)}%0A👤 Driver: ${driver} (📞 ${phone})`;
-  window.open(`https://api.whatsapp.com/send?text=${t}`, '_blank');
+function shareLiveWhatsapp(from, to, driverName, driverPhone, vehicleNo, rideId){
+  const currentUrl = window.location.origin + window.location.pathname;
+  const liveTrackingUrl = `${currentUrl}?trackRideId=${rideId || ''}`;
+
+  const t = `🚗 *SafarShare Live Trip Update!*
+Main travel kar raha hoon. 
+📍 *Route:* ${cleanLocationName(from)} ➔ ${cleanLocationName(to)}
+👤 *Driver Name:* ${driverName || 'Driver'}
+📞 *Driver Mobile:* ${driverPhone || 'N/A'}
+🚘 *Vehicle No:* ${vehicleNo || 'N/A'}
+
+📍 *Live Tracking Map:*
+${liveTrackingUrl}`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(t)}`, '_blank');
 }
+
 
 function choosePayment(qid){
   const qObj = window.getRequests().find(a => a.id === qid);
