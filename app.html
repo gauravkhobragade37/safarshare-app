@@ -2067,10 +2067,20 @@ function openDeepInspectModal(userUid) {
   detailsHtml += `<h4 style="margin:8px 0 4px; font-size:13px;">📋 Bookings & Deliveries (${userBookings.length}):</h4>`;
 
   // 🕒 3. ADMIN DATE/TIME FIXED TO USE q.date
-  if(userBookings.length === 0) {
+    if(userBookings.length === 0) {
     detailsHtml += `<div class="small muted">No bookings or parcel requests.</div>`;
   } else {
     detailsHtml += userBookings.map(q => {
+      // 1. सही तारीख (Date) निकालने का लॉजिक
+      let bookingDate = 'N/A';
+      if (q.date) {
+        bookingDate = q.date;
+      } else if (q.created || q.createdAt) {
+        const ts = q.created || q.createdAt;
+        bookingDate = new Date(ts).toLocaleDateString('en-IN');
+      }
+
+      // 2. सही समय (Time) निकालने का लॉजिक
       let bookingTime = 'N/A';
       if (q.time) {
         bookingTime = q.time;
@@ -2084,7 +2094,7 @@ function openDeepInspectModal(userUid) {
           <b>${q.type === 'passenger' ? '🧑 Seat Booking' : '📦 Parcel (' + (q.slab || 'General') + ')'}</b>: ${cleanLocationName(q.from)} ➔ ${cleanLocationName(q.to)}
           <div class="small" style="margin-top:3px;">
             Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b> | Code: ${q.startOtp || 'N/A'}<br>
-            <span style="color:#64748b;">📅 Date: ${q.date || 'N/A'} • ⏰ Time: ${bookingTime}</span>
+            <span style="color:#64748b;">📅 Date: ${bookingDate} • ⏰ Time: ${bookingTime}</span>
           </div>
         </div>
       `;
