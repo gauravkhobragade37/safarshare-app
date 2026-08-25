@@ -429,12 +429,12 @@ button{ font-family:inherit; }
           <option value="Other">⚪ Other</option>
         </select>
       </div>
-<div class="field">
+  <div class="field">
   <label>Contact Phone (10-Digits)</label>
   <input id="profPhone" type="tel" placeholder="Enter 10-digit mobile" maxlength="10">
 </div>
-   </div>
-    
+    </div>
+
     <hr style="border:0; border-top:1px solid #e2e8f0; margin:14px 0;">
     
     <h4 style="margin:0 0 8px;">🚗 My Vehicles / Garage</h4>
@@ -1176,48 +1176,50 @@ button{ font-family:inherit; }
     const cleanPhone = phoneInput.replace(/[\s-+]/g, '').replace(/^91/, '');
 
     try {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("phone", "==", cleanPhone));
-      const querySnapshot = await getDocs(q);
-      
-      let duplicateUserFound = false;
-      querySnapshot.forEach(docSnap => {
-        if(docSnap.id !== currentUser.uid) {
-          duplicateUserFound = true;
-        }
-      });
+        // 1. Check karein ki kya ye number pehle se kisi aur user ke paas hai ya nahi
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("phone", "==", cleanPhone));
+        const querySnapshot = await getDocs(q);
 
-      if(duplicateUserFound) {
-        window.showToast("🚫 Mobile number already linked with another account!");
-        await updateDoc(doc(db, "users", currentUser.uid), {
-          isBlocked: true,
-          blockReason: "Fraud Prevention: This mobile number is already registered under another account."
+        let isDuplicate = false;
+        querySnapshot.forEach((docSnap) => {
+            // Agar number milta hai, lekin wo kisi aur ki UID hai (aapki khud ki nahi)
+            if (docSnap.id !== currentUser.uid) {
+                isDuplicate = true;
+            }
         });
-        document.getElementById("blockedReasonText").textContent = "🚫 Mobile number already linked with another account!";
-        document.getElementById("blockedOverlay").style.display = "flex";
-        return;
-      }
-    } catch(e) {}
 
-    currentUser.displayName = name;
-    currentUser.phone = cleanPhone;
-    currentUser.gender = gender;
+        // 2. Agar duplicate milta hai, toh suspend karne ke bajaye sirf alert dikhayein
+        if (isDuplicate) {
+            window.showToast("⚠️ This mobile number is already in use by another account. Please use a different number.");
+            return; // Yahin rok dein, save na hone dein
+        }
 
-    try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        name: currentUser.displayName,
-        phone: currentUser.phone,
-        gender: currentUser.gender,
-        lastActive: Date.now()
-      });
-    } catch(e){}
+        // 3. Agar number naya hai ya aapka hi hai, toh profile safely save kar dein
+        currentUser.displayName = name;
+        currentUser.phone = cleanPhone;
+        currentUser.gender = gender;
 
-    document.getElementById("userDisplay").textContent = `👤 ${currentUser.displayName}`;
-    window.closeProfileModal();
-    window.renderVehicleDropdown();
-    window.showToast("✅ Profile Details Saved!");
-  };
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            name: currentUser.displayName,
+            phone: currentUser.phone,
+            gender: currentUser.gender,
+            lastActive: Date.now(),
+            isBlocked: false,
+            blockReason: ""
+        });
 
+        document.getElementById("userDisplay").textContent = `👤 ${currentUser.displayName}`;
+        window.closeProfileModal();
+        window.renderVehicleDropdown();
+        window.showToast("✅ Profile Details Saved Successfully!");
+
+    } catch(e){
+        console.error("Profile save error:", e);
+        window.showToast("❌ Error saving profile. Please try again.");
+    }
+};
+  
   window.addVehicleToGarage = async function() {
     if(!currentUser) { window.showToast("Please login with Google first!"); window.googleLogin(); return; }
     const type = document.getElementById("newVehType").value;
@@ -1488,7 +1490,18 @@ button{ font-family:inherit; }
         try { await window.fetchDriverRoutes?.(); route = window.getSelectedDriverRoute?.(); } catch(e) {}
       }
 
-      const routeCoords = route?.geometry?.coordinates || null;
+      // Firestore does NOT allow nested arrays. OSRM geometry.coordinates is [[lon,lat],...].
+      // Store route points as objects instead, while keeping the original route geometry in memory.
+      const rawRouteCoords = route?.geometry?.coordinates || null;
+      const validRoutePoints = Array.isArray(rawRouteCoords)
+        ? rawRouteCoords.filter(p => Array.isArray(p) && p.length >= 2 && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1])))
+        : [];
+      const maxRoutePoints = 500;
+      const step = Math.max(1, Math.ceil(validRoutePoints.length / maxRoutePoints));
+      const routeCoords = validRoutePoints.length
+        ? validRoutePoints.filter((p, i) => i === 0 || i === validRoutePoints.length - 1 || i % step === 0)
+            .map(p => ({ lon: Number(p[0]), lat: Number(p[1]) }))
+        : null;
       const routeDistanceKm = route?.distance ? Number((route.distance/1000).toFixed(2)) : null;
       const routeDurationMin = route?.duration ? Math.round(route.duration/60000) : null;
 
