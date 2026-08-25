@@ -1486,6 +1486,23 @@ button{ font-family:inherit; }
       setMsg('⏳ Posting trip...');
 
       let route = window.getSelectedDriverRoute ? window.getSelectedDriverRoute() : null;
+              // 1. Normal road route (Car, Bike, Bus etc.)
+      let geometryStr = route?.geometry ? JSON.stringify(route.geometry) : null;
+
+      // 2. 🚆 TRAIN & FLIGHT FIX: Seedhi hawai line ke coordinates auto-generate honge
+      if (!geometryStr && ['mode_train', 'mode_flight'].includes(selVal)) {
+          try {
+              const fC = await window.geocode(from, "pFrom");
+              const tC = await window.geocode(to, "pTo");
+              geometryStr = JSON.stringify({
+                  type: "LineString",
+                  coordinates: [[fC[1], fC[0]], [tC[1], tC[0]]]
+              });
+          } catch(e) { 
+              console.warn("Virtual route generation failed:", e); 
+          }
+      }
+
       if(!route && !['mode_train','mode_flight'].includes(selVal)){
         try { await window.fetchDriverRoutes?.(); route = window.getSelectedDriverRoute?.(); } catch(e) {}
       }
@@ -2761,6 +2778,9 @@ async function findRides(){
         try { geom = JSON.parse(geom); } catch(e) { geom = null; }
       }
 
+      let isMatch = false;
+
+      // 1. Radar map match logic
       if (geom && geom.coordinates && geom.coordinates.length >= 2) {
         const line = turf.lineString(geom.coordinates);
         const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
@@ -2768,12 +2788,35 @@ async function findRides(){
         const np1 = turf.nearestPointOnLine(line, pPickupPt);
         const np2 = turf.nearestPointOnLine(line, pDropPt);
 
-        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location < np2.properties.location) {
-          const travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-          const fare = Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
-          matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${(trip.ratePerKm||1.5).toFixed(2)}/km` });
+        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          isMatch = true;
         }
       }
+      
+      // 2. Text match (Train/Flight fallback)
+      if (!isMatch && trip.isCommuterMode && ['mode_train', 'mode_flight'].includes(trip.commuterMode)) {
+          const sFromStr = from.toLowerCase().split(',')[0];
+          const sToStr = to.toLowerCase().split(',')[0];
+          const rFromStr = (trip.from || "").toLowerCase();
+          const rToStr = (trip.to || "").toLowerCase();
+          if ((rFromStr.includes(sFromStr) || sFromStr.includes(rFromStr)) && 
+              (rToStr.includes(sToStr) || sToStr.includes(rToStr))) {
+              isMatch = true;
+          }
+      }
+
+      if (isMatch) {
+          let travelKm = 10;
+          if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+              const line = turf.lineString(geom.coordinates);
+              const np1 = turf.nearestPointOnLine(line, pPickupPt);
+              const np2 = turf.nearestPointOnLine(line, pDropPt);
+              travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
+          }
+          const fare = Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+          matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${(trip.ratePerKm||1.5).toFixed(2)}/km` });
+      }
+
     });
 
     const matchedAd = getMatchingAds(from, to);
@@ -2782,9 +2825,10 @@ async function findRides(){
     box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
       <div class="card">
         <div class="user-profile-header">
-          <img src="${esc(r.driverDp)}" class="user-dp">
-          <div><strong>${esc(r.name)}</strong> ⭐ 5.0<div class="small">${esc(r.carModel)} (${esc(r.carNumber)})</div></div>
-        </div>
+          <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" class="user-dp">
+<div>
+  <strong>${esc(r.driverName || r.name || 'Driver')}</strong> ⭐ 5.0
+
         <div class="ride-top">
           <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup: ${esc(r.pickupSpot)}</div>`:''}</div>
           <div class="price">₹${r.fare}/seat</div>
@@ -2866,11 +2910,9 @@ async function findParcel(){
     box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
       <div class="card">
         <div class="user-profile-header">
-          <img src="${esc(r.driverDp)}" class="user-dp">
-          <div>
-            <strong>${esc(r.name)}</strong> ⭐ 5.0
-            <div class="small">${esc(r.vehicle)} (${esc(r.carNumber)}) ${r.isCommuterMode ? '<span class="badge purple">Daily Commuter</span>' : ''}</div>
-          </div>
+          <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" class="user-dp">
+<div><strong>${esc(r.driverName || r.name || 'Driver')}</strong> ⭐ 5.0<div class="small">${esc(r.carModel)} (${esc(r.carNumber)})</div></div>
+
         </div>
         <div class="ride-top">
           <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup Spot: ${esc(r.pickupSpot)}</div>`:''}</div>
