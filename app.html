@@ -2854,9 +2854,120 @@ async function findRides(){
       </div>`).join("")) : (topAdHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 }
-window.findRides = findRides;
+window.findRides = async function(){
+  const from=document.getElementById("fFrom").value.trim();
+  const to=document.getElementById("fTo").value.trim();
+  const date=document.getElementById("fDate").value;
+  const vehicle=document.getElementById("fVehicle").value;
+  const seatsNeed=safeNumber(document.getElementById("fSeats").value)||1;
+  const ladiesOnly=document.getElementById("fLadiesOnly").checked;
+  const user = window.getCurrentUser();
+  const box = document.getElementById("rideResults");
 
-async function findParcel(){
+  const maxCorridorKm = (activeCorridorMode === 'local') ? 2.0 : 10.0;
+
+  if(!from || !to) { window.showToast("Enter pickup and drop locations!"); return; }
+  box.innerHTML = `⏳ Validating ${maxCorridorKm} KM corridor radar...`;
+
+  try {
+    const pFromCoord = await geocode(from);
+    const pToCoord = await geocode(to);
+    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
+    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
+
+    const allRides = window.getRides().filter(r => 
+      (user ? r.driverUid !== user.uid : true) && 
+      r.status === "Active" && 
+      (!date || r.date === date) && 
+      (!vehicle || r.vehicle === vehicle) && 
+      (!ladiesOnly || (r.isLadiesOnly || r.isFamilyOnBoard)) && 
+      r.passenger && 
+      safeNumber(r.seats) >= seatsNeed
+    );
+    const matched = [];
+
+    allRides.forEach(trip => {
+      let geom = trip.geometry;
+      if(typeof geom === "string") {
+        try { geom = JSON.parse(geom); } catch(e) { geom = null; }
+      }
+
+      let isMatch = false;
+
+      // 1. Radar map match logic
+      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const line = turf.lineString(geom.coordinates);
+        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+        const np1 = turf.nearestPointOnLine(line, pPickupPt);
+        const np2 = turf.nearestPointOnLine(line, pDropPt);
+
+        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          isMatch = true;
+        }
+      }
+      
+      // 2. Text match (Train/Flight fallback)
+      if (!isMatch && trip.isCommuterMode && ['mode_train', 'mode_flight'].includes(trip.commuterMode)) {
+          const sFromStr = from.toLowerCase().split(',')[0];
+          const sToStr = to.toLowerCase().split(',')[0];
+          const rFromStr = (trip.from || "").toLowerCase();
+          const rToStr = (trip.to || "").toLowerCase();
+          if ((rFromStr.includes(sFromStr) || sFromStr.includes(rFromStr)) && 
+              (rToStr.includes(sToStr) || sToStr.includes(rToStr))) {
+              isMatch = true;
+          }
+      }
+
+      if (isMatch) {
+          let travelKm = 10;
+          if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+              const line = turf.lineString(geom.coordinates);
+              const np1 = turf.nearestPointOnLine(line, pPickupPt);
+              const np2 = turf.nearestPointOnLine(line, pDropPt);
+              travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
+          }
+          const fare = Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+          matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${(trip.ratePerKm||1.5).toFixed(2)}/km` });
+      }
+    });
+
+    const matchedAd = getMatchingAds(from, to);
+    let topAdHtml = matchedAd ? buildSponsoredAdCard(matchedAd) : "";
+
+    box.innerHTML = matched.length ? (topAdHtml + matched.map(r => `
+      <div class="card">
+        <div class="user-profile-header">
+          <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" class="user-dp">
+          <div><strong>${esc(r.driverName || r.name || 'Driver')}</strong> ⭐ 5.0<div class="small">${esc(r.carModel)} (${esc(r.carNumber)})</div></div>
+        </div>
+        <div class="ride-top">
+          <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup: ${esc(r.pickupSpot)}</div>`:''}</div>
+          <div class="price">₹${r.fare}/seat</div>
+        </div>
+        <div class="pricing-preview">💰 Fair Distance Fare: ₹${r.fare} (${r.fareNote})</div>
+        <div class="badges">
+          <span class="badge">📅 ${esc(r.date)}</span>
+          <span class="badge">⏰ ${esc(r.time)}</span>
+          <span class="badge g">✅ ${maxCorridorKm}km Radar Verified</span>
+          ${r.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family/Couple</span>' : (r.isLadiesOnly ? '<span class="badge pink">🌸 Women Driven</span>' : '')}
+          ${r.vehicle === 'Auto' ? '<span class="badge o">🛺 Auto</span>' : ''}
+          ${r.vehicle === 'Pickup/Truck' ? '<span class="badge o">🛻 Front Cabin</span>' : ''}
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
+          <button class="primary" style="flex: 2; padding: 10px; font-size: 13px;" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">
+            ✅ Book Now ₹${r.fare}
+          </button>
+          ${r.tripScope === 'intercity' ? `
+            <button class="orange" style="flex: 1; padding: 10px; font-size: 13px;" onclick="counterRequest('${r.id}')">
+              🔄 Offer Fare
+            </button>` : ''}
+        </div>
+      </div>`).join("")) : (topAdHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
+  } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
+}
+
+window.findParcel = async function(){
   const from=document.getElementById("xFrom").value.trim();
   const to=document.getElementById("xTo").value.trim();
   const date=document.getElementById("xDate").value;
@@ -2890,6 +3001,8 @@ async function findParcel(){
         try { geom = JSON.parse(geom); } catch(e) { geom = null; }
       }
 
+      let isMatch = false;
+
       if(geom && geom.coordinates && geom.coordinates.length >= 2) {
         const line = turf.lineString(geom.coordinates);
         const d1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
@@ -2897,10 +3010,25 @@ async function findParcel(){
         const np1 = turf.nearestPointOnLine(line, pPickupPt);
         const np2 = turf.nearestPointOnLine(line, pDropPt);
 
-        if(d1 <= maxCorridorKm && d2 <= maxCorridorKm && np1.properties.location < np2.properties.location) {
+        if(d1 <= maxCorridorKm && d2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          isMatch = true;
+        }
+      } 
+      
+      if(!isMatch && r.isCommuterMode && ['mode_train', 'mode_flight'].includes(r.commuterMode)) {
+        const sFromStr = from.toLowerCase().split(',')[0];
+        const sToStr = to.toLowerCase().split(',')[0];
+        const rFromStr = (r.from || "").toLowerCase();
+        const rToStr = (r.to || "").toLowerCase();
+        if ((rFromStr.includes(sFromStr) || sFromStr.includes(rFromStr)) && 
+            (rToStr.includes(sToStr) || sToStr.includes(rToStr))) {
+            isMatch = true;
+        }
+      }
+
+      if(isMatch) {
           let price = slab === 'doc' ? r.docPrice : slab === 'bag' ? r.bagPrice : slab === 'cargo' ? r.cargoPrice : (r.fullVehiclePrice || 800);
           matched.push({ ...r, price });
-        }
       }
     });
 
@@ -2911,8 +3039,10 @@ async function findParcel(){
       <div class="card">
         <div class="user-profile-header">
           <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" class="user-dp">
-<div><strong>${esc(r.driverName || r.name || 'Driver')}</strong> ⭐ 5.0<div class="small">${esc(r.carModel)} (${esc(r.carNumber)})</div></div>
-
+          <div>
+            <strong>${esc(r.driverName || r.name || 'Driver')}</strong> ⭐ 5.0
+            <div class="small">${esc(r.vehicle)} (${esc(r.carNumber)}) ${r.isCommuterMode ? '<span class="badge purple">Daily Commuter</span>' : ''}</div>
+          </div>
         </div>
         <div class="ride-top">
           <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup Spot: ${esc(r.pickupSpot)}</div>`:''}</div>
