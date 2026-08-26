@@ -2006,6 +2006,140 @@ document.getElementById("chatInputText")?.addEventListener("keydown", function(e
     window.sendChatMessage();
   }
 });
+// ==========================================
+// 📦 PARCEL & SEAT REQUEST HANDLERS
+// ==========================================
+
+// 1. पार्सल डिलीवरी रिक्वेस्ट भेजने का फ़ंक्शन
+window.parcelRequest = async function(rideId, slab, price) {
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  if (!user) {
+    window.showToast("❌ Please login with Google first!");
+    window.googleLogin();
+    return;
+  }
+
+  const from = document.getElementById("xFrom")?.value.trim() || "";
+  const to = document.getElementById("xTo")?.value.trim() || "";
+  const date = document.getElementById("xDate")?.value || "";
+  const recName = document.getElementById("xRecName")?.value.trim() || "";
+  const recPhone = document.getElementById("xRecPhone")?.value.trim() || "";
+  const paymentSettlement = document.getElementById("xParcelPayMode")?.value || "sender_paid";
+
+  if (!from || !to) {
+    window.showToast("❌ Pickup and drop locations are required!");
+    return;
+  }
+  if (!recName || !recPhone) {
+    window.showToast("❌ Receiver Name and Mobile Number are required!");
+    return;
+  }
+  if (!window.isValidIndianMobile(recPhone)) {
+    window.showToast("❌ Enter valid 10-digit receiver mobile number!");
+    return;
+  }
+
+  const ride = window.getRides ? window.getRides().find(r => r.id === rideId) : null;
+  if (!ride) {
+    window.showToast("❌ Trip not found!");
+    return;
+  }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    await addDoc(collection(db, "requests"), {
+      rideId: rideId,
+      driverUid: ride.driverUid,
+      driverName: ride.driverName || ride.name || "Driver",
+      driverPhone: ride.driverPhone || "",
+      passengerUid: user.uid,
+      passengerName: user.displayName || user.name || "User",
+      passengerPhone: user.phone || "",
+      passengerEmail: user.email || "",
+      type: "parcel",
+      slab: slab,
+      originalPrice: Number(price),
+      currentPrice: Number(price),
+      from: from,
+      to: to,
+      date: date,
+      recName: recName,
+      recPhone: recPhone,
+      paymentSettlement: paymentSettlement,
+      status: "Pending",
+      bookingScope: window.getActiveCorridorMode ? window.getActiveCorridorMode() : "intercity",
+      created: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    window.showToast("✅ Parcel request sent to transporter!");
+    if (window.show) window.show("activity");
+  } catch (e) {
+    console.error("Parcel request error:", e);
+    window.showToast("❌ Request failed: " + e.message);
+  }
+};
+
+// 2. पैसेंजर सीट बुक करने का फ़ंक्शन
+window.seatRequest = async function(rideId, fare, travelKm) {
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  if (!user) {
+    window.showToast("❌ Please login with Google first!");
+    window.googleLogin();
+    return;
+  }
+
+  const from = document.getElementById("fFrom")?.value.trim() || "";
+  const to = document.getElementById("fTo")?.value.trim() || "";
+  const numSeats = Number(document.getElementById("fSeats")?.value) || 1;
+  const date = document.getElementById("fDate")?.value || "";
+
+  const ride = window.getRides ? window.getRides().find(r => r.id === rideId) : null;
+  if (!ride) {
+    window.showToast("❌ Ride not found!");
+    return;
+  }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    const totalPrice = Number(fare) * numSeats;
+
+    await addDoc(collection(db, "requests"), {
+      rideId: rideId,
+      driverUid: ride.driverUid,
+      driverName: ride.driverName || ride.name || "Driver",
+      driverPhone: ride.driverPhone || "",
+      passengerUid: user.uid,
+      passengerName: user.displayName || user.name || "User",
+      passengerPhone: user.phone || "",
+      passengerEmail: user.email || "",
+      type: "passenger",
+      numSeats: numSeats,
+      originalPrice: totalPrice,
+      currentPrice: totalPrice,
+      from: from,
+      to: to,
+      date: date,
+      travelKm: travelKm,
+      status: "Pending",
+      bookingScope: window.getActiveCorridorMode ? window.getActiveCorridorMode() : "intercity",
+      created: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    window.showToast("✅ Seat request sent to driver!");
+    if (window.show) window.show("activity");
+  } catch (e) {
+    console.error("Seat request error:", e);
+    window.showToast("❌ Booking request failed: " + e.message);
+  }
+};
 
 function toggleAudioAlert() {
   isAudioEnabled = !isAudioEnabled;
@@ -2899,21 +3033,43 @@ function buildSponsoredAdCard(ad) {
     </div>
   `;
 }
+// 🕒 दो समय के बीच मिनटों का अंतर निकालने का हेल्पर फ़ंक्शन
+function getMinutesDifference(tripTimeStr, baseTimeStr = null) {
+  if (!tripTimeStr) return 999;
+  
+  let baseMinutes;
+  if (baseTimeStr) {
+    const [bh, bm] = baseTimeStr.split(':').map(Number);
+    baseMinutes = bh * 60 + bm;
+  } else {
+    const now = new Date();
+    baseMinutes = now.getHours() * 60 + now.getMinutes();
+  }
+  
+  const [th, tm] = tripTimeStr.split(':').map(Number);
+  const tripMinutes = th * 60 + tm;
+  
+  return tripMinutes - baseMinutes; // पॉजिटिव = आगे का समय, नेगेटिव = बीत चुका समय
+}
 
-// 🟢 SINGLE DEDUPLICATED RIDE SEARCH FUNCTION
-window.findRides = async function(){
-  const from=document.getElementById("fFrom").value.trim();
-  const to=document.getElementById("fTo").value.trim();
-  const date=document.getElementById("fDate").value;
-  const vehicle=document.getElementById("fVehicle").value;
-  const seatsNeed=safeNumber(document.getElementById("fSeats").value)||1;
-  const ladiesOnly=document.getElementById("fLadiesOnly").checked;
+// 🟢 SMART FIND RIDES ENGINE (±2 Hours / Real-Time)
+window.findRides = async function() {
+  const from = document.getElementById("fFrom").value.trim();
+  const to = document.getElementById("fTo").value.trim();
+  const date = document.getElementById("fDate").value;
+  const time = document.getElementById("fTime")?.value || "";
+  const vehicle = document.getElementById("fVehicle").value;
+  const seatsNeed = safeNumber(document.getElementById("fSeats").value) || 1;
+  const ladiesOnly = document.getElementById("fLadiesOnly").checked;
   const user = window.getCurrentUser();
   const box = document.getElementById("rideResults");
 
   const maxCorridorKm = (activeCorridorMode === 'local') ? 2.0 : 10.0;
 
-  if(!from || !to) { window.showToast("Enter pickup and drop locations!"); return; }
+  if (!from || !to) { 
+    window.showToast("Enter pickup and drop locations!"); 
+    return; 
+  }
   box.innerHTML = `⏳ Validating ${maxCorridorKm} KM corridor radar...`;
 
   try {
@@ -2922,26 +3078,51 @@ window.findRides = async function(){
     const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
     const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
 
-    const allRides = window.getRides().filter(r => 
-      (user ? r.driverUid !== user.uid : true) && 
-      r.status === "Active" && 
-      (!date || r.date === date) && 
-      (!vehicle || r.vehicle === vehicle) && 
-      (!ladiesOnly || (r.isLadiesOnly || r.isFamilyOnBoard)) && 
-      r.passenger && 
-      safeNumber(r.seats) >= seatsNeed
-    );
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isToday = (!date || date === todayStr);
+
+    // 🎯 स्मार्ट फ़िल्टरिंग
+    const allRides = window.getRides().filter(r => {
+      // 1. ड्राइवर खुद की ट्रिप न देखे
+      if (user && r.driverUid === user.uid) return false;
+      
+      // 2. ट्रिप एक्टिव और सीटें उपलब्ध होनी चाहिए
+      if (r.status !== "Active") return false;
+      if (!r.passenger || safeNumber(r.seats) < seatsNeed) return false;
+
+      // 3. व्हीकल और सुरक्षा फ़िल्टर
+      if (vehicle && r.vehicle !== vehicle) return false;
+      if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
+
+      // 4. तारीख व समय (±2 घंटे की विंडो)
+      if (isToday) {
+        if (r.date && r.date !== todayStr) return false;
+        if (r.time) {
+          const diffMins = getMinutesDifference(r.time, time || null);
+          if (diffMins < -30 || diffMins > 120) return false;
+        }
+      } else {
+        if (date && r.date !== date) return false;
+        if (time && r.time) {
+          const diffMins = getMinutesDifference(r.time, time);
+          if (Math.abs(diffMins) > 120) return false;
+        }
+      }
+
+      return true;
+    });
+
     const matched = [];
 
     allRides.forEach(trip => {
       let geom = trip.geometry;
-      if(typeof geom === "string") {
+      if (typeof geom === "string") {
         try { geom = JSON.parse(geom); } catch(e) { geom = null; }
       }
 
       let isMatch = false;
 
-      // 1. Radar map match logic
+      // 1. Radar map match logic (Road Corridor)
       if (geom && geom.coordinates && geom.coordinates.length >= 2) {
         const line = turf.lineString(geom.coordinates);
         const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
@@ -2954,28 +3135,29 @@ window.findRides = async function(){
         }
       }
       
-      // 2. Text match fallback
+      // 2. Text match fallback (Train / Flight)
       if (!isMatch && trip.isCommuterMode && ['mode_train', 'mode_flight'].includes(trip.commuterMode)) {
-          const sFromStr = from.toLowerCase().split(',')[0];
-          const sToStr = to.toLowerCase().split(',')[0];
-          const rFromStr = (trip.from || "").toLowerCase();
-          const rToStr = (trip.to || "").toLowerCase();
-          if ((rFromStr.includes(sFromStr) || sFromStr.includes(rFromStr)) && 
-              (rToStr.includes(sToStr) || sToStr.includes(rToStr))) {
-              isMatch = true;
-          }
+        const sFromStr = from.toLowerCase().split(',')[0];
+        const sToStr = to.toLowerCase().split(',')[0];
+        const rFromStr = (trip.from || "").toLowerCase();
+        const rToStr = (trip.to || "").toLowerCase();
+        if ((rFromStr.includes(sFromStr) || sFromStr.includes(rFromStr)) && 
+            (rToStr.includes(sToStr) || sToStr.includes(rToStr))) {
+          isMatch = true;
+        }
       }
 
       if (isMatch) {
-          let travelKm = 10;
-          if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-              const line = turf.lineString(geom.coordinates);
-              const np1 = turf.nearestPointOnLine(line, pPickupPt);
-              const np2 = turf.nearestPointOnLine(line, pDropPt);
-              travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-          }
-          const fare = Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
-          matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${(trip.ratePerKm||1.5).toFixed(2)}/km` });
+        let travelKm = 10;
+        if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+          const line = turf.lineString(geom.coordinates);
+          const np1 = turf.nearestPointOnLine(line, pPickupPt);
+          const np2 = turf.nearestPointOnLine(line, pDropPt);
+          travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
+        }
+        
+        const fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+        matched.push({ ...trip, travelKm, fare, fareNote: `${travelKm} km @ ₹${fare}/seat` });
       }
     });
 
@@ -2989,14 +3171,17 @@ window.findRides = async function(){
           <div><strong>${esc(r.driverName || r.name || 'Driver')}</strong> ⭐ 5.0<div class="small">${esc(r.carModel || r.vehicle)} (${esc(r.carNumber || '')})</div></div>
         </div>
         <div class="ride-top">
-          <div><div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>${r.pickupSpot?`<div class="small" style="color:var(--primary)">📍 Pickup: ${esc(r.pickupSpot)}</div>`:''}</div>
+          <div>
+            <div class="route">${esc(cleanLocationName(r.from))} → ${esc(cleanLocationName(r.to))}</div>
+            ${r.pickupSpot ? `<div class="small" style="color:var(--primary)">📍 Pickup: ${esc(r.pickupSpot)}</div>` : ''}
+          </div>
           <div class="price">₹${r.fare}/seat</div>
         </div>
-        <div class="pricing-preview">💰 Fair Distance Fare: ₹${r.fare} (${r.fareNote})</div>
         <div class="badges">
           <span class="badge">📅 ${esc(r.date)}</span>
           <span class="badge">⏰ ${esc(r.time)}</span>
           <span class="badge g">✅ ${maxCorridorKm}km Radar Verified</span>
+          <span class="badge purple">💺 ${esc(r.seats)} Seats Left</span>
           ${r.isFamilyOnBoard ? '<span class="badge pink">👨‍👩‍👧 Family/Couple</span>' : (r.isLadiesOnly ? '<span class="badge pink">🌸 Women Driven</span>' : '')}
           ${r.vehicle === 'Auto' ? '<span class="badge o">🛺 Auto</span>' : ''}
           ${r.vehicle === 'Pickup/Truck' ? '<span class="badge o">🛻 Front Cabin</span>' : ''}
@@ -3005,20 +3190,22 @@ window.findRides = async function(){
           <button class="primary" style="flex: 2; padding: 10px; font-size: 13px;" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">
             ✅ Book Now ₹${r.fare}
           </button>
-          ${r.tripScope === 'intercity' ? `
+          ${activeCorridorMode === 'intercity' ? `
             <button class="orange" style="flex: 1; padding: 10px; font-size: 13px;" onclick="counterRequest('${r.id}')">
               🔄 Offer Fare
             </button>` : ''}
         </div>
-      </div>`).join("")) : (topAdHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor`));
-  } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
+      </div>`).join("")) : (topAdHtml + empty("🚗", `No rides found within ${maxCorridorKm}km corridor for this time window.`));
+  } catch(e) { 
+    box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; 
+  }
 };
 
 window.findParcel = async function(){
-  const from=document.getElementById("xFrom").value.trim();
-  const to=document.getElementById("xTo").value.trim();
-  const date=document.getElementById("xDate").value;
-  const slab=document.getElementById("xSlab").value;
+  const from = document.getElementById("xFrom").value.trim();
+  const to = document.getElementById("xTo").value.trim();
+  const date = document.getElementById("xDate").value;
+  const slab = document.getElementById("xSlab").value;
   const user = window.getCurrentUser();
   const box = document.getElementById("parcelResults");
 
@@ -3033,19 +3220,24 @@ window.findParcel = async function(){
     const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
     const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
 
-    const list = window.getRides().filter(r => 
-      (user ? r.driverUid !== user.uid : true) && 
-      r.status === "Active" && 
-      r.date === date && 
-      r.parcel && 
-      (slab === 'full_vehicle' || !r.parcelTypes || r.parcelTypes.includes(slab))
-    );
+    // ✅ केवल वही ट्रिप फ़िल्टर होंगी जिसका चुना गया स्लैब (Doc/Bag/Cargo) ड्राइवर ने चालू किया है
+    const list = window.getRides().filter(r => {
+      if (user && r.driverUid === user.uid) return false;
+      if (r.status !== "Active" || r.date !== date || !r.parcel) return false;
+
+      if (slab === 'doc') return Boolean(r.typeDoc && Number(r.docPrice) > 0);
+      if (slab === 'bag') return Boolean(r.typeBag && Number(r.bagPrice) > 0);
+      if (slab === 'cargo') return Boolean(r.typeCargo && Number(r.cargoPrice) > 0);
+      if (slab === 'full_vehicle') return Boolean(Number(r.fullVehiclePrice) > 0);
+      return false;
+    });
+
     const matched = [];
 
     list.forEach(r => {
       let isMatch = false;
 
-      // 1. 🚆 TRAIN & FLIGHT MATCHING (शहर / स्टेशन नाम के आधार पर)
+      // 1. 🚆 TRAIN & FLIGHT MATCHING
       if (r.isCommuterMode && ['mode_train', 'mode_flight'].includes(r.commuterMode)) {
         const sFrom = from.toLowerCase().split(',')[0].trim();
         const sTo = to.toLowerCase().split(',')[0].trim();
@@ -3057,7 +3249,7 @@ window.findParcel = async function(){
           isMatch = true;
         }
       } 
-      // 2. 🚗 CAR / BIKE / TRUCK MATCHING (सड़क कॉरिडोर के आधार पर)
+      // 2. 🚗 ROAD CORRIDOR MATCHING
       else {
         let geom = r.geometry;
         if (typeof geom === "string") {
@@ -3111,6 +3303,7 @@ window.findParcel = async function(){
       </div>`).join("")) : (topAdHtml + empty("📦", `No transporters found supporting this parcel type within ${maxCorridorKm}km corridor`));
   } catch(e) { box.innerHTML = "<p style='color:red;'>Error: " + e.message + "</p>"; }
 };
+
 
 function empty(icon, text){ return `<div class="empty"><div style="font-size:32px">${icon}</div><h3>${esc(text)}</h3></div>`; }
 
