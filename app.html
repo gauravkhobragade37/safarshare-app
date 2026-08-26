@@ -40,14 +40,37 @@
   --danger: #d9363e;
 }
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
-body{
-margin:0;
-font-family:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-background:var(--bg-color);
-color:var(--text-main);
-padding-bottom:80px;
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-main);
+  padding-bottom: 80px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.card, .request, .leaflet-container {
+  will-change: transform;
+  transform: translateZ(0); /* GPU Acceleration */
+}
+/* 🔘 Native App-Like Button Tap Feedback */
+button, .btn, .tab-btn, .clickable {
+  transition: transform 0.08s ease, opacity 0.08s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+button:active, .btn:active, .tab-btn:active, .clickable:active {
+  transform: scale(0.96) !important;
+  opacity: 0.85 !important;
 }
 
 header{
@@ -2867,6 +2890,24 @@ async function updatePassengerRoutePreview() {
     statusEl.textContent = "";
   }
 }
+// ⚡ Leaflet Map Memory Cleanup (RAM और बैटरी बचाने के लिए)
+window.cleanupOldMap = function(mapInstance) {
+  if (mapInstance && typeof mapInstance.remove === 'function') {
+    try {
+      mapInstance.off();
+      mapInstance.remove();
+    } catch(e) { console.warn("Map cleanup:", e); }
+  }
+};
+
+// ⚡ Input Debounce (टाइपिंग लैग खत्म करने के लिए)
+function debounce(func, delay = 350) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(this, args), delay);
+  };
+}
 
 async function fetchDriverRoutes() {
   const from = document.getElementById("pFrom").value.trim();
@@ -4178,25 +4219,53 @@ window.closeAdminTripDetails = function(){
 };
 
 window.adminForceCancelTrip = async function(rideId) {
-  if(!confirm("Are you sure you want to force cancel this active trip?")) return;
+  const reason = prompt("एडमिन कैंसलेशन का कारण दर्ज करें (Admin cancellation reason):");
+  if (!reason || !reason.trim()) {
+    window.showToast("❌ कारण दर्ज करना आवश्यक है!");
+    return;
+  }
+
   try {
     const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), "rides", rideId), { status: 'Cancelled', cancelReason: 'Force Cancelled by Master Admin' });
-    showToast("Trip Force Cancelled.");
-  } catch(e) { showToast("Error: " + e.message); }
+    const db = getFirestore();
+
+    await updateDoc(doc(db, "rides", rideId), {
+      status: "Cancelled",
+      cancelReason: `Admin: ${reason.trim()}`,
+      cancelledAt: Date.now()
+    });
+
+    window.showToast("✅ ट्रिप एडमिन द्वारा कैंसिल कर दी गई।");
+    if (window.renderTrips) window.renderTrips();
+  } catch (e) {
+    window.showToast("❌ Error: " + e.message);
+  }
 };
 
+
 window.cancelTrip = async function(rideId) {
-  if(!confirm("Are you sure you want to cancel your posted trip?")) return;
+  const reason = prompt("कृपया ट्रिप कैंसिल करने का कारण दर्ज करें (Reason for cancellation):");
+  if (!reason || !reason.trim()) {
+    window.showToast("❌ ट्रिप कैंसिल करने के लिए कारण लिखना ज़रूरी है!");
+    return;
+  }
+
   try {
     const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), "rides", rideId), { 
-      status: 'Cancelled', 
-      cancelReason: 'Cancelled by Driver',
-      updatedAt: Date.now()
+    const db = getFirestore();
+
+    await updateDoc(doc(db, "rides", rideId), {
+      status: "Cancelled",
+      cancelReason: reason.trim(),
+      cancelledAt: Date.now()
     });
-    window.showToast("🚫 Trip Cancelled Successfully.");
-  } catch(e) { window.showToast("Error: " + e.message); }
+
+    window.showToast("✅ ट्रिप कैंसिल कर दी गई है।");
+    if (window.renderTrips) window.renderTrips();
+  } catch (e) {
+    console.error("Cancel Trip Error:", e);
+    window.showToast("❌ Error: " + e.message);
+  }
 };
 
 window.renderAdminPaymentsLedger = function() {
