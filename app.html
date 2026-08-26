@@ -1090,6 +1090,8 @@ window.isUserAdmin = isUserAdmin;
       if (udata.gender) existingGender = udata.gender;
       if (udata.name) existingName = udata.name;
       isCurrentUserAdmin = (udata.role === 'admin');
+      window.isCurrentUserAdmin = isCurrentUserAdmin;
+
     } else {
       isCurrentUserAdmin = false;
     }
@@ -1142,12 +1144,15 @@ window.isUserAdmin = isUserAdmin;
       initDataListeners();
     } else {
       currentUser = null;
+      isCurrentUserAdmin = false;
+      window.isCurrentUserAdmin = false;
       initDataListeners();
       document.getElementById("navLoginBtn").style.display = "block";
       document.getElementById("navUserBadge").style.display = "none";
       document.getElementById("navLogoutBtn").style.display = "none";
       document.getElementById("blockedOverlay").style.display = "none";
     }
+
     window.stats();
     window.renderVehicleDropdown();
     if(document.getElementById("activity").classList.contains("active")) {
@@ -3468,8 +3473,8 @@ function renderTrips(){
   const box = document.getElementById("myTrips");
   const adminCard = document.getElementById("adminPanel");
 
-  // 1. एडमिन पैनल विजिबिलिटी (डेटाबेस रोल के आधार पर)
-  if (user && isCurrentUserAdmin) {
+  // 1. एडमिन पैनल विजिबिलिटी (window.isCurrentUserAdmin से)
+  if (user && window.isCurrentUserAdmin) {
     if(adminCard) adminCard.style.display = "block";
   } else {
     if(adminCard) adminCard.style.display = "none";
@@ -3478,7 +3483,7 @@ function renderTrips(){
   if(!user) { box.innerHTML = empty("🚗", "Please login with Google to view your trips"); return; }
 
   // 2. ट्रिप्स फ़िल्टरिंग
-  let filtered = (user && isCurrentUserAdmin) ? list : list.filter(r => r.driverUid === user.uid);
+  let filtered = (user && window.isCurrentUserAdmin) ? list : list.filter(r => r.driverUid === user.uid);
   if(currentAdminFilter === 'completed') filtered = filtered.filter(r => r.status === "Completed");
   if(currentAdminFilter === 'active') filtered = filtered.filter(r => r.status === "Active");
   if(currentAdminFilter === 'cancelled') filtered = filtered.filter(r => r.status === "Cancelled");
@@ -3545,11 +3550,12 @@ function renderTrips(){
         ${x.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(x)})'>📲 Share on WhatsApp</button>` : `<span class="small" style="color:#64748b;">🔒 WhatsApp Share disabled (${x.status})</span>`}
         ${showEditBtn ? `<button class="secondary" style="padding:5px 9px;font-size:11px;" onclick="openEditTripModal('${x.id}')">✏️ Edit Trip</button>` : (x.status === 'Active' ? `<span class="small muted" style="padding-top:4px;">🔒 Edit Locked</span>` : '')}
         ${x.status === 'Active' && user && x.driverUid === user.uid ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="cancelTrip('${x.id}')">🚫 Cancel Trip</button>` : ''}
-        ${(user && isCurrentUserAdmin && x.status === 'Active') ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Force Cancel</button>` : ''}
+        ${(user && window.isCurrentUserAdmin && x.status === 'Active') ? `<button class="red" style="padding:5px 9px;font-size:11px;" onclick="adminForceCancelTrip('${x.id}')">🚫 Force Cancel</button>` : ''}
       </div>
     </div>`;
   }).join("");
 }
+
 window.renderTrips = renderTrips;
 
 function updateWalletLedger() {
