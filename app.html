@@ -350,7 +350,8 @@ button{ font-family:inherit; }
 
 <!-- ⭐ AUTO 5-STAR RATING & FEEDBACK MODAL -->
 <div id="ratingModal" class="rating-modal">
-  <div class="rating-card">
+  <div class="rating-card" style="position:relative;">
+    <button style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:18px; cursor:pointer;" onclick="document.getElementById('ratingModal').style.display='none'">✖</button>
     <div style="font-size:36px;">⭐</div>
     <h3 style="margin:8px 0;">Rate Your Ride Experience</h3>
     <p class="small muted" style="margin-bottom:10px;">How was your trip with SafarShare?</p>
@@ -913,15 +914,15 @@ button{ font-family:inherit; }
       </div>
 
       <div class="admin-tab-bar">
-        <button class="admin-tab-btn active" onclick="switchAdminTab('overview')">📊 1. Overview</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('users')">👥 2. Users</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('trips')">🚗 3. Trips</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('payments')">💳 4. Payments</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('parcels')">📦 5. Parcels</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('live')">📍 6. Live Map</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('reports')">⚠️ 7. Reports</button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('ads')">📢 8. Ads</button>
-      </div>
+  <button class="admin-tab-btn active" onclick="switchAdminTab('overview', this)">📊 1. Overview</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('users', this)">👥 2. Users</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('trips', this)">🚗 3. Trips</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('payments', this)">💳 4. Payments</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('parcels', this)">📦 5. Parcels</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('live', this)">📍 6. Live Map</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">⚠️ 7. Reports</button>
+  <button class="admin-tab-btn" onclick="switchAdminTab('ads', this)">📢 8. Ads</button>
+</div>
 
       <div id="admTabOverview" class="admin-sub-section active">
         <div class="kpi-grid">
@@ -1056,6 +1057,9 @@ button{ font-family:inherit; }
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  window.db = db;
+  window.doc = doc;
+  window.onSnapshot = onSnapshot;  
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
@@ -1413,7 +1417,22 @@ window.isUserAdmin = isUserAdmin;
       if(requestNeedsAttention(r) && r.updatedAt && r.updatedAt > (existing.get(r.id)?.__lastSeenAt || 0) && !readRequestIds.has(r.id)) shouldNotify = true;
     });
     lastRequestIds = new Set(ALL_REQUESTS.map(r => r.id));
-
+    // ⬇️ पैसेंजर के लिए ऑटो रेटिंग पॉप-अप ⬇️
+    incoming.forEach(r => {
+      if (
+        currentUser &&
+        r.passengerUid === currentUser.uid &&
+        r.status === 'Completed' &&
+        !r.isRated
+      ) {
+        // अगर रेटिंग मोडल पहले से खुला नहीं है, तो खोलें
+        const modal = document.getElementById("ratingModal");
+        if (modal && modal.style.display !== "flex") {
+          window.openRatingModal(r.id);
+        }
+      }
+    });
+    
     if(shouldNotify){
       window.playAlertSound();
       window.triggerVibration();
@@ -3392,7 +3411,7 @@ function startTrackingForRequest(reqId){
 
   const rideId=req.rideId;
   if(!rideId){ status.textContent='⚠️ Trip ID unavailable for live tracking.'; return; }
-  state.locationUnsub=onSnapshot(doc(db,'live_locations',rideId), snap=>{
+  state.locationUnsub = window.onSnapshot(window.doc(window.db, 'live_locations', rideId), snap => {
     if(!snap.exists()){ status.textContent='⏳ Driver GPS not shared yet...'; return; }
     const d=snap.data();
     if(d.status==='offline'){ status.className='live-status'; status.textContent='🔴 Driver GPS unavailable'; return; }
@@ -3491,6 +3510,7 @@ window.toggleLiveTrackingBox=toggleLiveTrackingBox;
       });
       window.closePinModal();
       window.showToast?.('🏁 Drop PIN verified — Trip completed');
+      window.openRatingModal(qid);
       window.renderRequests?.();
       window.renderTrips?.();
     });
@@ -3553,6 +3573,19 @@ window.toggleLiveTrackingBox=toggleLiveTrackingBox;
         dropOtp:clean4(fresh.dropOtp)||code4()
       };
       await updateDoc(reqRef(q.id),update);
+            // ⬇️ ड्राइवर की ट्रिप से सीटें कम (Deduct) करें ⬇️
+      if (fresh.type === 'passenger' && fresh.rideId) {
+        const rideRef = doc(db, 'rides', fresh.rideId);
+        const rideSnap = await getDoc(rideRef);
+        if (rideSnap.exists()) {
+          const currentSeats = Number(rideSnap.data().seats || 0);
+          const bookedSeats = Number(fresh.numSeats || 1);
+          await updateDoc(rideRef, {
+            seats: Math.max(0, currentSeats - bookedSeats),
+            updatedAt: Date.now()
+          });
+        }
+      }
       window.showToast?.('✅ Booking confirmed. Start PIN generated.');
       window.renderRequests?.();
     }catch(e){ window.showToast?.('❌ '+e.message); }
@@ -3888,20 +3921,31 @@ document.addEventListener("DOMContentLoaded", function(){
   renderVehicleDropdown();
 });
 
-window.switchAdminTab = function(tabName) {
+window.switchAdminTab = function(tabName, btnElement) {
   document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".admin-sub-section").forEach(s => s.classList.remove("active"));
   
-  event.target.classList.add("active");
-  document.getElementById("admTab" + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add("active");
+  if (btnElement) {
+    btnElement.classList.add("active");
+  } else if (window.event && window.event.target) {
+    window.event.target.classList.add("active");
+  }
 
-  if(tabName === 'users') window.renderAdminUsersManagement();
-  if(tabName === 'trips') window.renderAdminTripsManagement();
-  if(tabName === 'payments') window.renderAdminPaymentsLedger();
-  if(tabName === 'parcels') window.renderAdminParcelsLogistics();
-  if(tabName === 'live') window.initAdminLiveGodEyeMap();
-  if(tabName === 'reports') window.renderAdminReports();
+  const targetId = "admTab" + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  const targetSection = document.getElementById(targetId);
+  if (targetSection) {
+    targetSection.classList.add("active");
+  }
+
+  if(tabName === 'users') window.renderAdminUsersManagement?.();
+  if(tabName === 'trips') window.renderAdminTripsManagement?.();
+  if(tabName === 'payments') window.renderAdminPaymentsLedger?.();
+  if(tabName === 'parcels') window.renderAdminParcelsLogistics?.();
+  if(tabName === 'live') window.initAdminLiveGodEyeMap?.();
+  if(tabName === 'reports') window.renderAdminReports?.();
+  if(tabName === 'ads') window.renderAdminAdsList?.();
 };
+
 
 window.updateAdminDashboardMetrics = function() {
   const users = window.getUsers ? window.getUsers() : [];
@@ -4242,6 +4286,62 @@ window.adminForceCancelTrip = async function(rideId) {
   }
 };
 
+window.cancelRequest = async function(reqId, isDriver) {
+  const reason = prompt(
+    isDriver 
+      ? "कृपया रिजेक्ट/कैंसिल करने का कारण दर्ज करें:" 
+      : "कृपया बुकिंग कैंसिल करने का कारण दर्ज करें:"
+  );
+  
+  if (reason === null) return;
+
+  try {
+    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const reqRef = doc(db, "requests", reqId);
+    
+    const reqSnap = await getDoc(reqRef);
+    if (!reqSnap.exists()) {
+      window.showToast("❌ रिक्वेस्ट नहीं मिली!");
+      return;
+    }
+    
+    const reqData = reqSnap.data();
+
+    // 1. रिक्वेस्ट को Cancelled मार्क करें
+    await updateDoc(reqRef, {
+      status: "Cancelled",
+      cancelReason: reason.trim() || "कोई कारण दर्ज नहीं किया गया",
+      cancelledBy: isDriver ? "Driver" : "Passenger",
+      cancelledAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    // 2. अगर पैसेंजर ने कन्फर्म सीट कैंसिल की है, तो ट्रिप में सीट वापस जोड़ें
+    if (reqData.type === "passenger" && reqData.status === "Confirmed" && reqData.rideId) {
+      const rideRef = doc(db, "rides", reqData.rideId);
+      const rideSnap = await getDoc(rideRef);
+      if (rideSnap.exists()) {
+        const currentSeats = Number(rideSnap.data().seats || 0);
+        const bookedSeats = Number(reqData.numSeats || 1);
+        await updateDoc(rideRef, {
+          seats: currentSeats + bookedSeats,
+          updatedAt: Date.now()
+        });
+      }
+    }
+
+    window.showToast(isDriver ? "🚫 रिक्वेस्ट रिजेक्ट कर दी गई।" : "🚫 बुकिंग कैंसिल कर दी गई।");
+    
+    // 3. UI को तुरंत रिफ्रेश करें
+    if (window.renderRequests) window.renderRequests();
+    if (window.renderTrips) window.renderTrips();
+
+  } catch (error) {
+    console.error("Cancel Request Error:", error);
+    window.showToast("❌ एरर: " + error.message);
+  }
+};
 
 window.cancelTrip = async function(rideId) {
   const reason = prompt("कृपया ट्रिप कैंसिल करने का कारण दर्ज करें (Reason for cancellation):");
@@ -4265,6 +4365,90 @@ window.cancelTrip = async function(rideId) {
   } catch (e) {
     console.error("Cancel Trip Error:", e);
     window.showToast("❌ Error: " + e.message);
+  }
+};
+let currentRatingValue = 0; // डिफ़ॉल्ट कोई स्टार सेलेक्ट नहीं रहेगा
+const selectedRatingChips = new Set();
+let ratingTargetRequestId = null;
+
+// 1. स्टार चुनने का फ़ंक्शन
+window.setRating = function(stars) {
+  currentRatingValue = stars;
+  const starEls = document.querySelectorAll("#starsContainer span");
+  starEls.forEach((el, idx) => {
+    el.style.color = idx < stars ? "#f59e0b" : "#cbd5e1";
+  });
+};
+
+// 2. फ़ीडबैक चिप्स (Tags) टॉगल करने का फ़ंक्शन
+window.toggleRatingChip = function(el) {
+  el.classList.toggle("selected");
+  const tag = el.textContent.trim();
+  if (selectedRatingChips.has(tag)) {
+    selectedRatingChips.delete(tag);
+  } else {
+    selectedRatingChips.add(tag);
+  }
+};
+
+// 3. रेटिंग मोडल खोलने का फ़ंक्शन
+window.openRatingModal = function(requestId) {
+  ratingTargetRequestId = requestId;
+  currentRatingValue = 0;
+  selectedRatingChips.clear();
+  
+  // सभी स्टार्स खाली (ग्रे) सेट करें
+  const starEls = document.querySelectorAll("#starsContainer span");
+  starEls.forEach(el => el.style.color = "#cbd5e1");
+  
+  // चिप्स और टेक्स्ट रीसेट करें
+  document.querySelectorAll(".rating-chips .chip-btn").forEach(c => c.classList.remove("selected"));
+  const reviewInput = document.getElementById("ratingReviewText");
+  if (reviewInput) reviewInput.value = "";
+  
+  document.getElementById("ratingModal").style.display = "flex";
+};
+
+// 4. रिव्यू सबमिट करने का फ़ंक्शन
+window.submitRatingReview = async function() {
+  if (currentRatingValue === 0) {
+    window.showToast("⚠️ कृपया कम से कम 1 स्टार रेटिंग ज़रूर चुनें!");
+    return;
+  }
+
+  const reviewText = document.getElementById("ratingReviewText")?.value.trim() || "";
+  const modal = document.getElementById("ratingModal");
+
+  try {
+    const { getFirestore, collection, addDoc, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
+
+    const ratingData = {
+      requestId: ratingTargetRequestId || null,
+      userUid: currentUser ? currentUser.uid : null,
+      userName: currentUser ? (currentUser.displayName || currentUser.name) : "Anonymous",
+      stars: currentRatingValue,
+      tags: Array.from(selectedRatingChips),
+      review: reviewText,
+      createdAt: Date.now()
+    };
+
+    // Firebase में रेटिंग सेव करें
+    await addDoc(collection(db, "ratings"), ratingData);
+
+    if (ratingTargetRequestId) {
+      await updateDoc(doc(db, "requests", ratingTargetRequestId), {
+        isRated: true,
+        ratingStars: currentRatingValue
+      });
+    }
+
+    if (modal) modal.style.display = "none";
+    window.showToast("⭐ आपकी प्रतिक्रिया (Review) के लिए धन्यवाद!");
+  } catch(e) {
+    console.error("Rating submission error:", e);
+    window.showToast("❌ एरर: " + e.message);
   }
 };
 
