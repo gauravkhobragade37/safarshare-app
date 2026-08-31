@@ -727,8 +727,8 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Platform Volume</div><div class="val" id="kpiPaidVol">₹0</div></div>
         </div>
       </div>
-      <div id="admTabUsers" class="admin-sub-section"><div class="input-card" style="margin-bottom:8px;"><input id="adminUserSearch" placeholder="🔍 Search user..." oninput="renderAdminUsers()"></div><div id="adminUsersListContainer"></div></div>
-      <div id="admTabTrips" class="admin-sub-section"><div id="adminTripsListContainer"></div></div>
+      <div id="admTabUsers" class="admin-sub-section"><div class="input-card" style="margin-bottom:8px;"><input id="adminUserSearch" placeholder="🔍 Search user..." oninput="renderAdminUsersManagement()"></div><div id="adminUsersListContainer"></div></div>
+      <div id="admTabTrips" class="admin-sub-section"><div style="display:flex; gap:6px; margin-bottom:10px;"><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('all')">All</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Active')">Active</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Completed')">Completed</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Cancelled')">Cancelled</button></div><div id="adminTripsListContainer"></div></div>
       <div id="admTabPayments" class="admin-sub-section"><div id="adminPaymentsContainer"></div></div>
       <div id="admTabParcels" class="admin-sub-section"><div id="adminParcelsContainer"></div></div>
       <div id="admTabLive" class="admin-sub-section"><div id="adminLiveMap"></div></div>
@@ -955,7 +955,7 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     <button class="uber-cta-btn" style="margin-top:12px; padding:10px;" onclick="closeModal('termsModal')">I Understand & Accept</button>
   </div>
 </div>
-  
+
 <!-- FIREBASE MESSAGING (PUSH NOTIFICATIONS) -->
 <script type="module">
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
@@ -1032,6 +1032,9 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   window.getRides = () => ALL_RIDES;
   window.getUsers = () => ALL_USERS;
   window.getAllVehicles = () => ALL_VEHICLES;
+  window.getAds = () => ALL_ADS;
+  window.getAllLiveLocations = () => ALL_LIVE_LOCATIONS;
+  window.getAllReports = () => ALL_REPORTS;
 
   function isValidIndianMobile(phone) {
     const clean = phone.replace(/[\s-+]/g, '').replace(/^91/, '');
@@ -1082,7 +1085,8 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
       currentUser = {
         uid: user.uid, email: user.email, displayName: existingName,
         phone: existingPhone, gender: existingGender,
-        photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+        photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+        vehicles: []
       };
 
       try {
@@ -1129,7 +1133,6 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     }
   });
 
-  // Global bindings for HTML inline onclick
   window.googleLogin = () => signInWithPopup(auth, provider).catch(e => showToast(e.message));
   window.googleLogout = () => signOut(auth).then(() => { showToast("🚪 Logged out."); location.reload(); });
 
@@ -1176,12 +1179,14 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   window.syncDriverLiveTracking = syncDriverLiveTracking;
 
   function initDataListeners() {
-    onSnapshot(collection(db, 'rides'), snap => { ALL_RIDES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); });
-    onSnapshot(collection(db, 'requests'), snap => { ALL_REQUESTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); syncDriverGPS(); });
-    onSnapshot(collection(db, 'users'), snap => { ALL_USERS = snap.docs.map(d => ({ id: d.id, ...d.data() })); updateAdminMetrics(); if(window.renderAdminUsers) window.renderAdminUsers(); });
-    onSnapshot(collection(db, 'user_vehicles'), snap => { ALL_VEHICLES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderGarageList) window.renderGarageList(); });
+    onSnapshot(collection(db, 'rides'), snap => { ALL_RIDES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); if(window.renderAdminTripsManagement) window.renderAdminTripsManagement(); });
+    onSnapshot(collection(db, 'requests'), snap => { ALL_REQUESTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); syncDriverGPS(); if(window.renderAdminPaymentsLedger) window.renderAdminPaymentsLedger(); });
+    onSnapshot(collection(db, 'users'), snap => { ALL_USERS = snap.docs.map(d => ({ id: d.id, ...d.data() })); updateAdminMetrics(); if(window.renderAdminUsersManagement) window.renderAdminUsersManagement(); });
+    onSnapshot(collection(db, 'user_vehicles'), snap => { ALL_VEHICLES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderGarageList) window.renderGarageList(); if(currentUser) currentUser.vehicles = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid); });
     onSnapshot(collection(db, 'saved_places'), snap => { ALL_PLACES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderSavedPlaces) window.renderSavedPlaces(); });
-    onSnapshot(collection(db, 'sponsored_ads'), snap => { ALL_ADS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminAds) window.renderAdminAds(); });
+    onSnapshot(collection(db, 'sponsored_ads'), snap => { ALL_ADS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminAdsList) window.renderAdminAdsList(); });
+    onSnapshot(collection(db, 'reports'), snap => { ALL_REPORTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminReports) window.renderAdminReports(); });
+    onSnapshot(collection(db, 'live_locations'), snap => { ALL_LIVE_LOCATIONS = {}; snap.docs.forEach(d => { ALL_LIVE_LOCATIONS[d.id] = d.data(); }); if(window.refreshAdminLiveMap) window.refreshAdminLiveMap(); });
   }
 
   function syncDriverGPS() {
