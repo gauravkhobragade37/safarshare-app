@@ -1188,6 +1188,166 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     onSnapshot(collection(db, 'reports'), snap => { ALL_REPORTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminReports) window.renderAdminReports(); });
     onSnapshot(collection(db, 'live_locations'), snap => { ALL_LIVE_LOCATIONS = {}; snap.docs.forEach(d => { ALL_LIVE_LOCATIONS[d.id] = d.data(); }); if(window.refreshAdminLiveMap) window.refreshAdminLiveMap(); });
   }
+  window.renderAdminUsersManagement = function() {
+  const queryText = (document.getElementById("adminUserSearch")?.value || "").toLowerCase();
+  const container = document.getElementById("adminUsersListContainer");
+  if (!container) return;
+
+  const filtered = ALL_USERS.filter(u => 
+    (u.name || "").toLowerCase().includes(queryText) ||
+    (u.email || "").toLowerCase().includes(queryText) ||
+    (u.phone || "").includes(queryText)
+  );
+
+  if (!filtered.length) { 
+    container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No users found.</div>"; 
+    return; 
+  }
+
+  container.innerHTML = filtered.map(u => {
+    const isBlocked = !!u.isBlocked;
+    return `
+      <div class="card" style="padding:12px; margin-bottom:8px; border:1.5px solid ${isBlocked ? '#fca5a5' : '#cbd5e1'}; background:${isBlocked ? '#fff5f5' : '#fff'};">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <b style="font-size:13px;">${esc(u.name || u.displayName || 'User')}</b> 
+            ${isBlocked ? '<span class="role-pill" style="background:#fef2f2; color:#dc2626; font-size:9.5px;">Blocked</span>' : '<span class="role-pill driver" style="font-size:9.5px;">Active</span>'}
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(u.email)} • 📞 ${esc(u.phone || 'No Phone')}</div>
+          </div>
+          <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 9px; font-size:10.5px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
+            ${isBlocked ? 'Unblock' : 'Block'}
+          </button>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="uber-cta-btn" style="flex:1; padding:6px; font-size:11px; margin-top:0;" onclick="openDeepInspectModal('${u.uid}')">🔍 Inspect Trips</button>
+          <button class="act-btn orange" style="flex:1; padding:6px; font-size:11px; justify-content:center; border:none;" onclick="openAdminGarageModal('${u.uid}')">🚘 Garage / KYC</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+};
+
+window.adminToggleBlockUser = async function(userUid, currentBlockStatus, userName) {
+  if (!isCurrentUserAdmin()) return showToast("⛔ Admin access required!");
+  const action = currentBlockStatus ? "Unblock" : "Block";
+  if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
+
+  try {
+    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await updateDoc(doc(window.db, "users", userUid), {
+      isBlocked: !currentBlockStatus,
+      blockReason: !currentBlockStatus ? "" : "Admin Manual Restriction"
+    });
+    showToast(`User ${userName} ${action}ed successfully!`);
+  } catch(e) {
+    showToast("Error: " + e.message);
+  }
+};
+
+window.renderAdminTripsManagement = function() {
+  const container = document.getElementById("adminTripsListContainer");
+  if (!container) return;
+  const rides = window.getRides ? window.getRides() : [];
+  if (!rides.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No trips found.</div>"; return; }
+
+  container.innerHTML = rides.map(r => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
+      <div style="font-size:11px; color:#64748b;">Driver: ${esc(r.driverName)} | Status: <b>${r.status}</b></div>
+    </div>
+  `).join("");
+};
+
+window.renderAdminPaymentsLedger = function() {
+  const container = document.getElementById("adminPaymentsContainer");
+  if (!container) return;
+  const reqs = window.getRequests ? window.getRequests() : [];
+  if (!reqs.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No payments found.</div>"; return; }
+
+  container.innerHTML = reqs.map(q => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      <b>${q.type === 'passenger' ? '🧑 Seat' : '📦 Parcel'}</b>: ₹${q.currentPrice}
+      <div style="font-size:11px; color:#64748b;">Status: <b>${q.status}</b></div>
+    </div>
+  `).join("");
+};
+
+window.renderAdminParcelsLogistics = function() {
+  const container = document.getElementById("adminParcelsContainer");
+  if (!container) return;
+  const parcels = (window.getRequests ? window.getRequests() : []).filter(q => q.type === 'parcel');
+  if (!parcels.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No parcels found.</div>"; return; }
+
+  container.innerHTML = parcels.map(q => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      📦 <b>Slab:</b> ${esc(q.slab)} | <b>Fare:</b> ₹${q.currentPrice}
+      <div style="font-size:11px; color:#64748b;">Receiver: ${esc(q.recName || q.receiverName)} (${esc(q.recPhone || q.receiverPhone)})</div>
+    </div>
+  `).join("");
+};
+
+window.renderAdminAdsList = function() {
+  const box = document.getElementById("adminAdsList");
+  if (!box) return;
+  const ads = window.getAds ? window.getAds() : [];
+  if (!ads.length) { box.innerHTML = "<div style='font-size:12px; color:#64748b;'>No sponsored ads active.</div>"; return; }
+
+  box.innerHTML = ads.map(a => `
+    <div class="item-row" style="margin-bottom:6px;">
+      <div><b>${esc(a.name)}</b> <span style="font-size:10px; color:var(--primary);">${esc(a.category)}</span></div>
+      <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="deleteSponsoredAd('${a.id}')">🗑️</button>
+    </div>
+  `).join("");
+};
+
+window.deleteSponsoredAd = async function(adId) {
+  if (!confirm("Delete this ad?")) return;
+  try {
+    const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await deleteDoc(doc(window.db, "sponsored_ads", adId));
+    showToast("🗑️ Ad deleted!");
+  } catch(e) { showToast(e.message); }
+};
+
+window.renderAdminReports = function() {
+  const container = document.getElementById("adminReportsContainer");
+  if (!container) return;
+  const reports = window.getAllReports ? window.getAllReports() : [];
+  if (!reports.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b;'>No reports.</div>"; return; }
+
+  container.innerHTML = reports.map(rep => `
+    <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
+      <b>🚨 ${esc(rep.type || 'Alert')}</b>
+      <div style="font-size:11px; color:#64748b;">User: ${esc(rep.userName)}</div>
+    </div>
+  `).join("");
+};
+
+window.refreshAdminLiveMap = function() {
+  if (!window.adminLiveMapInstance) return;
+  const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
+  if (!window.adminMapMarkers) window.adminMapMarkers = {};
+
+  Object.keys(liveLocs).forEach(rideId => {
+    const loc = liveLocs[rideId];
+    if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
+      const pos = [loc.lat, loc.lng];
+      if (window.adminMapMarkers[rideId]) {
+        window.adminMapMarkers[rideId].setLatLng(pos);
+      } else {
+        const marker = L.marker(pos).addTo(window.adminLiveMapInstance);
+        marker.bindPopup(`🚗 Active Transporter`);
+        window.adminMapMarkers[rideId] = marker;
+      }
+    } else {
+      if (window.adminMapMarkers[rideId]) {
+        window.adminLiveMapInstance.removeLayer(window.adminMapMarkers[rideId]);
+        delete window.adminMapMarkers[rideId];
+      }
+    }
+  });
+};
+
 
   function syncDriverGPS() {
     if (!currentUser || !navigator.geolocation) return;
@@ -1231,16 +1391,29 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   };
 
   window.renderGarageList = function() {
-    const box = document.getElementById("profileGarageList");
-    if (!box || !currentUser) return;
-    const myVehs = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
-    box.innerHTML = myVehs.length ? myVehs.map(v => `
-      <div class="item-row">
-        <div class="item-left"><span style="font-size:18px;">${v.type==='Bike'?'🏍️':'🚗'}</span><div><div class="item-title">${esc(v.model)}</div><div class="item-sub">${esc(v.plate)}</div></div></div>
-        <button style="border:none;background:none;color:var(--danger);cursor:pointer;" onclick="deleteVehicle('${v.id}')">🗑️</button>
+  const box = document.getElementById("profileGarageList");
+  if (!box || !currentUser) return;
+  const myVehs = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
+  box.innerHTML = myVehs.length ? myVehs.map(v => {
+    const kycBadge = v.kycStatus === 'verified' 
+      ? '<span class="role-pill driver" style="font-size:9.5px;">✅ Verified</span>' 
+      : (v.kycStatus === 'rejected' ? '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626;">🚫 Rejected</span>' : '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending KYC</span>');
+      
+    return `
+      <div class="item-row" style="margin-bottom:8px;">
+        <div class="item-left">
+          <span style="font-size:18px;">${v.type==='Bike'?'🏍️':'🚗'}</span>
+          <div>
+            <div class="item-title">${esc(v.model)} <span style="font-family:monospace; font-size:11px; color:var(--primary);">(${esc(v.plate)})</span></div>
+            <div class="item-sub" style="margin-top:2px;">${kycBadge}</div>
+          </div>
+        </div>
+        <button style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:14px;" onclick="deleteVehicle('${v.id}')">🗑️</button>
       </div>
-    `).join('') : '<div style="font-size:11.5px;color:#64748b;">No registered vehicles. Tap "+ Add Vehicle" above.</div>';
-  };
+    `;
+  }).join('') : '<div style="font-size:11.5px;color:#64748b;">No registered vehicles. Tap "+ Add Vehicle" above.</div>';
+};
+
 
   window.renderSavedPlaces = function() {
     const box = document.getElementById("savedPlacesList");
