@@ -1039,7 +1039,7 @@ button{ font-family:inherit; }
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { 
-    getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged 
+    getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
     getFirestore, collection, addDoc, onSnapshot, doc, setDoc, updateDoc, getDocs, writeBatch, getDoc, deleteDoc, query, where 
@@ -1189,7 +1189,7 @@ window.isUserAdmin = isUserAdmin;
   });
 
   window.googleLogin = function() {
-    signInWithPopup(auth, provider).catch(e => window.showToast("Login Error: " + e.message));
+    signInWithRedirect(auth, provider).catch(e => window.showToast("Login Error: " + e.message));
   };
 
   window.googleLogout = function() {
