@@ -1027,7 +1027,7 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
 <!-- FIREBASE SDK & CORE LOGIC ENGINE -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, deleteDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1045,91 +1045,6 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   window.db = db;
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
-    // 🔐 Auth State Listener & Login Handler
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userDocRef);
-      
-      let isBlocked = false;
-      let blockReason = "";
-
-      if (userSnap.exists()) {
-        const udata = userSnap.data();
-        if (udata.isBlocked) {
-          isBlocked = true;
-          blockReason = udata.blockReason || "Account restricted due to security policy.";
-        }
-        isCurrentUserAdmin = (udata.role === 'admin' || user.email === 'gauravkhobragade37@gmail.com');
-      } else {
-        isCurrentUserAdmin = (user.email === 'gauravkhobragade37@gmail.com');
-      }
-
-      if (isBlocked && !isCurrentUserAdmin) {
-        document.getElementById("blockedReasonText").textContent = blockReason;
-        document.getElementById("blockedOverlay").style.display = "flex";
-        return; 
-      } else {
-        document.getElementById("blockedOverlay").style.display = "none";
-      }
-      
-      currentUser = {
-        uid: user.uid, 
-        email: user.email, 
-        displayName: user.displayName || "User",
-        phone: userSnap.exists() ? (userSnap.data().phone || "") : "", 
-        gender: userSnap.exists() ? (userSnap.data().gender || "Male") : "Male",
-        photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-        vehicles: []
-      };
-
-      try {
-        await setDoc(userDocRef, {
-          uid: user.uid, name: currentUser.displayName, email: currentUser.email,
-          phone: currentUser.phone, gender: currentUser.gender, photoURL: currentUser.photoURL,
-          role: isCurrentUserAdmin ? 'admin' : 'citizen', lastActive: Date.now()
-        }, { merge: true });
-      } catch(e){}
-
-      document.getElementById("navLoginBtn").style.display = "none";
-      document.getElementById("btnLogoutAcc").style.display = "flex";
-      document.getElementById("navUserBadge").style.display = "flex";
-      document.getElementById("navUserDp").src = currentUser.photoURL;
-      document.getElementById("userDisplay").textContent = currentUser.displayName.split(' ')[0];
-
-      document.getElementById("profDisplayName").textContent = currentUser.displayName;
-      document.getElementById("profUserEmail").textContent = currentUser.email;
-      document.getElementById("profUserDp").src = currentUser.photoURL;
-      document.getElementById("profPhoneGender").textContent = `📞 ${currentUser.phone ? `+91 ${currentUser.phone}` : 'Mobile Not Added'} | 🧑 ${currentUser.gender}`;
-
-      if (isCurrentUserAdmin) {
-        document.getElementById("adminMasterPanel").style.display = "block";
-        document.getElementById("profBadgeRole").textContent = "👑";
-      } else {
-        document.getElementById("adminMasterPanel").style.display = "none";
-        document.getElementById("profBadgeRole").textContent = "✓";
-      }
-
-      initDataListeners();
-      showToast(`👋 Welcome back, ${currentUser.displayName.split(' ')[0]}!`);
-    } else {
-      currentUser = null;
-      isCurrentUserAdmin = false;
-      document.getElementById("navLoginBtn").style.display = "block";
-      document.getElementById("btnLogoutAcc").style.display = "none";
-      document.getElementById("navUserBadge").style.display = "none";
-      document.getElementById("adminMasterPanel").style.display = "none";
-      document.getElementById("profDisplayName").textContent = "Guest User";
-      document.getElementById("profUserEmail").textContent = "Sign in to sync your profile";
-      document.getElementById("profileGarageList").innerHTML = `<div style="font-size:11.5px;color:#64748b;">Sign in with Google to view your garage.</div>`;
-      document.getElementById("savedPlacesList").innerHTML = `<div style="font-size:11.5px;color:#64748b;">Sign in with Google to view saved places.</div>`;
-      if(window.renderActivityFeed) window.renderActivityFeed();
-    }
-  });
-
-  window.googleLogin = () => signInWithPopup(auth, provider).catch(e => showToast(e.message));
-  window.googleLogout = () => signOut(auth).then(() => { showToast("🚪 Logged out."); location.reload(); });
-
 
   let currentUser = null;
   let isCurrentUserAdmin = false;
@@ -1243,7 +1158,23 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     }
   });
 
-  window.googleLogin = () => signInWithPopup(auth, provider).catch(e => showToast(e.message));
+  window.googleLogin = async function() {
+    try {
+      // Redirect is more reliable than popup on Android/WebView and avoids popup blockers.
+      await signInWithRedirect(auth, provider);
+    } catch (e) {
+      console.error("Google Login Error:", e);
+      showToast("❌ Login Error: " + (e?.message || e));
+    }
+  };
+
+  // Catch redirect errors after returning from Google.
+  getRedirectResult(auth).catch(e => {
+    if (e) {
+      console.error("Google Redirect Result Error:", e);
+      showToast("❌ Google Login Error: " + (e?.message || e));
+    }
+  });
   window.googleLogout = () => signOut(auth).then(() => { showToast("🚪 Logged out."); location.reload(); });
 
   async function writeDriverLiveLocation(position) {
@@ -2527,5 +2458,203 @@ window.handlePinKeyDown = function(e, n) {
 };
 </script>
 
+<script>
+/* ================================================================
+   SAFARSHARE — PERFECT BUSINESS ENGINE BRIDGE
+   Modern app.html UI + business/state/security logic ported from
+   parfect.html. UI remains app.html; data contract stays Firestore.
+   ================================================================ */
+(() => {
+  'use strict';
+  const FIRESTORE = 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+  const state = { tracking:new Map(), ratingId:null, ratingStars:0, ratingTags:new Set(), chatUnsub:null, driverWatch:null, activeDriverRides:new Set() };
+  const code4=()=>String(Math.floor(1000+Math.random()*9000));
+  const clean4=v=>String(v??'').replace(/\D/g,'').slice(0,4);
+  const user=()=>window.getCurrentUser?.();
+  const db=()=>window.db;
+  const toast=m=>window.showToast?.(m);
+  const safe=v=>Number.isFinite(Number(v))?Number(v):0;
+  const esc2=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  async function fs(){ return await import(FIRESTORE); }
+  async function freshRequest(id){ const {doc,getDoc}=await fs(); const s=await getDoc(doc(db(),'requests',id)); if(!s.exists()) throw new Error('Request not found'); return {id:s.id,...s.data()}; }
+  async function freshRide(id){ const {doc,getDoc}=await fs(); const s=await getDoc(doc(db(),'rides',id)); if(!s.exists()) throw new Error('Ride not found'); return {id:s.id,...s.data()}; }
+
+  /* ---------- Secure request state machine ---------- */
+  window.acceptBooking = async function(qid){
+    try{
+      const me=user(); if(!me) throw new Error('Please login first');
+      const q=await freshRequest(qid);
+      if(q.driverUid!==me.uid) throw new Error('Only assigned driver can accept this request');
+      if(!['Pending','Counter Offered'].includes(q.status)) throw new Error('Request is not pending');
+      const {doc,updateDoc}=await fs();
+      await updateDoc(doc(db(),'requests',qid),{status:'Accepted',acceptedAt:Date.now(),acceptedBy:me.uid,startOtp:clean4(q.startOtp)||code4(),dropOtp:clean4(q.dropOtp)||code4()});
+      toast('✅ Request accepted. Passenger must confirm payment/booking.');
+    }catch(e){toast('❌ '+e.message)}
+  };
+
+  window.reserveCapacity = async function(qOrId,mode){
+    try{
+      const me=user(); if(!me) throw new Error('Please login first');
+      const q=typeof qOrId==='string'?await freshRequest(qOrId):await freshRequest(qOrId.id);
+      if(q.passengerUid!==me.uid) throw new Error('Only passenger can confirm booking');
+      if(q.status!=='Accepted') throw new Error('Booking must be Accepted first');
+      const {doc,getDoc,updateDoc}=await fs();
+      const rideRef=doc(db(),'rides',q.rideId); const rs=await getDoc(rideRef);
+      if(q.type==='passenger' && rs.exists()){
+        const available=safe(rs.data().seats), need=Math.max(1,safe(q.numSeats)||1);
+        if(available<need) throw new Error('Not enough seats available');
+        await updateDoc(rideRef,{seats:Math.max(0,available-need),updatedAt:Date.now()});
+      }
+      await updateDoc(doc(db(),'requests',q.id),{status:'Confirmed',paymentMode:mode||'cash_pickup',paymentStatus:'Pending',confirmedAt:Date.now(),startOtp:clean4(q.startOtp)||code4(),dropOtp:clean4(q.dropOtp)||code4()});
+      toast('✅ Booking confirmed. Start PIN generated.');
+      window.renderActivityFeed?.();
+    }catch(e){toast('❌ '+e.message)}
+  };
+
+  window.choosePayment = async function(qid){
+    const mode=prompt('Payment mode: type cash_pickup or driver_qr','cash_pickup');
+    if(mode===null)return;
+    await window.reserveCapacity(qid,mode.trim()||'cash_pickup');
+  };
+
+  window.counterRequest = async function(qid){
+    try{
+      const me=user(); if(!me) throw new Error('Please login first');
+      const q=await freshRequest(qid);
+      if(q.driverUid!==me.uid && q.passengerUid!==me.uid) throw new Error('Not authorized');
+      if(!['Pending','Accepted','Counter Offered'].includes(q.status)) throw new Error('Counter offer unavailable now');
+      const price=Number(prompt('Enter your new fare',String(q.currentPrice||q.originalPrice||0)));
+      if(!Number.isFinite(price)||price<=0) throw new Error('Enter valid fare');
+      const who=q.driverUid===me.uid?'Driver':'Passenger';
+      const {doc,updateDoc}=await fs();
+      await updateDoc(doc(db(),'requests',qid),{status:'Counter Offered',currentPrice:Math.round(price),lastCounterBy:who,counterAt:Date.now(),counterBy:me.uid});
+      toast('🔄 New fare offered: ₹'+Math.round(price));
+      window.renderActivityFeed?.();
+    }catch(e){toast('❌ '+e.message)}
+  };
+  window.acceptOffer = async function(qid){ await window.acceptBooking(qid); };
+
+  window.cancelWithReasonPrompt = async function(qid,role){
+    const reason=prompt('Enter mandatory cancellation reason:'); if(!reason?.trim())return toast('❌ Reason is required!');
+    try{ const me=user(); const q=await freshRequest(qid); if(!me|| (q.driverUid!==me.uid&&q.passengerUid!==me.uid&&!window.isUserAdmin?.())) throw new Error('Not authorized'); const {doc,updateDoc}=await fs(); await updateDoc(doc(db(),'requests',qid),{status:'Cancelled',cancelReason:reason.trim(),cancelledBy:role||'User',cancelledAt:Date.now(),updatedAt:Date.now()}); toast('🚫 Booking cancelled.'); window.renderActivityFeed?.(); }catch(e){toast('❌ '+e.message)}
+  };
+  window.cancelRequest=window.cancelWithReasonPrompt;
+
+  window.cancelTripPrompt = async function(rideId){
+    const reason=prompt('Enter reason for cancelling your trip:'); if(!reason?.trim())return toast('❌ Reason is required!');
+    try{const me=user(),r=await freshRide(rideId);if(!me|| (r.driverUid!==me.uid&&!window.isUserAdmin?.()))throw new Error('Not authorized');const {doc,updateDoc}=await fs();await updateDoc(doc(db(),'rides',rideId),{status:'Cancelled',cancelReason:reason.trim(),cancelledBy:me.uid,cancelledAt:Date.now(),updatedAt:Date.now()});toast('🚫 Trip cancelled.');window.renderActivityFeed?.();}catch(e){toast('❌ '+e.message)}
+  };
+  window.cancelTrip=window.cancelTripPrompt;
+
+  /* ---------- Secure PINs: always verify fresh Firestore state ---------- */
+  async function pinPrompt(title,callback){
+    const modal=document.getElementById('pinModal'); if(!modal)return callback(prompt(title,'')||'');
+    document.getElementById('pinModalTitle').textContent=title; [1,2,3,4].forEach(i=>{const e=document.getElementById('pin'+i);if(e)e.value='';}); modal.style.display='flex';
+    state.pinCallback=callback; document.getElementById('pin1')?.focus();
+  }
+  window.submitPinModal=async function(){const entered=[1,2,3,4].map(i=>document.getElementById('pin'+i)?.value||'').join('');if(entered.length!==4)return toast('❌ Enter all 4 digits');try{await state.pinCallback?.(entered)}catch(e){toast('❌ '+e.message)}};
+  window.closePinModal=function(){const m=document.getElementById('pinModal');if(m)m.style.display='none';state.pinCallback=null;[1,2,3,4].forEach(i=>{const e=document.getElementById('pin'+i);if(e)e.value=''})};
+  window.verifyStartOtpPrompt=async function(qid){
+    await pinPrompt('Enter START PIN',async entered=>{
+      const me=user(),q=await freshRequest(qid); if(!me||q.driverUid!==me.uid)throw new Error('Only assigned driver can start trip'); if(q.status!=='Confirmed')throw new Error('Trip is not confirmed'); if(clean4(q.startOtp)!==clean4(entered))throw new Error('Wrong Start PIN');
+      const {doc,updateDoc}=await fs(); await updateDoc(doc(db(),'requests',qid),{status:'In-Transit',startedAt:Date.now(),startedBy:me.uid,paymentStatus:q.paymentStatus||'Pending',updatedAt:Date.now()}); window.closePinModal();toast('🚗 Start PIN verified — Ride is In-Transit'); syncDriverGPS();window.renderActivityFeed?.();
+    });
+  };
+  window.verifyStartOtp=window.verifyStartOtpPrompt;
+  window.verifyDropOtpPrompt=async function(qid){
+    await pinPrompt('Enter DROP PIN',async entered=>{
+      const me=user(),q=await freshRequest(qid); if(!me||q.driverUid!==me.uid)throw new Error('Only assigned driver can complete trip'); if(q.status!=='In-Transit')throw new Error('Trip is not In-Transit'); if(clean4(q.dropOtp)!==clean4(entered))throw new Error('Wrong Drop PIN');
+      const {doc,updateDoc}=await fs(); await updateDoc(doc(db(),'requests',qid),{status:'Completed',completedAt:Date.now(),completedBy:me.uid,updatedAt:Date.now()}); window.closePinModal();toast('🏁 Trip completed');window.openRatingModal?.(qid);syncDriverGPS();window.renderActivityFeed?.();
+    });
+  };
+  window.verifyDropOtp=window.verifyDropOtpPrompt;
+
+  /* ---------- Rating + review/tags ---------- */
+  window.setRating=function(stars){state.ratingStars=Math.max(1,Math.min(5,Number(stars)||0));document.querySelectorAll('#starsContainer span').forEach((e,i)=>e.style.color=i<state.ratingStars?'#f59e0b':'#cbd5e1')};
+  window.toggleRatingChip=function(el){el.classList.toggle('selected');const t=el.textContent.trim();state.ratingTags.has(t)?state.ratingTags.delete(t):state.ratingTags.add(t)};
+  window.openRatingModal=function(qid){state.ratingId=qid;state.ratingStars=0;state.ratingTags.clear();document.querySelectorAll('#starsContainer span').forEach(e=>e.style.color='#cbd5e1');document.querySelectorAll('.rating-chips .chip-btn').forEach(e=>e.classList.remove('selected'));const r=document.getElementById('ratingReviewText');if(r)r.value='';const m=document.getElementById('ratingModal');if(m)m.style.display='flex'};
+  window.submitRatingReview=async function(){try{if(!state.ratingStars)throw new Error('Please select a star rating');const me=user();if(!me)throw new Error('Please login');const {collection,addDoc,doc,updateDoc}=await fs();await addDoc(collection(db(),'ratings'),{requestId:state.ratingId,userUid:me.uid,userName:me.displayName||me.name||'User',stars:state.ratingStars,tags:[...state.ratingTags],review:document.getElementById('ratingReviewText')?.value.trim()||'',createdAt:Date.now()});if(state.ratingId)await updateDoc(doc(db(),'requests',state.ratingId),{isRated:true,ratingStars:state.ratingStars});document.getElementById('ratingModal').style.display='none';toast('⭐ Review submitted');}catch(e){toast('❌ '+e.message)}};
+
+  /* ---------- Corridor matching: coordinates first, text fallback ---------- */
+  function hav(a,b){if(!a||!b)return Infinity;const R=6371000,p=Math.PI/180,dLat=(b.lat-a.lat)*p,dLon=(b.lon-a.lon)*p;const x=Math.sin(dLat/2)**2+Math.cos(a.lat*p)*Math.cos(b.lat*p)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+  async function geocodeText(q){try{const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q='+encodeURIComponent(q);const r=await fetch(u);const d=await r.json();return d[0]?{lat:Number(d[0].lat),lon:Number(d[0].lon)}:null}catch(e){return null}}
+  function getMarker(id){try{if(id==='rFrom')return ridePickupMarker?.getLatLng();if(id==='rTo')return rideDropMarker?.getLatLng();if(id==='xFrom')return parcelPickupMarker?.getLatLng();if(id==='xTo')return parcelDropMarker?.getLatLng();if(id==='pFrom')return postPickupMarker?.getLatLng();if(id==='pTo')return postDropMarker?.getLatLng()}catch(e){}return null}
+  async function resolvePair(fromId,toId,from,to){const a=getMarker(fromId),b=getMarker(toId);if(a&&b&&Math.abs(a.lat-21.4588)+Math.abs(a.lng-80.1961)>0.00001)return {a:{lat:a.lat,lon:a.lng},b:{lat:b.lat,lon:b.lng}};const ga=await geocodeText(from),gb=await geocodeText(to);return {a:ga,b:gb}}
+  function textMatch(r,from,to){const f=(from||'').toLowerCase(),t=(to||'').toLowerCase(),rf=(r.from||'').toLowerCase(),rt=(r.to||'').toLowerCase();return (rf.includes(f)||f.includes(rf))&&(rt.includes(t)||t.includes(rt))}
+  async function matchRides(from,to,fromId,toId){const rides=(window.getRides?.()||[]).filter(r=>r.status==='Active'&&safe(r.seats)>0);const pair=await resolvePair(fromId,toId,from,to);return rides.map(r=>{let score=textMatch(r,from,to)?100:0;if(pair.a&&pair.b&&r.fromCoords&&r.toCoords){const d1=hav(pair.a,r.fromCoords),d2=hav(pair.b,r.toCoords);score+=Math.max(0,100-(d1+d2)/1000)}return {...r,__score:score}}).filter(r=>r.__score>0).sort((a,b)=>b.__score-a.__score)}
+
+  window.findAvailableRides=async function(){const from=document.getElementById('rFrom')?.value.trim(),to=document.getElementById('rTo')?.value.trim();if(!from||!to)return toast('❌ Enter Pickup and Destination!');const box=document.getElementById('rideResultsList');box.innerHTML='<div class="small">🔎 Finding corridor matches...</div>';const matches=await matchRides(from,to,'rFrom','rTo');box.innerHTML=matches.length?matches.map(r=>`<div class="request" style="margin-top:8px"><div class="card-top-row"><span class="role-pill driver">${esc2(r.vehicle)}</span><span style="font-weight:800;color:var(--primary)">₹${safe(r.seatPrice)}/seat</span></div><div style="font-size:12px;font-weight:700">${esc2(r.from)} ➔ ${esc2(r.to)}</div><div style="font-size:11px;color:#64748b;margin:4px 0">Driver: <b>${esc2(r.driverName)}</b> • ${safe(r.seats)} Seats Available</div><button class="uber-cta-btn" style="padding:8px;font-size:12px" onclick="bookRideRequest('${r.id}',${safe(r.seatPrice)},'${esc2(r.driverUid)}','${esc2(r.driverName)}','${esc2(r.driverPhone)}','${esc2(from)}','${esc2(to)}')">Book Seat</button></div>`).join(''):'<div class="small">No corridor-matching rides found.</div>'};
+
+  window.bookRideRequest=async function(rideId,price,dUid,dName,dPhone,from,to){try{const me=user();if(!me)throw new Error('Please login');const r=await freshRide(rideId);if(r.status!=='Active')throw new Error('Ride is no longer active');const seats=Math.max(1,Number(window.selectedSeatCount||1));if(safe(r.seats)<seats)throw new Error('Not enough seats');const {collection,addDoc}=await fs();await addDoc(collection(db(),'requests'),{rideId,type:'passenger',numSeats:seats,originalPrice:safe(price),currentPrice:safe(price),status:'Pending',passengerUid:me.uid,passengerName:me.displayName,passengerPhone:me.phone||'',driverUid:dUid,driverName:dName,driverPhone:dPhone,from,to,travelKm:safe(r.distanceKm),created:Date.now(),updatedAt:Date.now()});toast('✅ Booking request sent');window.showPage?.('activity',document.querySelector('.nav-item[data-page="activity"]'));window.renderActivityFeed?.()}catch(e){toast('❌ '+e.message)}};
+
+  window.findParcelTransporters=async function(){const from=document.getElementById('xFrom')?.value.trim(),to=document.getElementById('xTo')?.value.trim(),rn=document.getElementById('xRecName')?.value.trim(),rp=document.getElementById('xRecPhone')?.value.trim();if(!from||!to)return toast('❌ Enter pickup and delivery locations');if(!rn||!/^[6-9]\d{9}$/.test(rp||''))return toast('❌ Enter valid receiver name and 10-digit phone');const box=document.getElementById('parcelResultsList');box.innerHTML='<div class="small">🔎 Finding corridor transporters...</div>';const matches=await matchRides(from,to,'xFrom','xTo');box.innerHTML=matches.length?matches.map(r=>`<div class="request" style="margin-top:8px"><div class="card-top-row"><span class="role-pill parcel">📦 Parcel Space</span><span style="font-weight:800;color:var(--primary)">₹${parcelFare(document.getElementById('xSlab')?.value,r)}</span></div><div style="font-size:12px;font-weight:700">${esc2(r.from)} ➔ ${esc2(r.to)}</div><div class="small">Transporter: <b>${esc2(r.driverName)}</b> • ${esc2(r.vehicle)}</div><button class="uber-cta-btn" style="padding:8px;font-size:12px" onclick="bookParcelRequest('${r.id}',${parcelFare(document.getElementById('xSlab')?.value,r)},'${esc2(r.driverUid)}','${esc2(r.driverName)}','${esc2(r.driverPhone)}','${esc2(from)}','${esc2(to)}','${esc2(rn)}','${esc2(rp)}')">Send with this Captain</button></div>`).join(''):'<div class="small">No corridor transporters found.</div>'};
+  function parcelFare(slab,r){const s=String(slab||'bag').toLowerCase();if(s.includes('doc'))return safe(r.docPrice)||50;if(s.includes('cargo'))return safe(r.cargoPrice)||150;return safe(r.bagPrice)||100}
+  window.bookParcelRequest=async function(rideId,price,dUid,dName,dPhone,from,to,recName,recPhone){try{const me=user();if(!me)throw new Error('Please login');const r=await freshRide(rideId);if(r.status!=='Active')throw new Error('Ride is no longer active');const {collection,addDoc}=await fs();await addDoc(collection(db(),'requests'),{rideId,type:'parcel',slab:document.getElementById('xSlab')?.value||'bag',currentPrice:safe(price),originalPrice:safe(price),status:'Pending',paymentSettlement:document.getElementById('xParcelPayMode')?.value||'sender_paid',passengerUid:me.uid,passengerName:me.displayName,passengerPhone:me.phone||'',receiverName:recName,receiverPhone:recPhone,recName,recPhone,driverUid:dUid,driverName:dName,driverPhone:dPhone,from,to,created:Date.now(),updatedAt:Date.now()});toast('📦 Parcel request sent');window.showPage?.('activity');window.renderActivityFeed?.()}catch(e){toast('❌ '+e.message)}};
+
+  /* ---------- Complete post-trip engine using modern UI fields ---------- */
+  window.publishPostTrip=async function(){
+    try{
+      const me=user();if(!me)throw new Error('Please login first');if(me.isBlocked)throw new Error('Your account is restricted');
+      const from=document.getElementById('pFrom')?.value.trim(),to=document.getElementById('pTo')?.value.trim();if(!from||!to)throw new Error('Enter From and To locations');if(from.toLowerCase()===to.toLowerCase())throw new Error('From and To cannot be same');
+      const vehNo=document.getElementById('pVehicleNo')?.value.trim();const vehType=document.getElementById('pVehicle')?.value||window.selectedVehicleType||'Car';
+      const vehicles=me.vehicles||[];const v=vehicles.find(x=>x.plate===vehNo||x.number===vehNo||x.model===vehType);
+      if(vehicles.length && vehNo && v && v.kycStatus && v.kycStatus!=='verified')throw new Error('Selected vehicle is pending KYC verification');
+      if(vehicles.length && vehNo && !v)throw new Error('Selected vehicle is not in your garage');
+      const seats=Math.max(0,Number(document.getElementById('pSeats')?.value||0));const price=Math.max(0,Number(document.getElementById('pPrice')?.value||0));if(seats===0&&price===0)throw new Error('Set seats or parcel fare');
+      const dt=document.getElementById('pDateTimeCombined')?.value||'';const date=dt?new Date(dt).toISOString().slice(0,10):new Date().toISOString().slice(0,10);const time=dt?new Date(dt).toTimeString().slice(0,5):'Today';
+      let geometry=null,distanceKm=null,durationMin=null;const route=window.fetchedDriverRoutes?.[window.selectedRouteIdx||0];if(route){geometry=route.geometry;distanceKm=route.distance/1000;durationMin=route.duration/60}
+      const p1=getMarker('pFrom'),p2=getMarker('pTo');const {collection,addDoc}=await fs();const ref=await addDoc(collection(db(),'rides'),{from,to,fromCoords:p1?{lat:p1.lat,lon:p1.lng}:null,toCoords:p2?{lat:p2.lat,lon:p2.lng}:null,geometry,distanceKm,durationMin,seatPrice:price,seats,vehicle:vehType,carNumber:vehNo,driverUid:me.uid,driverName:me.displayName,driverPhone:me.phone||'',status:'Active',hasReturn:!!document.getElementById('pHasReturnTrip')?.checked,returnTime:document.getElementById('pReturnTime')?.value||null,isLadiesOnly:!!document.getElementById('pLadiesOnly')?.checked,isCommuterMode:false,parcel:seats===0||true,created:Date.now(),updatedAt:Date.now()});toast('🚗 Trip published successfully');window.showPage?.('activity');window.renderActivityFeed?.();return ref.id;
+    }catch(e){toast('❌ '+e.message)}
+  };
+
+  /* ---------- Multi-ride driver GPS ---------- */
+  async function writeGPS(pos){const me=user();if(!me||!state.activeDriverRides.size)return;const {doc,setDoc}=await fs();const now=Date.now();await Promise.all([...state.activeDriverRides].map(id=>setDoc(doc(db(),'live_locations',id),{rideId:id,driverUid:me.uid,lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:Number(pos.coords.accuracy)||null,heading:Number.isFinite(pos.coords.heading)?pos.coords.heading:null,speed:Number.isFinite(pos.coords.speed)?pos.coords.speed:null,updatedAt:now,status:'live'},{merge:true})))}
+  function syncDriverGPS(){const me=user();if(!me)return;const ids=new Set((window.getRequests?.()||[]).filter(q=>q.driverUid===me.uid&&['Confirmed','In-Transit'].includes(q.status)).map(q=>q.rideId).filter(Boolean));state.activeDriverRides=ids;if(ids.size&&navigator.geolocation&&state.driverWatch===null)state.driverWatch=navigator.geolocation.watchPosition(writeGPS,()=>{}, {enableHighAccuracy:true,maximumAge:5000,timeout:15000});if(!ids.size&&state.driverWatch!==null){navigator.geolocation.clearWatch(state.driverWatch);state.driverWatch=null}}
+  window.stopDriverLiveTracking=()=>{if(state.driverWatch!==null)navigator.geolocation.clearWatch(state.driverWatch);state.driverWatch=null;state.activeDriverRides.clear()};
+
+  /* ---------- Passenger live tracking ---------- */
+  window.startTrackingForRequest=async function(qid){
+    const box=document.getElementById('liveTrackingBox')||document.getElementById('activityFeedList');if(!box)return;try{const {doc,onSnapshot}=await fs();const ref=doc(db(),'live_locations',qid);if(state.tracking.has(qid))state.tracking.get(qid).unsub();let map=null,marker=null;const mapId='ssTrack_'+qid;let holder=document.getElementById(mapId);if(!holder){holder=document.createElement('div');holder.id=mapId;holder.style='height:220px;margin:8px 0;border-radius:14px;overflow:hidden';box.prepend(holder)}map=L.map(holder).setView([21.4588,80.1961],11);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);const unsub=onSnapshot(ref,s=>{if(!s.exists())return;const d=s.data();if(!Number.isFinite(Number(d.lat))||!Number.isFinite(Number(d.lng)))return;const p=[Number(d.lat),Number(d.lng)];if(!marker)marker=L.marker(p).addTo(map);else marker.setLatLng(p);map.setView(p,15)});state.tracking.set(qid,{map,unsub});toast('📍 Live driver tracking started')}catch(e){toast('❌ '+e.message)}};
+  window.stopTrackingForRequest=function(qid){const x=state.tracking.get(qid);if(!x)return;try{x.unsub?.();x.map?.remove()}catch(e){}state.tracking.delete(qid)};
+  window.toggleLiveTrackingBox=function(qid){state.tracking.has(qid)?window.stopTrackingForRequest(qid):window.startTrackingForRequest(qid)};
+  window.triggerEmergencySOS=async function(){try{const me=user();if(!me)throw new Error('Please login');const {collection,addDoc}=await fs();await addDoc(collection(db(),'reports'),{type:'SOS Alert',userUid:me.uid,userName:me.displayName||'User',phone:me.phone||'',reason:'Emergency SOS',createdAt:Date.now()});toast('🚨 SOS alert sent to SafarShare admin');window.open('tel:112','_self')}catch(e){toast('❌ '+e.message)}};
+
+  /* ---------- Saved places ---------- */
+  window.savePlace=async function(){try{const me=user();if(!me)throw new Error('Login first');const title=document.getElementById('savedPlaceTitle')?.value.trim(),address=document.getElementById('savedPlaceAddress')?.value.trim();if(!title||!address)throw new Error('Title and address required');const {collection,addDoc}=await fs();await addDoc(collection(db(),'saved_places'),{uid:me.uid,title,address,createdAt:Date.now()});toast('📍 Place saved');document.getElementById('addSavedPlaceModal').style.display='none'}catch(e){toast('❌ '+e.message)}};
+
+  /* ---------- Realtime chat ---------- */
+  window.openChat=async function(qid,driverPhone){const modal=document.getElementById('chatModal'),box=document.getElementById('chatMessages');if(!modal||!box)return;modal.style.display='flex';document.getElementById('chatTitle').innerHTML='💬 Live Chat';if(state.chatUnsub)state.chatUnsub();const {collection,query,orderBy,onSnapshot}=await fs();const q=query(collection(db(),'requests',qid,'messages'),orderBy('createdAt','asc'));state.chatUnsub=onSnapshot(q,s=>{const me=user();box.innerHTML=s.docs.map(d=>{const x=d.data();return `<div style="padding:6px 9px;margin:4px 0;background:${x.senderUid===me?.uid?'#e8f5ff':'#f1f5f9'};border-radius:10px"><b>${esc2(x.senderName||'User')}</b><div>${esc2(x.text||'')}</div></div>`}).join('')||'<div class="small">No messages yet.</div>';box.scrollTop=box.scrollHeight})};
+  window.closeChat=function(){document.getElementById('chatModal')?.style.setProperty('display','none');state.chatUnsub?.();state.chatUnsub=null};
+  window.sendChatMessage=async function(){try{const me=user(),text=document.getElementById('chatInputText')?.value.trim(),qid=window.currentChatRequestId||state.chatId;if(!me||!text||!qid)return;const {collection,addDoc}=await fs();await addDoc(collection(db(),'requests',qid,'messages'),{text,senderUid:me.uid,senderName:me.displayName||'User',createdAt:Date.now()});document.getElementById('chatInputText').value=''}catch(e){toast('❌ '+e.message)}};
+
+  /* ---------- Sponsored ads / test-data compatibility ---------- */
+  window.publishSponsoredAd=async function(){try{if(!window.isUserAdmin?.())throw new Error('Admin only');const name=document.getElementById('adBizName')?.value.trim(),category=document.getElementById('adBizCat')?.value||'',locationTag=document.getElementById('adRouteTag')?.value.trim(),targetRoute=document.getElementById('adTargetRoute')?.value.trim(),phone=document.getElementById('adBizPhone')?.value.trim();if(!name||!locationTag||!phone)throw new Error('Business Name, Location and Phone are required');const {collection,addDoc}=await fs();await addDoc(collection(db(),'sponsored_ads'),{name,category,locationTag,targetRoute,phone,imageUrl:document.getElementById('adBizImage')?.value.trim()||'',mapUrl:document.getElementById('adBizMap')?.value.trim()||'',socialUrl:document.getElementById('adBizSocial')?.value.trim()||'',created:Date.now()});toast('🚀 Sponsored Ad published');document.getElementById('adminAdsModal')?.style.setProperty('display','none')}catch(e){toast('❌ '+e.message)}};
+  window.clearAllTestData=async function(){if(!window.isUserAdmin?.())return toast('❌ Admin only');if(!confirm('Delete all rides and booking requests?'))return;try{const {collection,getDocs,deleteDoc,doc}=await fs();for(const c of ['rides','requests']){const s=await getDocs(collection(db(),c));await Promise.all(s.docs.map(d=>deleteDoc(doc(db(),c,d.id))))}toast('🧹 Test data cleared')}catch(e){toast('❌ '+e.message)}};
+  /* ---------- Admin advanced controls ---------- */
+  window.adminForceCancelTrip=async function(id){if(!window.isUserAdmin?.())return toast('❌ Admin only');try{const {doc,updateDoc}=await fs();await updateDoc(doc(db(),'rides',id),{status:'Cancelled',cancelReason:'Force cancelled by admin',cancelledBy:'admin',cancelledAt:Date.now(),updatedAt:Date.now()});toast('🚫 Trip force-cancelled')}catch(e){toast('❌ '+e.message)}};
+  window.adminVerifyVehicle=async function(uid,vehicleId,status='verified'){if(!window.isUserAdmin?.())return toast('❌ Admin only');try{const {doc,getDoc,updateDoc}=await fs();const r=doc(db(),'users',uid),s=await getDoc(r);if(!s.exists())throw new Error('User not found');const vs=s.data().vehicles||[];const nv=vs.map(v=>v.id===vehicleId?{...v,kycStatus:status,kycUpdatedAt:Date.now()}:v);await updateDoc(r,{vehicles:nv,updatedAt:Date.now()});toast('✅ Vehicle KYC updated')}catch(e){toast('❌ '+e.message)}};
+  window.adminRejectVehicle=(uid,vehicleId)=>window.adminVerifyVehicle(uid,vehicleId,'rejected');
+  window.adminToggleBlockUser=async function(uid,blocked,name){if(!window.isUserAdmin?.())return toast('❌ Admin only');try{const {doc,updateDoc}=await fs();await updateDoc(doc(db(),'users',uid),{isBlocked:!blocked,blockReason:!blocked?'Blocked by admin':'',blockedAt:!blocked?Date.now():null});toast((!blocked?'🚫 Blocked ':'✅ Unblocked ')+(name||'user'))}catch(e){toast('❌ '+e.message)}};
+
+  /* ---------- Wallet/earnings ---------- */
+  window.updateWalletLedger=function(){const me=user(),el=document.getElementById('userTotalEarnings');if(!el)return;if(!me){el.textContent='0';return}const total=(window.getRequests?.()||[]).filter(q=>q.driverUid===me.uid&&['Completed','Paid'].includes(q.status)).reduce((s,q)=>s+safe(q.currentPrice||q.originalPrice),0);el.textContent=Math.round(total)};
+
+  /* ---------- Modern activity renderer with complete state actions ---------- */
+  window.renderActivityFeed=function(){const me=user(),feed=document.getElementById('activityFeedList');if(!feed)return;if(!me){feed.innerHTML='<div style="text-align:center;padding:40px;color:#64748b">🔐 Please login to view activity.</div>';return}const reqs=(window.getRequests?.()||[]).filter(q=>q.passengerUid===me.uid||q.driverUid===me.uid);const rides=(window.getRides?.()||[]).filter(r=>r.driverUid===me.uid);let list=reqs;if(window.currentSubTab==='pending')list=list.filter(q=>['Pending','Accepted','Counter Offered'].includes(q.status));else if(window.currentSubTab==='history')list=list.filter(q=>['Completed','Cancelled'].includes(q.status));else list=list.filter(q=>['Confirmed','In-Transit'].includes(q.status));
+    const cards=list.map(q=>{const isDriver=q.driverUid===me.uid;const action=[];if(isDriver&&['Pending','Counter Offered'].includes(q.status))action.push(`<button class="act-btn green" onclick="acceptBooking('${q.id}')">✅ Accept</button>`,`<button class="act-btn orange" onclick="counterRequest('${q.id}')">↔ Counter</button>`);if(!isDriver&&['Pending','Accepted','Counter Offered'].includes(q.status))action.push(`<button class="act-btn orange" onclick="counterRequest('${q.id}')">↔ Counter</button>`);if(!isDriver&&q.status==='Accepted')action.push(`<button class="act-btn primary" onclick="choosePayment('${q.id}')">💳 Confirm Booking</button>`);if(isDriver&&q.status==='Confirmed')action.push(`<button class="act-btn green" onclick="verifyStartOtpPrompt('${q.id}')">🔑 START PIN</button>`);if(isDriver&&q.status==='In-Transit')action.push(`<button class="act-btn green" onclick="verifyDropOtpPrompt('${q.id}')">🏁 DROP PIN</button>`);if(!isDriver&&['Confirmed','In-Transit'].includes(q.status))action.push(`<button class="act-btn" onclick="toggleLiveTrackingBox('${q.id}')">📍 Track Live</button>`);if(q.status==='In-Transit'&&!isDriver)action.push(`<button class="act-btn red" onclick="triggerEmergencySOS()">🚨 SOS</button>`);if(!['Completed','Cancelled'].includes(q.status))action.push(`<button class="act-btn red" onclick="cancelWithReasonPrompt('${q.id}','${isDriver?'Driver':'Passenger'}')">✖ Cancel</button>`);if(q.status==='Completed'&&!q.isRated&&!isDriver)action.push(`<button class="act-btn primary" onclick="openRatingModal('${q.id}')">⭐ Rate</button>`);return `<div class="request"><div class="card-top-row"><span class="role-pill ${q.type==='passenger'?'passenger':'parcel'}">${q.type==='passenger'?'🧑 Passenger':'📦 Parcel'}</span><span class="status-badge live">${esc2(q.status)}</span></div><div class="route-timeline"><div class="route-node">${esc2(q.from)}</div><div class="route-node drop">${esc2(q.to)}</div></div><div class="driver-veh-row"><div><div class="dv-name">${esc2(isDriver?(q.passengerName||'Passenger'):(q.driverName||'Driver'))}</div><div class="dv-sub">${esc2(q.vehicle||'SafarShare')}</div></div><div class="fare-tag">₹${safe(q.currentPrice||q.originalPrice)}</div></div>${q.startOtp&&q.status==='Confirmed'&&!isDriver?`<div class="pin-badge"><span class="pin-label">START PIN</span><span class="pin-code">${esc2(q.startOtp)}</span></div>`:''}${q.dropOtp&&q.status==='In-Transit'&&!isDriver?`<div class="pin-badge" style="background:#00a884"><span class="pin-label">DROP PIN</span><span class="pin-code">${esc2(q.dropOtp)}</span></div>`:''}<div class="action-buttons-group">${action.join('')}</div></div>`}).join('');const posted=window.currentSubTab==='active'?(rides.filter(r=>r.status==='Active').map(r=>`<div class="request"><div class="card-top-row"><span class="role-pill driver">🚗 Posted Trip</span><span class="status-badge live">Active</span></div><div class="route-timeline"><div class="route-node">${esc2(r.from)}</div><div class="route-node drop">${esc2(r.to)}</div></div><div class="small">₹${safe(r.seatPrice)}/seat • ${safe(r.seats)} seats</div><div class="action-buttons-group"><button class="act-btn red" onclick="cancelTripPrompt('${r.id}')">✖ Cancel Trip</button></div></div>`).join('')):'';feed.innerHTML=cards+posted||'<div style="text-align:center;padding:30px;color:#64748b">No activity in this tab.</div>';window.updateWalletLedger?.();syncDriverGPS()};
+
+  /* Keep app UI tab state visible to engine */
+  Object.defineProperty(window,'currentSubTab',{configurable:true,get:()=>window.__ssSubTab||'active',set:v=>window.__ssSubTab=v});
+  const oldSwitch=window.switchActivityTab;window.switchActivityTab=function(tab,btn){window.__ssSubTab=tab;document.querySelectorAll('.act-tab-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');window.renderActivityFeed()};
+
+  /* aliases required by app UI */
+  window.postTrip=window.publishPostTrip; window.findRides=window.findAvailableRides; window.findParcel=window.findParcelTransporters;
+  window.shareLiveWhatsapp=window.shareLiveTripWhatsApp;
+
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){window.renderActivityFeed?.();window.updateWalletLedger?.();syncDriverGPS()}});
+  window.addEventListener('load',()=>setTimeout(()=>{window.renderActivityFeed?.();syncDriverGPS()},800));
+})();
+</script>
 </body>
 </html>
