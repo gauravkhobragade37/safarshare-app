@@ -1045,6 +1045,91 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   window.db = db;
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
+    // 🔐 Auth State Listener & Login Handler
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userDocRef);
+      
+      let isBlocked = false;
+      let blockReason = "";
+
+      if (userSnap.exists()) {
+        const udata = userSnap.data();
+        if (udata.isBlocked) {
+          isBlocked = true;
+          blockReason = udata.blockReason || "Account restricted due to security policy.";
+        }
+        isCurrentUserAdmin = (udata.role === 'admin' || user.email === 'gauravkhobragade37@gmail.com');
+      } else {
+        isCurrentUserAdmin = (user.email === 'gauravkhobragade37@gmail.com');
+      }
+
+      if (isBlocked && !isCurrentUserAdmin) {
+        document.getElementById("blockedReasonText").textContent = blockReason;
+        document.getElementById("blockedOverlay").style.display = "flex";
+        return; 
+      } else {
+        document.getElementById("blockedOverlay").style.display = "none";
+      }
+      
+      currentUser = {
+        uid: user.uid, 
+        email: user.email, 
+        displayName: user.displayName || "User",
+        phone: userSnap.exists() ? (userSnap.data().phone || "") : "", 
+        gender: userSnap.exists() ? (userSnap.data().gender || "Male") : "Male",
+        photoURL: user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+        vehicles: []
+      };
+
+      try {
+        await setDoc(userDocRef, {
+          uid: user.uid, name: currentUser.displayName, email: currentUser.email,
+          phone: currentUser.phone, gender: currentUser.gender, photoURL: currentUser.photoURL,
+          role: isCurrentUserAdmin ? 'admin' : 'citizen', lastActive: Date.now()
+        }, { merge: true });
+      } catch(e){}
+
+      document.getElementById("navLoginBtn").style.display = "none";
+      document.getElementById("btnLogoutAcc").style.display = "flex";
+      document.getElementById("navUserBadge").style.display = "flex";
+      document.getElementById("navUserDp").src = currentUser.photoURL;
+      document.getElementById("userDisplay").textContent = currentUser.displayName.split(' ')[0];
+
+      document.getElementById("profDisplayName").textContent = currentUser.displayName;
+      document.getElementById("profUserEmail").textContent = currentUser.email;
+      document.getElementById("profUserDp").src = currentUser.photoURL;
+      document.getElementById("profPhoneGender").textContent = `📞 ${currentUser.phone ? `+91 ${currentUser.phone}` : 'Mobile Not Added'} | 🧑 ${currentUser.gender}`;
+
+      if (isCurrentUserAdmin) {
+        document.getElementById("adminMasterPanel").style.display = "block";
+        document.getElementById("profBadgeRole").textContent = "👑";
+      } else {
+        document.getElementById("adminMasterPanel").style.display = "none";
+        document.getElementById("profBadgeRole").textContent = "✓";
+      }
+
+      initDataListeners();
+      showToast(`👋 Welcome back, ${currentUser.displayName.split(' ')[0]}!`);
+    } else {
+      currentUser = null;
+      isCurrentUserAdmin = false;
+      document.getElementById("navLoginBtn").style.display = "block";
+      document.getElementById("btnLogoutAcc").style.display = "none";
+      document.getElementById("navUserBadge").style.display = "none";
+      document.getElementById("adminMasterPanel").style.display = "none";
+      document.getElementById("profDisplayName").textContent = "Guest User";
+      document.getElementById("profUserEmail").textContent = "Sign in to sync your profile";
+      document.getElementById("profileGarageList").innerHTML = `<div style="font-size:11.5px;color:#64748b;">Sign in with Google to view your garage.</div>`;
+      document.getElementById("savedPlacesList").innerHTML = `<div style="font-size:11.5px;color:#64748b;">Sign in with Google to view saved places.</div>`;
+      if(window.renderActivityFeed) window.renderActivityFeed();
+    }
+  });
+
+  window.googleLogin = () => signInWithPopup(auth, provider).catch(e => showToast(e.message));
+  window.googleLogout = () => signOut(auth).then(() => { showToast("🚪 Logged out."); location.reload(); });
+
 
   let currentUser = null;
   let isCurrentUserAdmin = false;
