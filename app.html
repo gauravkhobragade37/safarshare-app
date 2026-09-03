@@ -715,12 +715,11 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
         <button class="admin-tab-btn" onclick="switchAdminTab('live', this)">📍 6. Live Map</button>
         <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">⚠️ 7. Reports</button>
         <button class="admin-tab-btn" onclick="switchAdminTab('ads', this)">📢 8. Ads</button>
-    <button class="uber-cta-btn" style="background:#fef2f2; color:#d9363e; border:1.5px solid #fecaca; margin-top:8px;" onclick="clearAllTestData()">🗑️ Clear All Test Data (1-Click)</button>
-
       </div>
       
+      <button class="uber-cta-btn" style="background:#fef2f2; color:#d9363e; border:1.5px solid #fecaca; margin-top:8px;" onclick="clearAllTestData()">🗑️ Clear All Test Data (1-Click)</button>
 
-      <div id="admTabOverview" class="admin-sub-section active">
+      <div id="admTabOverview" class="admin-sub-section active" style="margin-top:10px;">
         <div class="kpi-grid">
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Total Users</div><div class="val" id="kpiTotalUsers">0</div></div>
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Active Trips</div><div class="val" id="kpiActiveTrips">0</div></div>
@@ -730,29 +729,52 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Platform Volume</div><div class="val" id="kpiPaidVol">₹0</div></div>
         </div>
       </div>
-      <div id="admTabUsers" class="admin-sub-section"><div class="input-card" style="margin-bottom:8px;"><input id="adminUserSearch" placeholder="🔍 Search user..." oninput="renderAdminUsersManagement()"></div><div id="adminUsersListContainer"></div></div>
-      <div id="admTabTrips" class="admin-sub-section"><div style="display:flex; gap:6px; margin-bottom:10px;"><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('all')">All</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Active')">Active</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Completed')">Completed</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Cancelled')">Cancelled</button></div><div id="adminTripsListContainer"></div></div>
-      <div id="admTabPayments" class="admin-sub-section"><div id="adminPaymentsContainer"></div></div>
-      <div id="admTabParcels" class="admin-sub-section"><div id="adminParcelsContainer"></div></div>
-      <div id="admTabLive" class="admin-sub-section"><div id="adminLiveMap"></div></div>
-      <div id="admTabReports" class="admin-sub-section"><div id="adminReportsContainer"></div></div>
-      <div id="admTabAds" class="admin-sub-section"><button class="uber-cta-btn" style="padding:10px;" onclick="openAdsModal()">📢 Manage Sponsored Ads</button><div id="adminAdsList" style="margin-top:10px;"></div></div>
+      <div id="admTabUsers" class="admin-sub-section" style="margin-top:10px;">
+        <div class="input-card" style="margin-bottom:8px;"><input id="adminUserSearch" placeholder="🔍 Search user..." oninput="renderAdminUsersManagement()"></div>
+        <div id="adminUsersListContainer"></div>
+      </div>
+      <div id="admTabTrips" class="admin-sub-section" style="margin-top:10px;">
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('all')">All</button>
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Active')">Active</button>
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Completed')">Completed</button>
+          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Cancelled')">Cancelled</button>
+        </div>
+        <div id="adminTripsListContainer"></div>
+      </div>
+      <div id="admTabPayments" class="admin-sub-section" style="margin-top:10px;"><div id="adminPaymentsContainer"></div></div>
+      <div id="admTabParcels" class="admin-sub-section" style="margin-top:10px;"><div id="adminParcelsContainer"></div></div>
+      <div id="admTabLive" class="admin-sub-section" style="margin-top:10px;"><div id="adminLiveMap"></div></div>
+      <div id="admTabReports" class="admin-sub-section" style="margin-top:10px;"><div id="adminReportsContainer"></div></div>
+      <div id="admTabAds" class="admin-sub-section" style="margin-top:10px;">
+        <button class="uber-cta-btn" style="padding:10px;" onclick="openAdsModal()">📢 Manage Sponsored Ads</button>
+        <div id="adminAdsList" style="margin-top:10px;"></div>
+      </div>
     </div>
 
     <!-- GARAGE & PLACES -->
     <div class="section-card">
-      <div class="section-header"><div class="section-title">🏍️ My Registered Vehicles</div><span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddVehicleModal()">+ Add Vehicle</span></div>
+      <div class="section-header">
+        <div class="section-title">🏍️ My Registered Vehicles</div>
+        <span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddVehicleModal()">+ Add Vehicle</span>
+      </div>
       <div id="profileGarageList"><div style="font-size:11.5px; color:#64748b;">Sign in to view garage.</div></div>
     </div>
+    
     <div class="section-card">
-      <div class="section-header"><div class="section-title">📍 Saved Places</div><span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddSavedPlaceModal()">+ Add Place</span></div>
+      <div class="section-header">
+        <div class="section-title">📍 Saved Places</div>
+        <span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddSavedPlaceModal()">+ Add Place</span>
+      </div>
       <div id="savedPlacesList"><div style="font-size:11.5px; color:#64748b;">Sign in to view saved places.</div></div>
     </div>
+    
     <div class="section-card">
       <div class="section-title" style="margin-bottom:8px;">📜 Platform Rules & Support</div>
       <div class="settings-item" onclick="openTermsModal()"><div class="settings-left"><span>🛡️</span><span>Terms of Service & Privacy Policy</span></div><span>›</span></div>
       <div class="settings-item" onclick="window.open('https://wa.me/918668828542?text=Hello%20SafarShare%20Support','_blank')"><div class="settings-left"><span>💬</span><span>24x7 WhatsApp Help & Support (Admin)</span></div><span>›</span></div>
     </div>
+    
     <button type="button" id="btnLogoutAcc" class="uber-cta-btn" style="background:#fef2f2; color:#d9363e; border:1.5px solid #fecaca; display:none;" onclick="googleLogout()"><span>🚪 Logout Account</span></button>
   </section>
 
@@ -1184,268 +1206,273 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   function initDataListeners() {
     onSnapshot(collection(db, 'rides'), snap => { ALL_RIDES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); if(window.renderAdminTripsManagement) window.renderAdminTripsManagement(); });
     onSnapshot(collection(db, 'requests'), snap => { ALL_REQUESTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); syncDriverGPS(); if(window.renderAdminPaymentsLedger) window.renderAdminPaymentsLedger(); });
-    onSnapshot(collection(db, 'users'), snap => { ALL_USERS = snap.docs.map(d => ({ id: d.id, ...d.data() })); updateAdminMetrics(); if(window.renderAdminUsersManagement) window.renderAdminUsersManagement(); });
+    
+    // 👥 Users Snapshot Listener (uid: d.id के साथ)
+    onSnapshot(collection(db, 'users'), snap => { 
+      ALL_USERS = snap.docs.map(d => ({ uid: d.id, ...d.data() })); 
+      updateAdminMetrics(); 
+      if(window.renderAdminUsersManagement) window.renderAdminUsersManagement(); 
+    });
+
     onSnapshot(collection(db, 'user_vehicles'), snap => { ALL_VEHICLES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderGarageList) window.renderGarageList(); if(currentUser) currentUser.vehicles = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid); });
     onSnapshot(collection(db, 'saved_places'), snap => { ALL_PLACES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderSavedPlaces) window.renderSavedPlaces(); });
     onSnapshot(collection(db, 'sponsored_ads'), snap => { ALL_ADS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminAdsList) window.renderAdminAdsList(); });
     onSnapshot(collection(db, 'reports'), snap => { ALL_REPORTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminReports) window.renderAdminReports(); });
     onSnapshot(collection(db, 'live_locations'), snap => { ALL_LIVE_LOCATIONS = {}; snap.docs.forEach(d => { ALL_LIVE_LOCATIONS[d.id] = d.data(); }); if(window.refreshAdminLiveMap) window.refreshAdminLiveMap(); });
   }
+
   window.renderAdminUsersManagement = function() {
-  const queryText = (document.getElementById("adminUserSearch")?.value || "").toLowerCase();
-  const container = document.getElementById("adminUsersListContainer");
-  if (!container) return;
+    const queryText = (document.getElementById("adminUserSearch")?.value || "").toLowerCase();
+    const container = document.getElementById("adminUsersListContainer");
+    if (!container) return;
 
-  const filtered = ALL_USERS.filter(u => 
-    (u.name || "").toLowerCase().includes(queryText) ||
-    (u.email || "").toLowerCase().includes(queryText) ||
-    (u.phone || "").includes(queryText)
-  );
+    const filtered = ALL_USERS.filter(u => 
+      (u.name || "").toLowerCase().includes(queryText) ||
+      (u.email || "").toLowerCase().includes(queryText) ||
+      (u.phone || "").includes(queryText)
+    );
 
-  if (!filtered.length) { 
-    container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No users found.</div>"; 
-    return; 
-  }
-
-  container.innerHTML = filtered.map(u => {
-    const isBlocked = !!u.isBlocked;
-    return `
-      <div class="card" style="padding:12px; margin-bottom:8px; border:1.5px solid ${isBlocked ? '#fca5a5' : '#cbd5e1'}; background:${isBlocked ? '#fff5f5' : '#fff'};">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <b style="font-size:13px;">${esc(u.name || u.displayName || 'User')}</b> 
-            ${isBlocked ? '<span class="role-pill" style="background:#fef2f2; color:#dc2626; font-size:9.5px;">Blocked</span>' : '<span class="role-pill driver" style="font-size:9.5px;">Active</span>'}
-            <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(u.email)} • 📞 ${esc(u.phone || 'No Phone')}</div>
-          </div>
-          <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 9px; font-size:10.5px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
-            ${isBlocked ? 'Unblock' : 'Block'}
-          </button>
-        </div>
-        <div style="display:flex; gap:6px; margin-top:8px;">
-          <button class="uber-cta-btn" style="flex:1; padding:6px; font-size:11px; margin-top:0;" onclick="openDeepInspectModal('${u.uid}')">🔍 Inspect Trips</button>
-          <button class="act-btn orange" style="flex:1; padding:6px; font-size:11px; justify-content:center; border:none;" onclick="openAdminGarageModal('${u.uid}')">🚘 Garage / KYC</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-};
-
-window.adminToggleBlockUser = async function(userUid, currentBlockStatus, userName) {
-  if (!isCurrentUserAdmin()) return showToast("⛔ Admin access required!");
-  const action = currentBlockStatus ? "Unblock" : "Block";
-  if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
-
-  try {
-    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(window.db, "users", userUid), {
-      isBlocked: !currentBlockStatus,
-      blockReason: !currentBlockStatus ? "" : "Admin Manual Restriction"
-    });
-    showToast(`User ${userName} ${action}ed successfully!`);
-  } catch(e) {
-    showToast("Error: " + e.message);
-  }
-};
-
-let currentAdminFilter = 'all';
-
-window.filterAdminTripsList = function(status) {
-  currentAdminFilter = status;
-  window.renderAdminTripsManagement();
-};
-
-window.renderAdminTripsManagement = function() {
-  const container = document.getElementById("adminTripsListContainer");
-  if (!container) return;
-  const rides = window.getRides ? window.getRides() : [];
-  
-  const filtered = currentAdminFilter === 'all' || !currentAdminFilter ? rides : rides.filter(r => r.status === currentAdminFilter);
-  if (!filtered.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No trips found for this filter.</div>"; return; }
-
-  container.innerHTML = filtered.map(r => `
-    <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
-        <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
-      </div>
-      <div style="font-size:11px; color:#64748b; margin-top:4px;">
-        Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
-        📅 Date: ${esc(r.date || 'N/A')} • ⏰ Time: ${esc(r.time || 'N/A')}
-      </div>
-    </div>
-  `).join("");
-};
-
-// Admin Trip Details Modal & Force Cancel
-window.openAdminTripDetails = function(rideId) {
-  const rides = window.getRides ? window.getRides() : [];
-  const reqs = window.getRequests ? window.getRequests() : [];
-  const r = rides.find(x => x.id === rideId);
-  if (!r) return showToast("Trip not found");
-
-  const tripReqs = reqs.filter(q => q.rideId === rideId);
-  
-  let modal = document.getElementById("adminTripDetailsModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "adminTripDetailsModal";
-    modal.className = "custom-modal-overlay";
-    modal.style.cssText = "display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:2000; align-items:flex-end; justify-content:center;";
-    modal.innerHTML = `
-      <div class="custom-modal-content" style="background:#fff; width:100%; max-width:540px; border-radius:20px 20px 0 0; padding:16px; max-height:88vh; overflow-y:auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h3 id="adminTripTitle" style="margin:0; font-size:16px;">🔍 Trip Complete Details</h3>
-          <button style="border:none; background:none; font-size:18px; cursor:pointer;" onclick="closeAdminTripDetails()">✕</button>
-        </div>
-        <div id="adminTripBody"></div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  }
-
-  document.getElementById("adminTripTitle").innerHTML = `🔍 Trip: ${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}`;
-  
-  let reqsHtml = tripReqs.length ? tripReqs.map(q => `
-    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:8px; margin-top:6px; font-size:11.5px;">
-      <b>${q.type === 'passenger' ? '🧑 Passenger' : '📦 Parcel'}</b>: ${esc(q.passengerName || 'User')} (📞 ${esc(q.passengerPhone || 'N/A')})<br>
-      Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b>
-    </div>
-  `).join('') : '<div style="font-size:11.5px; color:#64748b; margin-top:4px;">No bookings on this trip yet.</div>';
-
-  document.getElementById("adminTripBody").innerHTML = `
-    <div style="font-size:12.5px; line-height:1.6; color:#334155;">
-      <div style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:10px;">
-        <b>🚘 Driver Details:</b><br>
-        Name: <b>${esc(r.driverName || 'N/A')}</b><br>
-        Phone: <a href="tel:${esc(r.driverPhone || '')}" style="color:var(--primary); font-weight:700;">${esc(r.driverPhone || 'N/A')}</a><br>
-        Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})
-      </div>
-      <div style="background:#f8fafc; padding:10px; border-radius:10px; margin-bottom:10px;">
-        <b>🛣️ Route & Schedule:</b><br>
-        From: ${esc(r.from)}<br>
-        To: ${esc(r.to)}<br>
-        Date: ${esc(r.date || 'N/A')} • Time: ${esc(r.time || 'N/A')}<br>
-        Status: <span class="role-pill ${r.status==='Completed'?'driver':'primary'}">${esc(r.status)}</span>
-      </div>
-      <h4 style="margin:10px 0 4px; font-size:13px;">👥 Passengers & Bookings (${tripReqs.length}):</h4>
-      ${reqsHtml}
-      ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#ef4444; margin-top:14px; padding:10px;" onclick="adminForceCancelTrip('${r.id}')">🚫 Force Cancel This Trip</button>` : ''}
-    </div>
-  `;
-
-  modal.style.display = 'flex';
-};
-
-window.closeAdminTripDetails = function() {
-  const m = document.getElementById("adminTripDetailsModal");
-  if (m) m.style.display = 'none';
-};
-
-window.adminForceCancelTrip = async function(rideId) {
-  const reason = prompt("Enter reason for admin force cancellation:");
-  if (!reason || !reason.trim()) return showToast("❌ Reason is required!");
-  try {
-    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(window.db, "rides", rideId), {
-      status: "Cancelled", cancelReason: `Admin Force Cancel: ${reason.trim()}`, cancelledAt: Date.now()
-    });
-    showToast("✅ Trip Force Cancelled!");
-    window.closeAdminTripDetails();
-    if (window.renderAdminTripsManagement) window.renderAdminTripsManagement();
-  } catch(e) { showToast("Error: " + e.message); }
-};
-
-
-window.renderAdminPaymentsLedger = function() {
-  const container = document.getElementById("adminPaymentsContainer");
-  if (!container) return;
-  const reqs = window.getRequests ? window.getRequests() : [];
-  if (!reqs.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No payments found.</div>"; return; }
-
-  container.innerHTML = reqs.map(q => `
-    <div class="card" style="padding:10px; margin-bottom:8px;">
-      <b>${q.type === 'passenger' ? '🧑 Seat' : '📦 Parcel'}</b>: ₹${q.currentPrice}
-      <div style="font-size:11px; color:#64748b;">Status: <b>${q.status}</b></div>
-    </div>
-  `).join("");
-};
-
-window.renderAdminParcelsLogistics = function() {
-  const container = document.getElementById("adminParcelsContainer");
-  if (!container) return;
-  const parcels = (window.getRequests ? window.getRequests() : []).filter(q => q.type === 'parcel');
-  if (!parcels.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No parcels found.</div>"; return; }
-
-  container.innerHTML = parcels.map(q => `
-    <div class="card" style="padding:10px; margin-bottom:8px;">
-      📦 <b>Slab:</b> ${esc(q.slab)} | <b>Fare:</b> ₹${q.currentPrice}
-      <div style="font-size:11px; color:#64748b;">Receiver: ${esc(q.recName || q.receiverName)} (${esc(q.recPhone || q.receiverPhone)})</div>
-    </div>
-  `).join("");
-};
-
-window.renderAdminAdsList = function() {
-  const box = document.getElementById("adminAdsList");
-  if (!box) return;
-  const ads = window.getAds ? window.getAds() : [];
-  if (!ads.length) { box.innerHTML = "<div style='font-size:12px; color:#64748b;'>No sponsored ads active.</div>"; return; }
-
-  box.innerHTML = ads.map(a => `
-    <div class="item-row" style="margin-bottom:6px;">
-      <div><b>${esc(a.name)}</b> <span style="font-size:10px; color:var(--primary);">${esc(a.category)}</span></div>
-      <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="deleteSponsoredAd('${a.id}')">🗑️</button>
-    </div>
-  `).join("");
-};
-
-window.deleteSponsoredAd = async function(adId) {
-  if (!confirm("Delete this ad?")) return;
-  try {
-    const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await deleteDoc(doc(window.db, "sponsored_ads", adId));
-    showToast("🗑️ Ad deleted!");
-  } catch(e) { showToast(e.message); }
-};
-
-window.renderAdminReports = function() {
-  const container = document.getElementById("adminReportsContainer");
-  if (!container) return;
-  const reports = window.getAllReports ? window.getAllReports() : [];
-  if (!reports.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b;'>No reports.</div>"; return; }
-
-  container.innerHTML = reports.map(rep => `
-    <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
-      <b>🚨 ${esc(rep.type || 'Alert')}</b>
-      <div style="font-size:11px; color:#64748b;">User: ${esc(rep.userName)}</div>
-    </div>
-  `).join("");
-};
-
-window.refreshAdminLiveMap = function() {
-  if (!window.adminLiveMapInstance) return;
-  const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
-  if (!window.adminMapMarkers) window.adminMapMarkers = {};
-
-  Object.keys(liveLocs).forEach(rideId => {
-    const loc = liveLocs[rideId];
-    if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
-      const pos = [loc.lat, loc.lng];
-      if (window.adminMapMarkers[rideId]) {
-        window.adminMapMarkers[rideId].setLatLng(pos);
-      } else {
-        const marker = L.marker(pos).addTo(window.adminLiveMapInstance);
-        marker.bindPopup(`🚗 Active Transporter`);
-        window.adminMapMarkers[rideId] = marker;
-      }
-    } else {
-      if (window.adminMapMarkers[rideId]) {
-        window.adminLiveMapInstance.removeLayer(window.adminMapMarkers[rideId]);
-        delete window.adminMapMarkers[rideId];
-      }
+    if (!filtered.length) { 
+      container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No users found.</div>"; 
+      return; 
     }
-  });
-};
 
+    container.innerHTML = filtered.map(u => {
+      const isBlocked = !!u.isBlocked;
+      return `
+        <div class="card" style="padding:12px; margin-bottom:8px; border:1.5px solid ${isBlocked ? '#fca5a5' : '#cbd5e1'}; background:${isBlocked ? '#fff5f5' : '#fff'};">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <b style="font-size:13px;">${esc(u.name || u.displayName || 'User')}</b> 
+              ${isBlocked ? '<span class="role-pill" style="background:#fef2f2; color:#dc2626; font-size:9.5px;">Blocked</span>' : '<span class="role-pill driver" style="font-size:9.5px;">Active</span>'}
+              <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(u.email)} • 📞 ${esc(u.phone || 'No Phone')}</div>
+            </div>
+            <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 9px; font-size:10.5px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
+              ${isBlocked ? 'Unblock' : 'Block'}
+            </button>
+          </div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="uber-cta-btn" style="flex:1; padding:6px; font-size:11px; margin-top:0;" onclick="openDeepInspectModal('${u.uid}')">🔍 Inspect Trips</button>
+            <button class="act-btn orange" style="flex:1; padding:6px; font-size:11px; justify-content:center; border:none;" onclick="openAdminGarageModal('${u.uid}')">🚘 Garage / KYC</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  };
+
+  window.adminToggleBlockUser = async function(userUid, currentBlockStatus, userName) {
+    if (!isCurrentUserAdmin()) return showToast("⛔ Admin access required!");
+    const action = currentBlockStatus ? "Unblock" : "Block";
+    if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
+
+    try {
+      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+      await updateDoc(doc(window.db, "users", userUid), {
+        isBlocked: !currentBlockStatus,
+        blockReason: !currentBlockStatus ? "" : "Admin Manual Restriction"
+      });
+      showToast(`User ${userName} ${action}ed successfully!`);
+    } catch(e) {
+      showToast("Error: " + e.message);
+    }
+  };
+
+  let currentAdminFilter = 'all';
+
+  window.filterAdminTripsList = function(status) {
+    currentAdminFilter = status;
+    window.renderAdminTripsManagement();
+  };
+
+  window.renderAdminTripsManagement = function() {
+    const container = document.getElementById("adminTripsListContainer");
+    if (!container) return;
+    const rides = window.getRides ? window.getRides() : [];
+    
+    const filtered = currentAdminFilter === 'all' || !currentAdminFilter ? rides : rides.filter(r => r.status === currentAdminFilter);
+    if (!filtered.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No trips found for this filter.</div>"; return; }
+
+    container.innerHTML = filtered.map(r => `
+      <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
+          <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">
+          Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
+          📅 Date: ${esc(r.date || 'N/A')} • ⏰ Time: ${esc(r.time || 'N/A')}
+        </div>
+      </div>
+    `).join("");
+  };
+
+  window.openAdminTripDetails = function(rideId) {
+    const rides = window.getRides ? window.getRides() : [];
+    const reqs = window.getRequests ? window.getRequests() : [];
+    const r = rides.find(x => x.id === rideId);
+    if (!r) return showToast("Trip not found");
+
+    const tripReqs = reqs.filter(q => q.rideId === rideId);
+    
+    let modal = document.getElementById("adminTripDetailsModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "adminTripDetailsModal";
+      modal.className = "custom-modal-overlay";
+      modal.style.cssText = "display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:2000; align-items:flex-end; justify-content:center;";
+      modal.innerHTML = `
+        <div class="custom-modal-content" style="background:#fff; width:100%; max-width:540px; border-radius:20px 20px 0 0; padding:16px; max-height:88vh; overflow-y:auto;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 id="adminTripTitle" style="margin:0; font-size:16px;">🔍 Trip Complete Details</h3>
+            <button style="border:none; background:none; font-size:18px; cursor:pointer;" onclick="closeAdminTripDetails()">✕</button>
+          </div>
+          <div id="adminTripBody"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    document.getElementById("adminTripTitle").innerHTML = `🔍 Trip: ${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}`;
+    
+    let reqsHtml = tripReqs.length ? tripReqs.map(q => `
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:8px; margin-top:6px; font-size:11.5px;">
+        <b>${q.type === 'passenger' ? '🧑 Passenger' : '📦 Parcel'}</b>: ${esc(q.passengerName || 'User')} (📞 ${esc(q.passengerPhone || 'N/A')})<br>
+        Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b>
+      </div>
+    `).join('') : '<div style="font-size:11.5px; color:#64748b; margin-top:4px;">No bookings on this trip yet.</div>';
+
+    document.getElementById("adminTripBody").innerHTML = `
+      <div style="font-size:12.5px; line-height:1.6; color:#334155;">
+        <div style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:10px;">
+          <b>🚘 Driver Details:</b><br>
+          Name: <b>${esc(r.driverName || 'N/A')}</b><br>
+          Phone: <a href="tel:${esc(r.driverPhone || '')}" style="color:var(--primary); font-weight:700;">${esc(r.driverPhone || 'N/A')}</a><br>
+          Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})
+        </div>
+        <div style="background:#f8fafc; padding:10px; border-radius:10px; margin-bottom:10px;">
+          <b>🛣️ Route & Schedule:</b><br>
+          From: ${esc(r.from)}<br>
+          To: ${esc(r.to)}<br>
+          Date: ${esc(r.date || 'N/A')} • Time: ${esc(r.time || 'N/A')}<br>
+          Status: <span class="role-pill ${r.status==='Completed'?'driver':'primary'}">${esc(r.status)}</span>
+        </div>
+        <h4 style="margin:10px 0 4px; font-size:13px;">👥 Passengers & Bookings (${tripReqs.length}):</h4>
+        ${reqsHtml}
+        ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#ef4444; margin-top:14px; padding:10px;" onclick="adminForceCancelTrip('${r.id}')">🚫 Force Cancel This Trip</button>` : ''}
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+  };
+
+  window.closeAdminTripDetails = function() {
+    const m = document.getElementById("adminTripDetailsModal");
+    if (m) m.style.display = 'none';
+  };
+
+  window.adminForceCancelTrip = async function(rideId) {
+    const reason = prompt("Enter reason for admin force cancellation:");
+    if (!reason || !reason.trim()) return showToast("❌ Reason is required!");
+    try {
+      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+      await updateDoc(doc(window.db, "rides", rideId), {
+        status: "Cancelled", cancelReason: `Admin Force Cancel: ${reason.trim()}`, cancelledAt: Date.now()
+      });
+      showToast("✅ Trip Force Cancelled!");
+      window.closeAdminTripDetails();
+      if (window.renderAdminTripsManagement) window.renderAdminTripsManagement();
+    } catch(e) { showToast("Error: " + e.message); }
+  };
+
+  window.renderAdminPaymentsLedger = function() {
+    const container = document.getElementById("adminPaymentsContainer");
+    if (!container) return;
+    const reqs = window.getRequests ? window.getRequests() : [];
+    if (!reqs.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No payments found.</div>"; return; }
+
+    container.innerHTML = reqs.map(q => `
+      <div class="card" style="padding:10px; margin-bottom:8px;">
+        <b>${q.type === 'passenger' ? '🧑 Seat' : '📦 Parcel'}</b>: ₹${q.currentPrice}
+        <div style="font-size:11px; color:#64748b;">Status: <b>${q.status}</b></div>
+      </div>
+    `).join("");
+  };
+
+  window.renderAdminParcelsLogistics = function() {
+    const container = document.getElementById("adminParcelsContainer");
+    if (!container) return;
+    const parcels = (window.getRequests ? window.getRequests() : []).filter(q => q.type === 'parcel');
+    if (!parcels.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No parcels found.</div>"; return; }
+
+    container.innerHTML = parcels.map(q => `
+      <div class="card" style="padding:10px; margin-bottom:8px;">
+        📦 <b>Slab:</b> ${esc(q.slab)} | <b>Fare:</b> ₹${q.currentPrice}
+        <div style="font-size:11px; color:#64748b;">Receiver: ${esc(q.recName || q.receiverName)} (${esc(q.recPhone || q.receiverPhone)})</div>
+      </div>
+    `).join("");
+  };
+
+  window.renderAdminAdsList = function() {
+    const box = document.getElementById("adminAdsList");
+    if (!box) return;
+    const ads = window.getAds ? window.getAds() : [];
+    if (!ads.length) { box.innerHTML = "<div style='font-size:12px; color:#64748b;'>No sponsored ads active.</div>"; return; }
+
+    box.innerHTML = ads.map(a => `
+      <div class="item-row" style="margin-bottom:6px;">
+        <div><b>${esc(a.name)}</b> <span style="font-size:10px; color:var(--primary);">${esc(a.category)}</span></div>
+        <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="deleteSponsoredAd('${a.id}')">🗑️</button>
+      </div>
+    `).join("");
+  };
+
+  window.deleteSponsoredAd = async function(adId) {
+    if (!confirm("Delete this ad?")) return;
+    try {
+      const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+      await deleteDoc(doc(window.db, "sponsored_ads", adId));
+      showToast("🗑️ Ad deleted!");
+    } catch(e) { showToast(e.message); }
+  };
+
+  window.renderAdminReports = function() {
+    const container = document.getElementById("adminReportsContainer");
+    if (!container) return;
+    const reports = window.getAllReports ? window.getAllReports() : [];
+    if (!reports.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b;'>No reports.</div>"; return; }
+
+    container.innerHTML = reports.map(rep => `
+      <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
+        <b>🚨 ${esc(rep.type || 'Alert')}</b>
+        <div style="font-size:11px; color:#64748b;">User: ${esc(rep.userName)}</div>
+      </div>
+    `).join("");
+  };
+
+  window.refreshAdminLiveMap = function() {
+    if (!window.adminLiveMapInstance) return;
+    const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
+    if (!window.adminMapMarkers) window.adminMapMarkers = {};
+
+    Object.keys(liveLocs).forEach(rideId => {
+      const loc = liveLocs[rideId];
+      if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
+        const pos = [loc.lat, loc.lng];
+        if (window.adminMapMarkers[rideId]) {
+          window.adminMapMarkers[rideId].setLatLng(pos);
+        } else {
+          const marker = L.marker(pos).addTo(window.adminLiveMapInstance);
+          marker.bindPopup(`🚗 Active Transporter`);
+          window.adminMapMarkers[rideId] = marker;
+        }
+      } else {
+        if (window.adminMapMarkers[rideId]) {
+          window.adminLiveMapInstance.removeLayer(window.adminMapMarkers[rideId]);
+          delete window.adminMapMarkers[rideId];
+        }
+      }
+    });
+  };
 
   function syncDriverGPS() {
     if (!currentUser || !navigator.geolocation) return;
@@ -1489,29 +1516,28 @@ window.refreshAdminLiveMap = function() {
   };
 
   window.renderGarageList = function() {
-  const box = document.getElementById("profileGarageList");
-  if (!box || !currentUser) return;
-  const myVehs = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
-  box.innerHTML = myVehs.length ? myVehs.map(v => {
-    const kycBadge = v.kycStatus === 'verified' 
-      ? '<span class="role-pill driver" style="font-size:9.5px;">✅ Verified</span>' 
-      : (v.kycStatus === 'rejected' ? '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626;">🚫 Rejected</span>' : '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending KYC</span>');
-      
-    return `
-      <div class="item-row" style="margin-bottom:8px;">
-        <div class="item-left">
-          <span style="font-size:18px;">${v.type==='Bike'?'🏍️':'🚗'}</span>
-          <div>
-            <div class="item-title">${esc(v.model)} <span style="font-family:monospace; font-size:11px; color:var(--primary);">(${esc(v.plate)})</span></div>
-            <div class="item-sub" style="margin-top:2px;">${kycBadge}</div>
+    const box = document.getElementById("profileGarageList");
+    if (!box || !currentUser) return;
+    const myVehs = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
+    box.innerHTML = myVehs.length ? myVehs.map(v => {
+      const kycBadge = v.kycStatus === 'verified' 
+        ? '<span class="role-pill driver" style="font-size:9.5px;">✅ Verified</span>' 
+        : (v.kycStatus === 'rejected' ? '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626;">🚫 Rejected</span>' : '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending KYC</span>');
+        
+      return `
+        <div class="item-row" style="margin-bottom:8px;">
+          <div class="item-left">
+            <span style="font-size:18px;">${v.type==='Bike'?'🏍️':'🚗'}</span>
+            <div>
+              <div class="item-title">${esc(v.model)} <span style="font-family:monospace; font-size:11px; color:var(--primary);">(${esc(v.plate)})</span></div>
+              <div class="item-sub" style="margin-top:2px;">${kycBadge}</div>
+            </div>
           </div>
+          <button style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:14px;" onclick="deleteVehicle('${v.id}')">🗑️</button>
         </div>
-        <button style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:14px;" onclick="deleteVehicle('${v.id}')">🗑️</button>
-      </div>
-    `;
-  }).join('') : '<div style="font-size:11.5px;color:#64748b;">No registered vehicles. Tap "+ Add Vehicle" above.</div>';
-};
-
+      `;
+    }).join('') : '<div style="font-size:11.5px;color:#64748b;">No registered vehicles. Tap "+ Add Vehicle" above.</div>';
+  };
 
   window.renderSavedPlaces = function() {
     const box = document.getElementById("savedPlacesList");
@@ -1555,7 +1581,7 @@ window.refreshAdminLiveMap = function() {
     if (!isValidIndianPlate(plate)) return showToast("❌ Invalid Indian plate (e.g. MH35AB1234)!");
 
     try {
-      await addDoc(collection(db, "user_vehicles"), { type, model, plate, userUid: currentUser.uid, userEmail: currentUser.email, created: Date.now() });
+      await addDoc(collection(db, "user_vehicles"), { type, model, plate, userUid: currentUser.uid, userEmail: currentUser.email, kycStatus: 'pending', created: Date.now() });
       document.getElementById("newVehModel").value = "";
       document.getElementById("newVehPlate").value = "";
       closeModal("addVehicleModal");
@@ -1587,6 +1613,58 @@ window.refreshAdminLiveMap = function() {
     try { await deleteDoc(doc(db, "saved_places", id)); showToast("🗑️ Location removed."); } catch(e) { showToast(e.message); }
   };
 
+  <!-- 🚘 GARAGE KYC ADMIN MODAL & HANDLERS -->
+  window.openAdminGarageModal = async function(userUid) {
+    const vehicles = window.getAllVehicles ? window.getAllVehicles().filter(v => v.userUid === userUid) : [];
+    
+    let modal = document.getElementById("adminGarageModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "adminGarageModal";
+      modal.className = "custom-modal-overlay";
+      modal.style.cssText = "display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:2000; align-items:flex-end; justify-content:center;";
+      modal.innerHTML = `
+        <div class="custom-modal-content" style="background:#fff; width:100%; max-width:540px; border-radius:20px 20px 0 0; padding:16px; max-height:88vh; overflow-y:auto;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin:0; font-size:16px;">🚘 Manage User Garage & KYC</h3>
+            <button style="border:none; background:none; font-size:18px; cursor:pointer;" onclick="document.getElementById('adminGarageModal').style.display='none'">✕</button>
+          </div>
+          <div id="adminGarageModalBody"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    const bodyEl = document.getElementById("adminGarageModalBody");
+    if (!vehicles.length) {
+      bodyEl.innerHTML = `<div style="font-size:12px; color:#64748b; padding:10px; text-align:center;">This user has no registered vehicles.</div>`;
+    } else {
+      bodyEl.innerHTML = vehicles.map(v => `
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; border-radius:10px; margin-bottom:8px;">
+          <b>${esc(v.model)}</b> (${esc(v.plate)}) - <span style="text-transform:uppercase; font-size:11px;">${esc(v.type)}</span><br>
+          <div style="font-size:11.5px; color:#64748b; margin:6px 0;">Current KYC Status: <b>${esc(v.kycStatus || 'pending')}</b></div>
+          <div style="display:flex; gap:6px;">
+            <button class="green" style="padding:6px 10px; font-size:11px;" onclick="adminUpdateVehicleKyc('${v.id}', 'verified')">✅ Verify KYC</button>
+            <button class="red" style="padding:6px 10px; font-size:11px;" onclick="adminUpdateVehicleKyc('${v.id}', 'rejected')">🚫 Reject KYC</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    modal.style.display = 'flex';
+  };
+
+  window.adminUpdateVehicleKyc = async function(vehicleId, status) {
+    try {
+      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+      await updateDoc(doc(window.db, "user_vehicles", vehicleId), { kycStatus: status });
+      showToast(`✅ Vehicle KYC updated to ${status}!`);
+      document.getElementById('adminGarageModal').style.display = 'none';
+    } catch(e) {
+      showToast("Error: " + e.message);
+    }
+  };
+
   function updateAdminMetrics() {
     const el = document.getElementById("kpiTotalUsers");
     if(!el) return;
@@ -1602,28 +1680,20 @@ window.refreshAdminLiveMap = function() {
 
 <!-- UI CONTROLLERS & INTERACTION ENGINE -->
 <script>
-// ==========================================
-// 📱 BOTTOM NAVIGATION (TAB SWITCHING LOGIC)
-// ==========================================
 window.showPage = function(pageId, btnEl) {
-  // सारे पेजेज को छुपाना
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  // सिर्फ जो क्लिक हुआ है उसे दिखाना
   const targetPage = document.getElementById(pageId);
   if(targetPage) targetPage.classList.add('active');
   
-  // सारे बटन्स से एक्टिव कलर हटाना
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  // जो बटन क्लिक हुआ है उसे एक्टिव कलर (नीला) करना
   if (btnEl) btnEl.classList.add('active');
 
-  // मैप का साइज फिक्स करना (ताकि मैप आधा न दिखे)
   setTimeout(() => {
     try {
       if (pageId === 'rides' && typeof rideMap !== 'undefined') rideMap.invalidateSize();
       if (pageId === 'parcel' && typeof parcelMap !== 'undefined') parcelMap.invalidateSize();
       if (pageId === 'post' && typeof postMap !== 'undefined') postMap.invalidateSize();
-    } catch(e) { console.warn("Map resize ignored"); }
+    } catch(e) {}
   }, 120);
 };
 
@@ -2347,7 +2417,7 @@ window.openDeepInspectModal = function(userUid) {
         let geom = typeof activeTrip.geometry === "string" ? JSON.parse(activeTrip.geometry) : activeTrip.geometry;
         const line = L.geoJSON(geom, { style: { color: "#1261ff", weight: 5 } }).addTo(deepInspectMapInstance);
         deepInspectMapInstance.fitBounds(line.getBounds(), { padding: [20, 20] });
-      } catch(e) { console.warn("Polyline render error", e); }
+      } catch(e) {}
     }
   }, 250);
 };
@@ -2356,8 +2426,6 @@ window.closeDeepInspectModal = function() {
   document.getElementById("deepInspectModal").style.display = "none";
 };
 
-
-// 🔢 बैंकिंग ऐप जैसा स्मूथ पिन पैड लॉजिक
 window.handlePinInput = function(n) {
   const el = document.getElementById('pin' + n);
   if (!el) return;
@@ -2372,1314 +2440,6 @@ window.handlePinKeyDown = function(e, n) {
     document.getElementById('pin' + (n - 1))?.focus();
   }
 };
-// 🔍 1. SMART FIND RIDES (CORRIDOR MATCHING)
-window.findAvailableRides = async function() {
-  const from = document.getElementById('rFrom').value.trim();
-  const to = document.getElementById('rTo').value.trim();
-  const ladiesOnly = document.getElementById('rLadiesOnly')?.checked;
-  const seatsNeed = Number(document.getElementById('lblSeatsFilter')?.innerText.replace(/\D/g, '')) || 1;
-  const box = document.getElementById('rideResultsList');
-  
-  if (!from || !to) return showToast("❌ Enter Pickup and Destination!");
-  box.innerHTML = `⏳ Scanning Intercity Corridor...`;
-
-  try {
-    const pFromCoord = await geocode(from); // Requires a basic geocode function
-    const pToCoord = await geocode(to);
-    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
-    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
-    const maxCorridorKm = 10.0; // 10 KM Radius
-
-    const allRides = window.getRides ? window.getRides() : [];
-    const matched = [];
-
-    allRides.forEach(r => {
-      if (r.status !== 'Active' || !r.passenger || r.seats < seatsNeed) return;
-      if (ladiesOnly && !r.isLadiesOnly) return;
-      if (r.driverUid === (currentUser?.uid)) return; // Khud ki trip hide karein
-
-      let isMatch = false;
-      let geom = typeof r.geometry === 'string' ? JSON.parse(r.geometry) : r.geometry;
-
-      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-        const line = turf.lineString(geom.coordinates);
-        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
-        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
-        const np1 = turf.nearestPointOnLine(line, pPickupPt);
-        const np2 = turf.nearestPointOnLine(line, pDropPt);
-
-        // Direction & Distance check
-        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
-          isMatch = true;
-        }
-      }
-
-      if (isMatch) matched.push(r);
-    });
-
-    box.innerHTML = matched.length ? matched.map(r => `
-      <div class="request" style="margin-top:8px;">
-        <div class="card-top-row"><span class="role-pill driver">${esc(r.vehicle)}</span><span style="font-weight:800;color:var(--primary);">₹${r.seatPrice}/seat</span></div>
-        <div style="font-size:12px;font-weight:700;">${cleanLocation(r.from)} ➔ ${cleanLocation(r.to)}</div>
-        <div style="font-size:11px;color:#64748b;margin:4px 0;">Driver: <b>${esc(r.driverName)}</b> • ${r.seats} Seats Left</div>
-        <button class="uber-cta-btn" style="padding:8px;font-size:12px;" onclick="bookRideRequest('${r.id}', ${r.seatPrice}, '${esc(r.driverUid)}', '${esc(r.driverName)}', '${esc(r.driverPhone)}', '${esc(r.from)}', '${esc(r.to)}')">✅ Book Seat Now</button>
-      </div>
-    `).join('') : '<div style="font-size:11.5px;color:#64748b;padding:10px;text-align:center;">No direct rides matching 10 KM corridor.</div>';
-  } catch(e) { box.innerHTML = "❌ Error finding rides."; }
-};
-
-// 📦 2. SMART PARCEL TRANSPORTERS
-window.findParcelTransporters = async function() {
-  const from = document.getElementById('xFrom').value.trim();
-  const to = document.getElementById('xTo').value.trim();
-  const rName = document.getElementById('xRecName').value.trim();
-  const rPhone = document.getElementById('xRecPhone').value.trim();
-  const slab = document.getElementById('xSlab').value;
-  const box = document.getElementById('parcelResultsList');
-
-  if (!from || !to) return showToast("❌ Enter Pickup and Delivery locations!");
-  if (!rName || rPhone.length !== 10) return showToast("❌ Enter Receiver Name & 10-digit Phone!");
-  
-  box.innerHTML = `⏳ Scanning Logistics Corridor...`;
-
-  const allRides = window.getRides ? window.getRides() : [];
-  const matched = allRides.filter(r => r.status === 'Active' && r.parcel && r.driverUid !== currentUser?.uid);
-  // (In real deployment, add turf.js distance matching here just like findAvailableRides)
-
-  box.innerHTML = matched.length ? matched.map(r => `
-    <div class="request" style="margin-top:8px;">
-      <div class="card-top-row"><span class="role-pill parcel">📦 Parcel Space</span><span style="font-weight:800;color:var(--primary);">₹${slab === 'doc' ? r.docPrice : slab === 'bag' ? r.bagPrice : r.cargoPrice || 100}</span></div>
-      <div style="font-size:12px;font-weight:700;">${cleanLocation(r.from)} ➔ ${cleanLocation(r.to)}</div>
-      <div style="font-size:11px;color:#64748b;margin:4px 0;">Transporter: <b>${esc(r.driverName)}</b> (${esc(r.vehicle)})</div>
-      <button class="uber-cta-btn" style="padding:8px;font-size:12px;" onclick="bookParcelRequest('${r.id}', 100, '${esc(r.driverUid)}', '${esc(r.driverName)}', '${esc(r.driverPhone)}', '${esc(r.from)}', '${esc(r.to)}', '${esc(rName)}', '${esc(rPhone)}')">Send with this Captain</button>
-    </div>
-  `).join('') : '<div style="font-size:11.5px;color:#64748b;padding:10px;text-align:center;">No transporters right now.</div>';
-};
-// ==========================================
-// 🟢 SMART FIND RIDES ENGINE (MODERN UI INTEGRATION)
-// ==========================================
-window.findAvailableRides = async function() {
-  // 1. नए UI (app.html) से इनपुट्स पढ़ना
-  const from = document.getElementById("rFrom").value.trim();
-  const to = document.getElementById("rTo").value.trim();
-  
-  // DateTime Combined से Date और Time अलग करना
-  const dateTime = document.getElementById("rDateTimeCombined").value;
-  const date = dateTime ? dateTime.split("T")[0] : "";
-  const time = dateTime ? dateTime.split("T")[1] : "";
-  
-  // Filters
-  const ladiesOnly = document.getElementById("rLadiesOnly").checked;
-  // व्हीकल फ़िल्टर और सीट्स (ग्लोबल वैरिएबल्स जो मोडल से सेट होते हैं)
-  const vehicle = window.selectedVehicleType || ""; 
-  const seatsNeed = window.selectedVehicleSeats || 1; 
-  
-  const user = window.getCurrentUser();
-  const box = document.getElementById("rideResultsList"); // नया रिज़ल्ट बॉक्स
-
-  // कॉरिडोर मोड (डिफ़ॉल्ट 10 KM या रडार टॉगल के हिसाब से)
-  const isLocalMode = document.getElementById("rideRadarToggleBadge").classList.contains("local-mode");
-  const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
-
-  if (!from || !to) { 
-    showToast("❌ Please enter Pickup and Drop locations!"); 
-    return; 
-  }
-  
-  box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Corridor Radar...</div>`;
-
-  try {
-    // 2. Geocoding (लोकेशन को कोऑर्डिनेट्स में बदलना)
-    const pFromCoord = await geocode(from, "rFrom");
-    const pToCoord = await geocode(to, "rTo");
-    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
-    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const isToday = (!date || date === todayStr);
-
-    // 3. स्मार्ट डेटाबेस फ़िल्टरिंग
-    const allRides = window.getRides().filter(r => {
-      if (user && r.driverUid === user.uid) return false; // खुद की ट्रिप नहीं दिखेगी
-      if (r.status !== "Active") return false;
-      if (!r.passenger || safeNumber(r.seats) < seatsNeed) return false;
-      if (vehicle && r.vehicle !== vehicle) return false;
-      if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
-
-      // टाइम विंडो (±2 Hours)
-      if (isToday) {
-        if (r.date && r.date !== todayStr) return false;
-      } else {
-        if (date && r.date !== date) return false;
-      }
-      return true;
-    });
-
-    const matched = [];
-
-    // 4. Turf.js Spatial Route Matching
-    allRides.forEach(trip => {
-      let geom = trip.geometry;
-      if (typeof geom === "string") {
-        try { geom = JSON.parse(geom); } catch(e) { geom = null; }
-      }
-
-      let isMatch = false;
-
-      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-        const line = turf.lineString(geom.coordinates);
-        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
-        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
-        const np1 = turf.nearestPointOnLine(line, pPickupPt);
-        const np2 = turf.nearestPointOnLine(line, pDropPt);
-
-        // पिकअप और ड्रॉप दोनों कॉरिडोर के अंदर हों और सही दिशा में हों
-        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
-          isMatch = true;
-          let travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-          const fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
-          matched.push({ ...trip, travelKm, fare });
-        }
-      }
-    });
-
-    // 5. मॉडर्न UI कार्ड्स रेंडर करना
-    if (matched.length) {
-      box.innerHTML = matched.map(r => `
-        <div class="card" style="margin-bottom:12px; border: 1.5px solid var(--border-light); border-radius:18px;">
-          <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
-            <div class="dv-info">
-              <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary);">
-              <div>
-                <div class="dv-name">${esc(r.driverName || r.name || 'Driver')} ⭐ 5.0</div>
-                <div class="dv-sub">${esc(r.carModel || r.vehicle)} (${esc(r.carNumber || '')})</div>
-              </div>
-            </div>
-            <div class="fare-tag" style="color:var(--success); font-size:18px;">₹${r.fare}/seat</div>
-          </div>
-          
-          <div class="route-timeline">
-            <div class="route-node">${esc(cleanLocation(r.from))}</div>
-            <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
-          </div>
-          
-          <div class="chips-scroller" style="margin-bottom:10px;">
-            <span class="role-pill driver">📅 ${esc(r.date)} • ⏰ ${esc(r.time)}</span>
-            <span class="role-pill passenger">💺 ${esc(r.seats)} Seats Left</span>
-            <span class="role-pill parcel">✅ ${maxCorridorKm}km Radar</span>
-            ${r.isLadiesOnly ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">🌸 Women Driven</span>' : ''}
-            ${r.isFamilyOnBoard ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">👨‍👩‍👧 Family Safe</span>' : ''}
-          </div>
-          
-          <div style="display: flex; gap: 8px;">
-            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">
-              ✅ Book Now
-            </button>
-            <button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content:center; border:none;" onclick="counterRequest('${r.id}')">
-              🔄 Offer Fare
-            </button>
-          </div>
-        </div>`).join("");
-    } else {
-      box.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; background:#fff; border-radius:18px; border:1px solid #e2e8f0;">
-        <div style="font-size:36px; margin-bottom:10px;">🚗</div>
-        <h3 style="margin:0 0 6px; color:#1e293b;">No Rides Found</h3>
-        <p style="font-size:12px; margin:0;">We couldn't find any active trips within the ${maxCorridorKm}km corridor right now.</p>
-      </div>`;
-    }
-  } catch(e) { 
-    box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; 
-  }
-};
-// ==========================================
-// 🚗 SMART POST TRIP ENGINE (MODERN UI INTEGRATION)
-// ==========================================
-window.publishPostTrip = async function() {
-  const user = window.getCurrentUser();
-  if(!user) {
-    showToast("❌ Please login with Google first!");
-    if(window.googleLogin) window.googleLogin();
-    return;
-  }
-  if(user.isBlocked) {
-    showToast("❌ Your account is restricted by Admin.");
-    return;
-  }
-
-  // 1. नए UI से Inputs पढ़ना
-  const from = document.getElementById("pFrom").value.trim();
-  const to = document.getElementById("pTo").value.trim();
-  
-  // Date & Time (Combined Chip से)
-  const dateTime = document.getElementById("pDateTimeCombined").value;
-  let date = "", time = "";
-  if (dateTime) {
-    [date, time] = dateTime.split("T");
-  } else {
-    // अगर यूज़र ने टाइम नहीं चुना तो डिफ़ॉल्ट 'Now' मान लेंगे
-    const n = new Date();
-    date = n.toISOString().split("T")[0];
-    time = n.toTimeString().split("T")[1].substring(0,5);
-  }
-
-  // 2. व्हीकल, सीट्स और प्राइस (Fleet Modal और UI से)
-  const vehicleType = document.getElementById("pVehicle").value || "Car";
-  const vehiclePlate = document.getElementById("pVehicleNo").value || "MH35AB1234";
-  const seats = Number(document.getElementById("pSeats").value) || 3;
-  const seatPrice = Number(document.getElementById("pPrice").value) || 150;
-  
-  // Toggles (Daily, Ladies, Return Trip)
-  const isLadiesOnly = document.getElementById("pLadiesOnly").checked;
-  const isDaily = document.getElementById("pDailyCommuter").checked;
-  const alsoReturn = document.getElementById("pHasReturnTrip").checked;
-  const returnTime = document.getElementById("pReturnTime") ? document.getElementById("pReturnTime").value : "";
-
-  // 3. पार्सल स्लैब्स (Parcel Modal के Checkmarks से पढ़ना)
-  const docEl = document.getElementById("chk_doc");
-  const bagEl = document.getElementById("chk_bag");
-  const cargoEl = document.getElementById("chk_cargo");
-  const fullEl = document.getElementById("chk_full");
-  
-  const typeDoc = docEl && docEl.textContent.includes("✓");
-  const typeBag = bagEl && bagEl.textContent.includes("✓");
-  const typeCargo = cargoEl && cargoEl.textContent.includes("✓");
-  const typeFull = fullEl && fullEl.textContent.includes("✓");
-  
-  const acceptsParcel = typeDoc || typeBag || typeCargo || typeFull;
-  
-  const docPrice = typeDoc ? 60 : 0;
-  const bagPrice = typeBag ? 100 : 0;
-  const cargoPrice = typeCargo ? 150 : 0;
-  const fullVehiclePrice = typeFull ? Number(document.getElementById("pFullVehicleCustomPrice").value || 800) : 0;
-
-  // वैलिडेशन
-  if(!from || !to) { showToast("❌ Please enter Starting Point and Destination!"); return; }
-  if(from.toLowerCase() === to.toLowerCase()) { showToast("❌ From and To cannot be the same!"); return; }
-  if(seats < 1 && !acceptsParcel) { showToast("❌ Choose at least 1 Seat or Accept Parcels!"); return; }
-
-  showToast("⏳ Calculating fast route & publishing trip...");
-
-  // 4. OSRM Route Geometry (Live Map Drawing Logic)
-  let geometryStr = null;
-  let routeDistanceKm = null;
-  let routeDurationMin = null;
-
-  try {
-    const fC = await geocode(from, "pFrom");
-    const tC = await geocode(to, "pTo");
-    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fC[1]},${fC[0]};${tC[1]},${tC[0]}?overview=full&geometries=geojson`;
-    const res = await fetch(osrmUrl);
-    const data = await res.json();
-    
-    if (data.routes && data.routes.length > 0) {
-      const route = data.routes[0];
-      geometryStr = JSON.stringify(route.geometry);
-      routeDistanceKm = Number((route.distance / 1000).toFixed(1));
-      routeDurationMin = Math.round(route.duration / 60);
-    }
-  } catch(e) {
-    console.warn("Routing fallback...", e);
-  }
-
-  // 5. Firebase डेटा स्ट्रक्चर (परफेक्ट वाला)
-  const baseData = {
-    driverUid: user.uid,
-    driverName: user.displayName || 'Driver',
-    driverEmail: user.email || '',
-    driverDp: user.photoURL || '',
-    driverPhone: user.phone || '',
-    from, to, date, time,
-    status: 'Active',
-    created: Date.now(),
-    updatedAt: Date.now(),
-    passenger: seats > 0,
-    parcel: acceptsParcel,
-    seats, seatPrice,
-    typeDoc, typeBag, typeCargo,
-    docPrice, bagPrice, cargoPrice, fullVehiclePrice,
-    isCommuterMode: false,
-    isDaily,
-    isLadiesOnly,
-    isFamilyOnBoard: false,
-    vehicle: vehicleType,
-    carModel: vehicleType, // Modern UI picks this from fleet card
-    carNumber: vehiclePlate,
-    geometry: geometryStr,
-    routeDistanceKm,
-    routeDurationMin,
-    routeSource: geometryStr ? 'OSRM' : null
-  };
-
-  try {
-    // डायनामिक Firebase इम्पोर्ट
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    
-    // मेन ट्रिप पब्लिश करना
-    const firstRef = await addDoc(collection(db, 'rides'), baseData);
-
-    // अगर रिटर्न ट्रिप (Return Trip) ऑन है
-    if(alsoReturn && returnTime) {
-      const returnData = {
-        ...baseData,
-        from: to,   // उल्टा रूट
-        to: from,   // उल्टा रूट
-        time: returnTime,
-        returnOf: firstRef.id,
-        isReturnTrip: true,
-        created: Date.now() + 1,
-        updatedAt: Date.now() + 1
-      };
-      await addDoc(collection(db, 'rides'), returnData);
-    }
-
-    showToast(`🚀 Trip posted successfully: ${from} → ${to}`);
-    
-    // फॉर्म क्लियर करना
-    document.getElementById("pFrom").value = "";
-    document.getElementById("pTo").value = "";
-    document.getElementById("pHasReturnTrip").checked = false;
-    
-    // सीधे Activity टैब में भेज देना (ताकि अपनी पोस्ट की हुई ट्रिप दिख जाए)
-    setTimeout(() => {
-      // Modern UI showPage function call
-      showPage("activity", document.querySelectorAll(".nav-item")[3]);
-    }, 800);
-
-  } catch(e) {
-    console.error(e);
-    showToast("❌ Trip post failed: " + e.message);
-  }
-};
-// ==========================================
-// 💺 STEP 3: BOOKING & PARCEL REQUEST ENGINE (MODERN UI)
-// ==========================================
-
-// 1. Seat Booking Request (पैसेंजर बुकिंग)
-window.seatRequest = async function(rideId, fare, travelKm) {
-  const user = window.getCurrentUser();
-  if (!user) {
-    showToast("❌ Please login with Google first!");
-    if(window.googleLogin) window.googleLogin();
-    return;
-  }
-
-  // UI से डेटा लेना
-  const from = document.getElementById("rFrom").value.trim();
-  const to = document.getElementById("rTo").value.trim();
-  const seatsNeed = window.selectedVehicleSeats || 1;
-  const dateTime = document.getElementById("rDateTimeCombined").value;
-  const date = dateTime ? dateTime.split("T")[0] : new Date().toISOString().split("T")[0];
-
-  const ride = window.getRides().find(r => r.id === rideId);
-  if (!ride) { showToast("❌ Ride not found!"); return; }
-
-  try {
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    const totalPrice = Number(fare) * seatsNeed;
-
-    await addDoc(collection(db, "requests"), {
-      rideId: rideId,
-      driverUid: ride.driverUid,
-      driverName: ride.driverName || ride.name || "Driver",
-      driverPhone: ride.driverPhone || "",
-      passengerUid: user.uid,
-      passengerName: user.displayName || user.name || "User",
-      passengerPhone: user.phone || "",
-      passengerEmail: user.email || "",
-      type: "passenger",
-      numSeats: seatsNeed,
-      originalPrice: totalPrice,
-      currentPrice: totalPrice,
-      from: from,
-      to: to,
-      date: date,
-      travelKm: travelKm,
-      status: "Pending", // शुरुआत में पेंडिंग रहेगा
-      bookingScope: document.getElementById("rideRadarToggleBadge").classList.contains("local-mode") ? "local" : "intercity",
-      created: Date.now(),
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-
-    showToast("✅ Seat request sent to driver!");
-    // बुकिंग होते ही सीधे Activity टैब पर भेजें
-    setTimeout(() => showPage("activity", document.querySelectorAll(".nav-item")[3]), 800);
-  } catch (e) {
-    console.error("Seat request error:", e);
-    showToast("❌ Booking failed: " + e.message);
-  }
-};
-
-// 2. Parcel Delivery Request (पार्सल रिक्वेस्ट)
-window.parcelRequest = async function(rideId, slab, price) {
-  const user = window.getCurrentUser();
-  if (!user) {
-    showToast("❌ Please login with Google first!");
-    if(window.googleLogin) window.googleLogin();
-    return;
-  }
-
-  const from = document.getElementById("xFrom").value.trim();
-  const to = document.getElementById("xTo").value.trim();
-  const dateTime = document.getElementById("xDateTimeCombined").value;
-  const date = dateTime ? dateTime.split("T")[0] : new Date().toISOString().split("T")[0];
-  
-  const recName = document.getElementById("xRecName").value.trim();
-  const recPhone = document.getElementById("xRecPhone").value.trim();
-  const paymentSettlement = document.getElementById("xParcelPayMode").value || "sender_paid";
-
-  if (!from || !to) { showToast("❌ Pickup and drop locations are required!"); return; }
-  if (!recName || !recPhone) { showToast("❌ Receiver Name and Mobile Number are required!"); return; }
-  
-  // मोबाइल नंबर वैलिडेशन (10 अंकों का)
-  const cleanPhone = recPhone.replace(/[\s-+]/g, '').replace(/^91/, '');
-  if (!/^[6-9][0-9]{9}$/.test(cleanPhone)) { showToast("❌ Enter valid 10-digit receiver mobile number!"); return; }
-
-  const ride = window.getRides().find(r => r.id === rideId);
-  if (!ride) { showToast("❌ Transporter not found!"); return; }
-
-  try {
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-
-    await addDoc(collection(db, "requests"), {
-      rideId: rideId,
-      driverUid: ride.driverUid,
-      driverName: ride.driverName || ride.name || "Driver",
-      driverPhone: ride.driverPhone || "",
-      passengerUid: user.uid,
-      passengerName: user.displayName || user.name || "User",
-      passengerPhone: user.phone || "",
-      passengerEmail: user.email || "",
-      type: "parcel",
-      slab: slab,
-      originalPrice: Number(price),
-      currentPrice: Number(price),
-      from: from,
-      to: to,
-      date: date,
-      recName: recName,
-      recPhone: cleanPhone,
-      paymentSettlement: paymentSettlement,
-      status: "Pending",
-      bookingScope: document.getElementById("parcelRadarToggleBadge").classList.contains("local-mode") ? "local" : "intercity",
-      created: Date.now(),
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-
-    showToast("✅ Parcel request sent to transporter!");
-    setTimeout(() => showPage("activity", document.querySelectorAll(".nav-item")[3]), 800);
-  } catch (e) {
-    console.error("Parcel request error:", e);
-    showToast("❌ Request failed: " + e.message);
-  }
-};
-
-// 3. Counter Offer Fare (किराया कम-ज़्यादा करना)
-window.counterRequest = async function(qid) {
-  const user = window.getCurrentUser();
-  if(!user) { showToast("❌ Please login first!"); return; }
-
-  try {
-    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    const reqRef = doc(db, 'requests', qid);
-    const snap = await getDoc(reqRef);
-    
-    if(!snap.exists()) { showToast("❌ Request not found!"); return; }
-    const q = {id: snap.id, ...snap.data()};
-    
-    if(q.driverUid !== user.uid && q.passengerUid !== user.uid) { showToast("❌ Not authorized!"); return; }
-    if(!['Pending','Counter Offered'].includes(q.status)) { showToast("❌ Counter offer is closed for this status."); return; }
-
-    const val = prompt('Enter new fare (₹):', String(q.currentPrice || q.originalPrice || ''));
-    if(val === null) return;
-    
-    const price = Number(String(val).replace(/[^0-9.]/g,''));
-    if(!Number.isFinite(price) || price <= 0) { showToast("❌ Enter valid fare."); return; }
-    
-    const who = (q.driverUid === user.uid) ? 'Driver' : 'Passenger';
-    
-    // Firestore अपडेट करना
-    await updateDoc(reqRef, {
-      status: 'Counter Offered',
-      currentPrice: Math.round(price),
-      lastCounterBy: who,
-      counterAt: Date.now(),
-      counterBy: user.uid,
-      updatedAt: Date.now()
-    });
-    
-    showToast(`🔄 New fare offered: ₹${Math.round(price)}`);
-  } catch(e) {
-    showToast('❌ ' + e.message);
-  }
-};
-// ==========================================
-// 📋 STEP 4: ACTIVITY TAB & ACTIONS ENGINE
-// ==========================================
-
-let currentActivityTab = 'active';
-
-// 1. एक्टिविटी के अंदर टैब्स बदलने का फंक्शन
-window.switchActivityTab = function(tab, btn) {
-  document.querySelectorAll('.act-tab-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  
-  currentActivityTab = tab;
-  renderActivityFeed(); // टैब बदलते ही डेटा रीफ्रेश करें
-};
-
-// 2. एक्टिविटी फीड रेंडर करने का मास्टर फंक्शन
-window.renderActivityFeed = function() {
-  const user = window.getCurrentUser();
-  const box = document.getElementById("activityFeedList");
-  
-  if (!user) {
-    box.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b;">
-      <div style="font-size:36px; margin-bottom:10px;">👤</div>
-      <h3 style="margin:0 0 6px; color:#1e293b;">Login Required</h3>
-      <p style="font-size:12px; margin:0;">Please login to view your activity.</p>
-    </div>`;
-    return;
-  }
-
-  // डेटाबेस से अपनी रिक्वेस्ट्स और ट्रिप्स फ़िल्टर करना
-  const allReqs = window.getRequests().filter(x => x.passengerUid === user.uid || x.driverUid === user.uid);
-  const allTrips = window.getRides().filter(r => r.driverUid === user.uid);
-
-  let feedHtml = "";
-
-  if (currentActivityTab === 'pending') {
-    // Pending Tab: पेंडिंग और काउंटर ऑफर वाली रिक्वेस्ट्स
-    const pendingReqs = allReqs.filter(q => ['Pending', 'Counter Offered'].includes(q.status));
-    if (!pendingReqs.length) feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No pending requests.</div>`;
-    else feedHtml = pendingReqs.map(q => generateRequestCardHtml(q, user)).join('');
-  } 
-  else if (currentActivityTab === 'active') {
-    // Active Tab: आपकी लाइव ट्रिप्स और कन्फर्म बुकिंग्स
-    const activeTrips = allTrips.filter(r => r.status === 'Active');
-    const activeReqs = allReqs.filter(q => ['Accepted', 'Confirmed', 'In-Transit'].includes(q.status));
-    
-    if (!activeTrips.length && !activeReqs.length) {
-      feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No active trips or bookings right now.</div>`;
-    } else {
-      feedHtml += activeTrips.map(r => generateTripCardHtml(r)).join('');
-      feedHtml += activeReqs.map(q => generateRequestCardHtml(q, user)).join('');
-    }
-  } 
-  else if (currentActivityTab === 'history') {
-    // History Tab: पूरी हो चुकी या कैंसल हुई ट्रिप्स
-    const historyTrips = allTrips.filter(r => ['Completed', 'Cancelled'].includes(r.status));
-    const historyReqs = allReqs.filter(q => ['Completed', 'Cancelled', 'Paid'].includes(q.status));
-    
-    if (!historyTrips.length && !historyReqs.length) {
-      feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No history available.</div>`;
-    } else {
-      feedHtml += historyTrips.map(r => generateTripCardHtml(r)).join('');
-      feedHtml += historyReqs.map(q => generateRequestCardHtml(q, user)).join('');
-    }
-  }
-
-  box.innerHTML = feedHtml;
-};
-
-// 3. मॉडर्न UI वाले ट्रिप कार्ड जेनरेट करना (My Posted Trips)
-function generateTripCardHtml(r) {
-  return `
-    <div class="card">
-      <div class="card-top-row">
-        <b style="font-size:14px;">🚗 My Posted Trip</b>
-        <span class="role-pill ${r.status === 'Active' ? 'driver' : 'parcel'}">${r.status}</span>
-      </div>
-      <div class="route-timeline">
-        <div class="route-node">${esc(cleanLocation(r.from))}</div>
-        <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
-      </div>
-      <div class="small" style="color:#64748b; margin-bottom:10px;">📅 ${r.date} • ⏰ ${r.time} | 🚘 ${r.vehicle}</div>
-      <div class="action-buttons-group">
-        ${r.status === 'Active' ? `<button class="red" onclick="cancelTrip('${r.id}')">🚫 Cancel Trip</button>` : ''}
-      </div>
-    </div>
-  `;
-}
-
-// 4. मॉडर्न UI वाले रिक्वेस्ट कार्ड जेनरेट करना (Bookings)
-function generateRequestCardHtml(q, user) {
-  const isDriver = (q.driverUid === user.uid);
-  const isPassenger = (q.type === 'passenger');
-  const title = isPassenger ? `🧑 Seat Request (${q.numSeats})` : `📦 Parcel Delivery`;
-  const roleText = isDriver ? 'As Driver' : (isPassenger ? 'As Passenger' : 'As Sender');
-  
-  let actionBtns = "";
-  // पेंडिंग एक्शन्स (ड्राइवर Accept करेगा, पैसेंजर Cancel कर सकता है)
-  if (q.status === 'Pending') {
-    if (isDriver) {
-      actionBtns = `
-        <button class="green" onclick='acceptOffer(${JSON.stringify(q).replace(/"/g, '&quot;')})'>✅ Accept ₹${q.currentPrice}</button>
-        <button class="red" onclick="cancelRequest('${q.id}', true)">✖ Reject</button>
-      `;
-    } else {
-      actionBtns = `
-        <button class="red" onclick="cancelRequest('${q.id}', false)">✖ Cancel Request</button>
-        <span class="small" style="color:#d97706; font-weight:bold;">⏳ Waiting for driver...</span>
-      `;
-    }
-  } 
-  // एक्सेप्ट होने के बाद (पैसेंजर पेमेंट मोड चुनकर बुकिंग पक्की करेगा)
-  else if (q.status === 'Accepted' && !isDriver) {
-    actionBtns = `
-      <div style="width:100%; background:#eff6ff; padding:10px; border-radius:10px; border:1px solid #bfdbfe; margin-top:8px;">
-        <p style="margin:0 0 6px; font-size:12px; font-weight:700;">💳 Confirm Payment Mode:</p>
-        <label style="font-size:13px; font-weight:600;"><input type="radio" name="pay_${q.id}" value="cash_pickup" checked> 💵 Cash on Pickup</label><br>
-        <label style="font-size:13px; font-weight:600;"><input type="radio" name="pay_${q.id}" value="driver_qr"> 📲 Scan Driver UPI QR</label>
-        <div style="display:flex; gap:6px; margin-top:10px;">
-          <button class="primary full" onclick="choosePayment('${q.id}')">Confirm Booking</button>
-        </div>
-      </div>
-    `;
-  }
-
-  // लाइव एक्शन्स (OTP PINs) - इसका लॉजिक हम अगले स्टेप में जोड़ेंगे
-  let activeActions = "";
-  if (q.status === 'Confirmed') {
-    if (!isDriver) {
-      activeActions = `<div class="pin-badge"><span class="pin-label">YOUR START PIN</span><span class="pin-code">${q.startOtp}</span></div>`;
-    } else {
-      activeActions = `<button class="green full" onclick="verifyStartOtp('${q.id}', '${q.startOtp}')">🔑 Enter Passenger PIN</button>`;
-    }
-  }
-
-  return `
-    <div class="request">
-      <div class="card-top-row">
-        <b style="font-size:14px;">${title}</b>
-        <span class="role-pill ${isDriver ? 'driver' : 'passenger'}">${roleText}</span>
-      </div>
-      <div class="route-timeline">
-        <div class="route-node">${esc(cleanLocation(q.from))}</div>
-        <div class="route-node drop">${esc(cleanLocation(q.to))}</div>
-      </div>
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px; margin-bottom:8px; display:flex; justify-content:space-between;">
-        <span style="font-size:13px;">Fare: <b>₹${q.currentPrice}</b></span>
-        <span style="color:var(--primary); font-weight:bold; font-size:13px;">${q.status}</span>
-      </div>
-      
-      <div class="action-buttons-group">
-        ${actionBtns}
-      </div>
-      <div style="margin-top:8px;">
-        ${activeActions}
-      </div>
-    </div>
-  `;
-}
-
-// ==========================================
-// ⚙️ ACTION LOGIC (Firebase Updates)
-// ==========================================
-
-// ड्राइवर द्वारा रिक्वेस्ट एक्सेप्ट करना
-window.acceptOffer = async function(q) {
-  try {
-    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), 'requests', q.id), {
-      status: 'Accepted', acceptedBy: window.getCurrentUser().uid, acceptedAt: Date.now()
-    });
-    showToast('✅ Fare accepted. Passenger can now confirm booking.');
-  } catch(e) { showToast('❌ ' + e.message); }
-};
-
-// बुकिंग/रिक्वेस्ट कैंसल करना
-window.cancelRequest = async function(reqId, isDriver) {
-  const reason = prompt("Enter cancellation reason:");
-  if (reason === null) return;
-  try {
-    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), 'requests', reqId), {
-      status: "Cancelled", cancelReason: reason.trim() || "No reason", cancelledBy: isDriver ? "Driver" : "Passenger", cancelledAt: Date.now()
-    });
-    showToast("🚫 Request Cancelled.");
-  } catch(e) { showToast("❌ Error: " + e.message); }
-};
-
-window.cancelTrip = async function(rideId) {
-  const reason = prompt("Reason for cancelling trip:");
-  if (reason === null) return;
-  try {
-    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), "rides", rideId), {
-      status: "Cancelled", cancelReason: reason.trim(), cancelledAt: Date.now()
-    });
-    showToast("✅ Trip Cancelled.");
-  } catch(e) { showToast("❌ Error: " + e.message); }
-};
-
-// पैसेंजर द्वारा पेमेंट मोड चुनकर बुकिंग पक्की करना (Generating OTPs)
-window.choosePayment = function(qid) {
-  const qObj = window.getRequests().find(a => a.id === qid);
-  const selectedMode = document.querySelector(`input[name="pay_${qid}"]:checked`).value;
-  if(qObj) reserveCapacity(qObj, selectedMode);
-};
-
-window.reserveCapacity = async function(q, selectedMode) {
-  try {
-    const { getFirestore, doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    
-    // 4-अंकों का सिक्योर पिन जनरेट करना
-    const startOtp = Math.floor(1000 + Math.random()*9000).toString();
-    const dropOtp = Math.floor(1000 + Math.random()*9000).toString();
-
-    await updateDoc(doc(db, 'requests', q.id), {
-      status: 'Confirmed', paymentMode: selectedMode, confirmedAt: Date.now(), startOtp, dropOtp
-    });
-
-    // ड्राइवर की ट्रिप से सीटें कम करना (Deduct Seats)
-    if (q.type === 'passenger' && q.rideId) {
-      const rideRef = doc(db, 'rides', q.rideId);
-      const rideSnap = await getDoc(rideRef);
-      if (rideSnap.exists()) {
-        const currentSeats = Number(rideSnap.data().seats || 0);
-        const bookedSeats = Number(q.numSeats || 1);
-        await updateDoc(rideRef, { seats: Math.max(0, currentSeats - bookedSeats) });
-      }
-    }
-    showToast('✅ Booking Confirmed! Start PIN generated.');
-  } catch(e) { showToast('❌ ' + e.message); }
-};
-
-// नोट: एक छोटी सी फिक्स - ताकि पेज लोड होते ही Activity फीड अपडेट हो जाए
-window.renderRequests = window.renderActivityFeed;
-window.renderTrips = window.renderActivityFeed;
-// ==========================================
-// 🔐 STEP 5: OTP PIN SYSTEM & LIVE TRACKING
-// ==========================================
-
-let pinAction = null; // यह बताएगा कि स्टार्ट पिन डाल रहे हैं या ड्रॉप पिन
-
-// 1. 4-Box PIN Input Logic (ऑटो-फोकस और बैकस्पेस)
-function clean4(v) { return String(v ?? '').replace(/\D/g, '').slice(0, 4); }
-
-window.handlePinInput = function(n) {
-  const el = document.getElementById('pin' + n);
-  if (!el) return;
-  el.value = clean4(el.value);
-  if (el.value && n < 4) document.getElementById('pin' + (n + 1))?.focus();
-};
-
-window.handlePinKeyDown = function(e, n) {
-  if (e.key === 'Backspace' && !document.getElementById('pin' + n)?.value && n > 1) {
-    document.getElementById('pin' + (n - 1))?.focus();
-  }
-};
-
-window.closePinModal = function() {
-  document.getElementById('pinModal').style.display = 'none';
-  pinAction = null;
-  [1, 2, 3, 4].forEach(i => { const e = document.getElementById('pin' + i); if (e) e.value = ''; });
-};
-
-function openPinModal(title, icon, actionFunction) {
-  pinAction = actionFunction;
-  document.getElementById('pinModalTitle').textContent = title;
-  document.getElementById('pinModalIcon').textContent = icon;
-  [1, 2, 3, 4].forEach(i => { const e = document.getElementById('pin' + i); if (e) e.value = ''; });
-  document.getElementById('pinModal').style.display = 'flex';
-  setTimeout(() => document.getElementById('pin1')?.focus(), 100);
-}
-
-// पिन सबमिट करना
-window.submitPinModal = async function() {
-  const entered = [1, 2, 3, 4].map(i => document.getElementById('pin' + i)?.value || '').join('');
-  if (entered.length !== 4) { showToast('❌ Enter all 4 digits!'); return; }
-  if (!pinAction) return;
-  
-  try { 
-    await pinAction(entered); 
-  } catch (e) { 
-    showToast('❌ ' + (e.message || 'Verification failed')); 
-  }
-};
-
-// 2. Start OTP Verification (ट्रिप शुरू करना)
-window.verifyStartOtp = function(qid, expectedFromUi) {
-  openPinModal('Enter 4-Digit START PIN', '🔑', async (enteredOtp) => {
-    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    const snap = await getDoc(doc(db, 'requests', qid));
-    
-    if (!snap.exists()) throw new Error('Request not found');
-    const qData = snap.data();
-    
-    if (enteredOtp !== String(qData.startOtp || expectedFromUi)) throw new Error('Wrong Start PIN!');
-    
-    // स्टेटस बदलकर In-Transit करना
-    await updateDoc(doc(db, 'requests', qid), {
-      status: 'In-Transit', 
-      startedAt: Date.now(), 
-      startedBy: window.getCurrentUser().uid
-    });
-    
-    closePinModal();
-    showToast('🚗 Start PIN verified! Ride is now In-Transit.');
-  });
-};
-
-// 3. Drop OTP Verification (ट्रिप खत्म करना)
-window.verifyDropOtp = function(qid, expectedFromUi, rideId) {
-  openPinModal('Enter 4-Digit DROP PIN', '🏁', async (enteredOtp) => {
-    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    const snap = await getDoc(doc(db, 'requests', qid));
-    
-    if (!snap.exists()) throw new Error('Request not found');
-    const qData = snap.data();
-    
-    if (enteredOtp !== String(qData.dropOtp || expectedFromUi)) throw new Error('Wrong Drop PIN!');
-    
-    // स्टेटस बदलकर Completed करना
-    await updateDoc(doc(db, 'requests', qid), {
-      status: 'Completed', 
-      completedAt: Date.now(), 
-      completedBy: window.getCurrentUser().uid
-    });
-    
-    closePinModal();
-    showToast('🏁 Drop PIN verified! Trip completed successfully.');
-    
-    // ट्रिप खत्म होते ही रेटिंग मोडल खोलना (अगर उपलब्ध हो)
-    if (window.openRatingModal) window.openRatingModal(qid);
-  });
-};
-
-// ==========================================
-// 📍 PASSENGER LIVE TRACKING (Leaflet Map)
-// ==========================================
-
-let passengerTrackMaps = {};
-let activeTrackingIds = new Set();
-
-window.toggleLiveTrackingBox = function(reqId) {
-  const mapBox = document.getElementById(`trackMap_${reqId}`);
-  if (!mapBox) return;
-  
-  if (mapBox.style.display === 'block') { 
-    // ट्रैकिंग बंद करना
-    const state = passengerTrackMaps[reqId];
-    if (state) {
-      try { if (state.locationUnsub) state.locationUnsub(); } catch(e){}
-      try { if (state.map) state.map.remove(); } catch(e){}
-      delete passengerTrackMaps[reqId];
-      activeTrackingIds.delete(reqId);
-    }
-    mapBox.style.display = 'none'; 
-  } else {
-    // ट्रैकिंग चालू करना
-    const req = window.getRequests().find(r => r.id === reqId);
-    if (!req) return;
-    
-    activeTrackingIds.add(reqId);
-    mapBox.style.display = 'block';
-
-    // Leaflet Map सेटअप
-    const map = L.map(`trackMap_${reqId}`).setView([21.4588, 80.1961], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-    
-    const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28,28], iconAnchor: [14,14] });
-    const marker = L.marker([21.4588, 80.1961], { icon: carIcon }).addTo(map);
-    marker.bindPopup('🚗 Waiting for transporter GPS...');
-    
-    const statusDiv = document.createElement('div');
-    statusDiv.style.cssText = "font-size:11px; color:#64748b; margin-top:4px; text-align:center; font-weight:bold;";
-    statusDiv.textContent = '⏳ Waiting for driver live GPS...';
-    mapBox.appendChild(statusDiv);
-
-    passengerTrackMaps[reqId] = { map, marker, status: statusDiv, locationUnsub: null };
-    
-    // मैप का साइज़ ठीक करने के लिए हल्का सा डिले
-    setTimeout(() => map.invalidateSize(), 200);
-
-    // Firestore से लाइव लोकेशन डेटा सुनना (Listen to GPS)
-    import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then(({ getFirestore, doc, onSnapshot }) => {
-      const db = getFirestore();
-      
-      passengerTrackMaps[reqId].locationUnsub = onSnapshot(doc(db, 'live_locations', req.rideId), snap => {
-        if (!snap.exists()) { statusDiv.textContent = '⏳ Driver GPS not shared yet...'; return; }
-        const d = snap.data();
-        
-        if (d.status === 'offline') { 
-          statusDiv.style.color = 'var(--danger)'; 
-          statusDiv.textContent = '🔴 Driver GPS unavailable / Offline'; 
-          return; 
-        }
-        
-        if (!Number.isFinite(Number(d.lat)) || !Number.isFinite(Number(d.lng))) return;
-        
-        const pos = [Number(d.lat), Number(d.lng)];
-        marker.setLatLng(pos);
-        map.setView(pos, Math.max(map.getZoom(), 15), { animate: true });
-        
-        // GPS की टाइमिंग चेक करना (कितना पुराना है)
-        const ageSecs = Math.max(0, Math.round((Date.now() - (Number(d.updatedAt) || Date.now())) / 1000));
-        statusDiv.style.color = ageSecs <= 15 ? '#16a34a' : '#d97706';
-        statusDiv.textContent = ageSecs <= 15 ? `🟢 Live • Updated ${ageSecs}s ago` : `🟠 GPS delayed • ${ageSecs}s ago`;
-      });
-    });
-  }
-};
-// ==========================================
-// 💬 STEP 6: LIVE CHAT & ⭐ RATING ENGINE
-// ==========================================
-
-// ------------------------------------------
-// 1. LIVE CHAT SYSTEM
-// ------------------------------------------
-let currentChatRequestId = null;
-let chatUnsubscribe = null;
-
-window.openChat = async function(requestId, driverPhone) {
-  currentChatRequestId = requestId;
-  const modal = document.getElementById("chatModal");
-  const messagesBox = document.getElementById("chatMessages");
-  const titleEl = document.getElementById("chatTitle");
-  
-  if (!modal || !messagesBox) return;
-
-  // टाइटल में कॉल करने का बटन भी जोड़ना
-  titleEl.innerHTML = `💬 Live Chat ${driverPhone && driverPhone !== 'N/A' ? `• <a href="tel:${driverPhone}" style="color:#fff; text-decoration:none; background:rgba(0,0,0,0.2); padding:4px 8px; border-radius:8px; font-size:12px;">📞 Call</a>` : ''}`;
-  messagesBox.innerHTML = "<div style='text-align:center; padding:10px; color:#64748b; font-size:12px;'>Loading chat...</div>";
-  modal.style.display = "flex";
-
-  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
-
-  try {
-    const { getFirestore, collection, query, orderBy, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    const chatRef = collection(db, "requests", requestId, "messages");
-    const q = query(chatRef, orderBy("createdAt", "asc"));
-
-    // रियल-टाइम मैसेज सिंक (Firestore Listener)
-    chatUnsubscribe = onSnapshot(q, (snapshot) => {
-      const u = window.getCurrentUser();
-      if (!snapshot.docs.length) {
-        messagesBox.innerHTML = "<div style='text-align:center; padding:10px; color:#64748b; font-size:12px;'>No messages yet. Say hello! 👋</div>";
-        return;
-      }
-
-      messagesBox.innerHTML = snapshot.docs.map(docSnap => {
-        const msg = docSnap.data();
-        const isSentByMe = u && msg.senderUid === u.uid;
-        return `
-          <div class="chat-msg ${isSentByMe ? 'sent' : 'received'}">
-            <div style="font-size:10px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${esc(msg.senderName || 'User')}</div>
-            <div>${esc(msg.text)}</div>
-          </div>
-        `;
-      }).join("");
-      
-      // नया मैसेज आने पर स्क्रॉल को सबसे नीचे ले जाना
-      messagesBox.scrollTop = messagesBox.scrollHeight;
-    });
-  } catch(e) { 
-    console.error(e); 
-    messagesBox.innerHTML = "<div style='color:red; text-align:center;'>Chat error!</div>";
-  }
-};
-
-window.closeChat = function() {
-  const modal = document.getElementById("chatModal");
-  if (modal) modal.style.display = "none";
-  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
-  currentChatRequestId = null;
-};
-
-window.sendChatMessage = async function() {
-  const input = document.getElementById("chatInputText");
-  const text = input ? input.value.trim() : "";
-  const u = window.getCurrentUser();
-
-  if (!text || !currentChatRequestId || !u) return;
-
-  try {
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
-      text: text, 
-      senderUid: u.uid, 
-      senderName: u.displayName || "User", 
-      createdAt: Date.now()
-    });
-    input.value = ""; 
-    input.focus();
-  } catch(e) { 
-    showToast("❌ Error sending message: " + e.message); 
-  }
-};
-
-// Enter बटन दबाने पर मैसेज सेंड करना
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("chatInputText")?.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      window.sendChatMessage();
-    }
-  });
-});
-
-
-// ==========================================
-// 👤 STEP 7: PROFILE, GARAGE & SAVED PLACES ENGINE
-// ==========================================
-
-// ------------------------------------------
-// 1. PROFILE DETAILS SAVING LOGIC
-// ------------------------------------------
-window.saveProfileDetails = async function() {
-  const user = window.getCurrentUser();
-  if (!user) { showToast("❌ Please login first!"); return; }
-
-  // नए UI वाले इनपुट्स
-  const name = document.getElementById("editProfName").value.trim();
-  const phoneInput = document.getElementById("editProfPhone").value.trim();
-  const gender = document.getElementById("editProfGender").value;
-
-  if (!name) { showToast("❌ Full Name is required!"); return; }
-  
-  // फोन नंबर वैलिडेशन (सिर्फ अंक)
-  const cleanPhone = phoneInput.replace(/[\s-+]/g, '').replace(/^91/, '');
-  if (!/^[6-9][0-9]{9}$/.test(cleanPhone)) { showToast("❌ Enter valid 10-digit Indian mobile number!"); return; }
-
-  try {
-    const { getFirestore, doc, updateDoc, collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-
-    // डुप्लिकेट नंबर चेक करना (ताकि एक ही नंबर 2 खातों में न हो)
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("phone", "==", cleanPhone));
-    const querySnapshot = await getDocs(q);
-    
-    let isDuplicate = false;
-    querySnapshot.forEach((docSnap) => {
-      if (docSnap.id !== user.uid) isDuplicate = true;
-    });
-
-    if (isDuplicate) { showToast("⚠️ This mobile number is already used by another account."); return; }
-
-    // डेटाबेस अपडेट करना
-    await updateDoc(doc(db, "users", user.uid), {
-      name: name,
-      phone: cleanPhone,
-      gender: gender,
-      lastActive: Date.now()
-    });
-
-    // UI में तुरंत नाम और डिटेल्स अपडेट करना
-    document.getElementById("profDisplayName").textContent = name;
-    document.getElementById("profPhoneGender").textContent = `📞 +91 ${cleanPhone} | ${gender === 'Male' ? '🧑 Male' : (gender === 'Female' ? '👩 Female' : '⚪ Other')}`;
-    document.getElementById("userDisplay").textContent = name.split(' ')[0];
-    
-    closeModal('editProfileModal');
-    showToast("✅ Profile Details Saved Successfully!");
-  } catch(e) {
-    console.error("Profile save error:", e);
-    showToast("❌ Error saving profile: " + e.message);
-  }
-};
-
-// ------------------------------------------
-// 2. GARAGE / VEHICLE MANAGEMENT
-// ------------------------------------------
-window.addVehicleToGarage = async function() {
-  const user = window.getCurrentUser();
-  if (!user) { showToast("❌ Please login first!"); return; }
-
-  // नए UI के इनपुट्स
-  const type = document.getElementById("newVehType").value;
-  const model = document.getElementById("newVehModel").value.trim();
-  const plateRaw = document.getElementById("newVehPlate").value.trim();
-
-  if (!model) { showToast("❌ Vehicle model name required!"); return; }
-  
-  // नंबर प्लेट वैलिडेशन (MH35AB1234 या 22BH1234AA)
-  const cleanPlate = plateRaw.replace(/[\s-]/g, '').toUpperCase();
-  const standardRegex = /^[A-Z]{2}[0-9]{2}[A-Z]{0,3}[0-9]{4}$/;
-  const bhRegex = /^[0-9]{2}BH[0-9]{4}[A-Z]{1,2}$/;
-  
-  if (!standardRegex.test(cleanPlate) && !bhRegex.test(cleanPlate)) {
-    showToast("❌ Invalid Indian plate! e.g. MH35AB1234 or 22BH1234AA");
-    return;
-  }
-
-  try {
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-
-    await addDoc(collection(db, "user_vehicles"), {
-      type, 
-      model, 
-      plate: cleanPlate,
-      userUid: user.uid,
-      userEmail: user.email,
-      created: Date.now(),
-      kycStatus: 'pending' // Admin द्वारा वेरीफाई होने के लिए पेंडिंग
-    });
-
-    document.getElementById("newVehModel").value = "";
-    document.getElementById("newVehPlate").value = "";
-    
-    closeModal('addVehicleModal');
-    showToast("✅ Vehicle saved! Waiting for Admin KYC verification.");
-  } catch(e) {
-    showToast("❌ Error saving vehicle: " + e.message);
-  }
-};
-
-window.removeVehicleFromGarage = async function(docId) {
-  const user = window.getCurrentUser();
-  if (!user) return;
-  
-  if (confirm("Are you sure you want to remove this vehicle from your garage?")) {
-    try {
-      const { getFirestore, doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-      await deleteDoc(doc(getFirestore(), "user_vehicles", docId));
-      showToast("🗑️ Vehicle removed from garage.");
-    } catch(e) { showToast("❌ Error: " + e.message); }
-  }
-};
-
-// UI में गैराज लिस्ट रेंडर करना
-window.renderGarageList = function() {
-  const user = window.getCurrentUser();
-  const box = document.getElementById("profileGarageList");
-  if (!box) return;
-
-  if (!user || !user.vehicles || !user.vehicles.length) { 
-    box.innerHTML = "<div class='small muted' style='font-size:11.5px;color:#64748b;'>No vehicles added yet. Click + Add Vehicle above.</div>"; 
-    return; 
-  }
-  
-  box.innerHTML = user.vehicles.map(v => {
-    let kycBadge = "";
-    let borderColor = "#e2e8f0";
-    if (v.kycStatus === 'verified') {
-      kycBadge = '<span class="role-pill driver" style="font-size:9.5px;">✅ KYC Verified</span>';
-    } else if (v.kycStatus === 'rejected') {
-      kycBadge = '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">🚫 Rejected</span>';
-      borderColor = "#fca5a5";
-    } else {
-      kycBadge = '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending Admin Check</span>';
-      borderColor = "#fde68a";
-    }
-      
-    return `
-    <div class="item-row" style="border-color:${borderColor}; margin-bottom:8px;">
-      <div style="flex:1;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <b style="font-size:13px; font-family:monospace;">${esc(v.plate)}</b>
-          <span style="font-size:11px; font-weight:700; color:#475569;">${esc(v.type)}</span>
-        </div>
-        <div style="font-size:11px; color:#64748b; margin-top:3px; display:flex; justify-content:space-between;">
-          <span>Model: <b>${esc(v.model)}</b></span>
-          ${kycBadge}
-        </div>
-      </div>
-      <button class="red" style="padding:4px 8px; font-size:11px; margin-left:10px;" onclick="removeVehicleFromGarage('${v.id}')">🗑️</button>
-    </div>
-  `}).join("");
-};
-
-// ------------------------------------------
-// 3. SAVED PLACES MANAGEMENT
-// ------------------------------------------
-window.saveNewPlace = async function() {
-  const user = window.getCurrentUser();
-  if (!user) { showToast("❌ Please login first!"); return; }
-
-  const title = document.getElementById("savedPlaceTitle").value.trim();
-  const address = document.getElementById("savedPlaceAddress").value.trim();
-
-  if (!title || !address) { showToast("❌ Enter both Title and Address!"); return; }
-
-  try {
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-
-    await addDoc(collection(db, 'saved_places'), {
-      userUid: user.uid,
-      title: title,
-      address: address,
-      createdAt: Date.now()
-    });
-
-    document.getElementById("savedPlaceTitle").value = "";
-    document.getElementById("savedPlaceAddress").value = "";
-    
-    closeModal('addSavedPlaceModal');
-    showToast("✅ Location saved to your places!");
-  } catch(e) {
-    showToast("❌ Error: " + e.message);
-  }
-};
-
-window.renderSavedPlaces = function() {
-  const user = window.getCurrentUser();
-  const box = document.getElementById("savedPlacesList");
-  if (!box) return;
-
-  if (!user) {
-    box.innerHTML = "<div class='small muted' style='font-size:11.5px;color:#64748b;'>Sign in to view saved places.</div>";
-    return;
-  }
-
-  // ALL_PLACES ग्लोबल एरे है जो Firebase onSnapshot से डेटा लाता है
-  const myPlaces = (typeof ALL_PLACES !== 'undefined' ? ALL_PLACES : []).filter(p => p.userUid === user.uid);
-
-  if (!myPlaces.length) {
-    box.innerHTML = "<div class='small muted' style='font-size:11.5px;color:#64748b;'>No saved places. Add Home/Office for quick access.</div>";
-    return;
-  }
-
-  box.innerHTML = myPlaces.map(p => `
-    <div class="item-row" style="margin-bottom:8px;">
-      <div style="flex:1;">
-        <b style="font-size:12.5px; color:var(--text-main);">📍 ${esc(p.title)}</b>
-        <div style="font-size:10.5px; color:#64748b; margin-top:2px;">${esc(p.address)}</div>
-      </div>
-      <button class="secondary" style="padding:4px 8px; font-size:11px; border:none; background:transparent; color:var(--danger);" onclick="deleteSavedPlace('${p.id}')">✖</button>
-    </div>
-  `).join("");
-};
-
-window.deleteSavedPlace = async function(docId) {
-  if (!confirm("Remove this saved place?")) return;
-  try {
-    const { getFirestore, doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await deleteDoc(doc(getFirestore(), "saved_places", docId));
-    showToast("🗑️ Place removed.");
-  } catch(e) { showToast("❌ Error: " + e.message); }
-};
-
-window.clearAllTestData = async function() {
-  if (!confirm("🚨 DANGER: Are you sure you want to delete ALL trips and requests?")) return;
-  try {
-    const { collection, getDocs, deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    
-    const ridesSnap = await getDocs(collection(window.db, "rides"));
-    ridesSnap.forEach(async (d) => await deleteDoc(doc(window.db, "rides", d.id)));
-    
-    const reqsSnap = await getDocs(collection(window.db, "requests"));
-    reqsSnap.forEach(async (d) => await deleteDoc(doc(window.db, "requests", d.id)));
-    
-    showToast("🧹 All test data cleared successfully!");
-  } catch(e) {
-    showToast("Error clearing data: " + e.message);
-  }
-};
-
 </script>
 
 </body>
