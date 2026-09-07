@@ -715,11 +715,12 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
         <button class="admin-tab-btn" onclick="switchAdminTab('live', this)">📍 6. Live Map</button>
         <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">⚠️ 7. Reports</button>
         <button class="admin-tab-btn" onclick="switchAdminTab('ads', this)">📢 8. Ads</button>
+    <button class="uber-cta-btn" style="background:#fef2f2; color:#d9363e; border:1.5px solid #fecaca; margin-top:8px;" onclick="clearAllTestData()">🗑️ Clear All Test Data (1-Click)</button>
+
       </div>
       
-      <button class="uber-cta-btn" style="background:#fef2f2; color:#d9363e; border:1.5px solid #fecaca; margin-top:8px;" onclick="clearAllTestData()">🗑️ Clear All Test Data (1-Click)</button>
 
-      <div id="admTabOverview" class="admin-sub-section active" style="margin-top:10px;">
+      <div id="admTabOverview" class="admin-sub-section active">
         <div class="kpi-grid">
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Total Users</div><div class="val" id="kpiTotalUsers">0</div></div>
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Active Trips</div><div class="val" id="kpiActiveTrips">0</div></div>
@@ -729,52 +730,29 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
           <div class="kpi-card"><div style="font-size:10.5px;color:#64748b;">Platform Volume</div><div class="val" id="kpiPaidVol">₹0</div></div>
         </div>
       </div>
-      <div id="admTabUsers" class="admin-sub-section" style="margin-top:10px;">
-        <div class="input-card" style="margin-bottom:8px;"><input id="adminUserSearch" placeholder="🔍 Search user..." oninput="renderAdminUsersManagement()"></div>
-        <div id="adminUsersListContainer"></div>
-      </div>
-      <div id="admTabTrips" class="admin-sub-section" style="margin-top:10px;">
-        <div style="display:flex; gap:6px; margin-bottom:10px;">
-          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('all')">All</button>
-          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Active')">Active</button>
-          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Completed')">Completed</button>
-          <button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Cancelled')">Cancelled</button>
-        </div>
-        <div id="adminTripsListContainer"></div>
-      </div>
-      <div id="admTabPayments" class="admin-sub-section" style="margin-top:10px;"><div id="adminPaymentsContainer"></div></div>
-      <div id="admTabParcels" class="admin-sub-section" style="margin-top:10px;"><div id="adminParcelsContainer"></div></div>
-      <div id="admTabLive" class="admin-sub-section" style="margin-top:10px;"><div id="adminLiveMap"></div></div>
-      <div id="admTabReports" class="admin-sub-section" style="margin-top:10px;"><div id="adminReportsContainer"></div></div>
-      <div id="admTabAds" class="admin-sub-section" style="margin-top:10px;">
-        <button class="uber-cta-btn" style="padding:10px;" onclick="openAdsModal()">📢 Manage Sponsored Ads</button>
-        <div id="adminAdsList" style="margin-top:10px;"></div>
-      </div>
+      <div id="admTabUsers" class="admin-sub-section"><div class="input-card" style="margin-bottom:8px;"><input id="adminUserSearch" placeholder="🔍 Search user..." oninput="renderAdminUsersManagement()"></div><div id="adminUsersListContainer"></div></div>
+      <div id="admTabTrips" class="admin-sub-section"><div style="display:flex; gap:6px; margin-bottom:10px;"><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('all')">All</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Active')">Active</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Completed')">Completed</button><button class="secondary" style="font-size:11px; padding:6px;" onclick="filterAdminTripsList('Cancelled')">Cancelled</button></div><div id="adminTripsListContainer"></div></div>
+      <div id="admTabPayments" class="admin-sub-section"><div id="adminPaymentsContainer"></div></div>
+      <div id="admTabParcels" class="admin-sub-section"><div id="adminParcelsContainer"></div></div>
+      <div id="admTabLive" class="admin-sub-section"><div id="adminLiveMap"></div></div>
+      <div id="admTabReports" class="admin-sub-section"><div id="adminReportsContainer"></div></div>
+      <div id="admTabAds" class="admin-sub-section"><button class="uber-cta-btn" style="padding:10px;" onclick="openAdsModal()">📢 Manage Sponsored Ads</button><div id="adminAdsList" style="margin-top:10px;"></div></div>
     </div>
 
     <!-- GARAGE & PLACES -->
     <div class="section-card">
-      <div class="section-header">
-        <div class="section-title">🏍️ My Registered Vehicles</div>
-        <span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddVehicleModal()">+ Add Vehicle</span>
-      </div>
+      <div class="section-header"><div class="section-title">🏍️ My Registered Vehicles</div><span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddVehicleModal()">+ Add Vehicle</span></div>
       <div id="profileGarageList"><div style="font-size:11.5px; color:#64748b;">Sign in to view garage.</div></div>
     </div>
-    
     <div class="section-card">
-      <div class="section-header">
-        <div class="section-title">📍 Saved Places</div>
-        <span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddSavedPlaceModal()">+ Add Place</span>
-      </div>
+      <div class="section-header"><div class="section-title">📍 Saved Places</div><span style="font-size:11.5px; font-weight:800; color:var(--primary); cursor:pointer;" onclick="openAddSavedPlaceModal()">+ Add Place</span></div>
       <div id="savedPlacesList"><div style="font-size:11.5px; color:#64748b;">Sign in to view saved places.</div></div>
     </div>
-    
     <div class="section-card">
       <div class="section-title" style="margin-bottom:8px;">📜 Platform Rules & Support</div>
       <div class="settings-item" onclick="openTermsModal()"><div class="settings-left"><span>🛡️</span><span>Terms of Service & Privacy Policy</span></div><span>›</span></div>
       <div class="settings-item" onclick="window.open('https://wa.me/918668828542?text=Hello%20SafarShare%20Support','_blank')"><div class="settings-left"><span>💬</span><span>24x7 WhatsApp Help & Support (Admin)</span></div><span>›</span></div>
     </div>
-    
     <button type="button" id="btnLogoutAcc" class="uber-cta-btn" style="background:#fef2f2; color:#d9363e; border:1.5px solid #fecaca; display:none;" onclick="googleLogout()"><span>🚪 Logout Account</span></button>
   </section>
 
@@ -875,10 +853,19 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
 <div id="ratingModal" class="rating-modal">
   <div class="rating-card">
     <div style="font-size:36px;">⭐</div>
-    <h3 style="margin:8px 0; font-size:16px;">Rate Your Experience</h3>
+    <h3 style="margin:8px 0; font-size:16px;" id="ratingModalTitle">Rate Your Experience</h3>
     <div style="font-size:30px; margin:10px 0; cursor:pointer;" id="starsContainer">
       <span onclick="setRating(1)">★</span><span onclick="setRating(2)">★</span><span onclick="setRating(3)">★</span><span onclick="setRating(4)">★</span><span onclick="setRating(5)">★</span>
     </div>
+    <div class="chips-scroller" id="ratingTagsContainer" style="justify-content:center; flex-wrap:wrap;">
+      <span class="modern-chip rating-tag-chip" onclick="toggleRatingTag('Safe Driving', this)">🛡️ Safe Driving</span>
+      <span class="modern-chip rating-tag-chip" onclick="toggleRatingTag('On Time', this)">⏰ On Time</span>
+      <span class="modern-chip rating-tag-chip" onclick="toggleRatingTag('Polite', this)">🙏 Polite</span>
+      <span class="modern-chip rating-tag-chip" onclick="toggleRatingTag('Clean Vehicle', this)">✨ Clean Vehicle</span>
+      <span class="modern-chip rating-tag-chip" onclick="toggleRatingTag('Late', this)">🐢 Late</span>
+      <span class="modern-chip rating-tag-chip" onclick="toggleRatingTag('Rude Behaviour', this)">😠 Rude Behaviour</span>
+    </div>
+    <textarea id="ratingReviewText" placeholder="Write a quick review (optional)..." style="width:100%; margin-top:10px; border:1.5px solid #e2e8f0; border-radius:12px; padding:8px 10px; font-size:12.5px; font-family:inherit; resize:none; min-height:52px;"></textarea>
     <button class="uber-cta-btn" onclick="submitRatingReview()">Submit Feedback</button>
     <div style="text-align:center; margin-top:8px;"><span style="font-size:11.5px; color:#64748b; cursor:pointer;" onclick="document.getElementById('ratingModal').style.display='none'">Skip</span></div>
   </div>
@@ -986,14 +973,20 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
   import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+  const VAPID_KEY = "YOUR_VAPID_KEY"; // 🔑 REPLACE THIS: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → generate/copy key pair
+
   window.initializePushNotifications = async function() {
+    if (VAPID_KEY === "YOUR_VAPID_KEY") {
+      console.warn("⚠️ Push notifications disabled: VAPID_KEY is still the placeholder. Generate a real key in Firebase Console → Cloud Messaging → Web Push certificates.");
+      return; // fail silently for the user, loudly for the developer — no broken getToken() call
+    }
     try {
       const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         const messaging = getMessaging();
         const currentToken = await getToken(messaging, { 
-          vapidKey: "YOUR_VAPID_KEY", 
+          vapidKey: VAPID_KEY, 
           serviceWorkerRegistration: registration
         });
         const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
@@ -1027,7 +1020,7 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
 <!-- FIREBASE SDK & CORE LOGIC ENGINE -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, updateDoc, setDoc, deleteDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1158,23 +1151,7 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     }
   });
 
-  window.googleLogin = async function() {
-    try {
-      // Redirect is more reliable than popup on Android/WebView and avoids popup blockers.
-      await signInWithRedirect(auth, provider);
-    } catch (e) {
-      console.error("Google Login Error:", e);
-      showToast("❌ Login Error: " + (e?.message || e));
-    }
-  };
-
-  // Catch redirect errors after returning from Google.
-  getRedirectResult(auth).catch(e => {
-    if (e) {
-      console.error("Google Redirect Result Error:", e);
-      showToast("❌ Google Login Error: " + (e?.message || e));
-    }
-  });
+  window.googleLogin = () => signInWithPopup(auth, provider).catch(e => showToast(e.message));
   window.googleLogout = () => signOut(auth).then(() => { showToast("🚪 Logged out."); location.reload(); });
 
   async function writeDriverLiveLocation(position) {
@@ -1222,285 +1199,354 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   function initDataListeners() {
     onSnapshot(collection(db, 'rides'), snap => { ALL_RIDES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); if(window.renderAdminTripsManagement) window.renderAdminTripsManagement(); });
     onSnapshot(collection(db, 'requests'), snap => { ALL_REQUESTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderActivityFeed) window.renderActivityFeed(); updateAdminMetrics(); syncDriverGPS(); if(window.renderAdminPaymentsLedger) window.renderAdminPaymentsLedger(); });
-    
-    // 👥 Users Snapshot Listener (uid: d.id के साथ)
-    onSnapshot(collection(db, 'users'), snap => { 
-      ALL_USERS = snap.docs.map(d => ({ uid: d.id, ...d.data() })); 
-      updateAdminMetrics(); 
-      if(window.renderAdminUsersManagement) window.renderAdminUsersManagement(); 
-    });
-
+    onSnapshot(collection(db, 'users'), snap => { ALL_USERS = snap.docs.map(d => ({ id: d.id, ...d.data() })); updateAdminMetrics(); if(window.renderAdminUsersManagement) window.renderAdminUsersManagement(); });
     onSnapshot(collection(db, 'user_vehicles'), snap => { ALL_VEHICLES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderGarageList) window.renderGarageList(); if(currentUser) currentUser.vehicles = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid); });
     onSnapshot(collection(db, 'saved_places'), snap => { ALL_PLACES = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderSavedPlaces) window.renderSavedPlaces(); });
     onSnapshot(collection(db, 'sponsored_ads'), snap => { ALL_ADS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminAdsList) window.renderAdminAdsList(); });
     onSnapshot(collection(db, 'reports'), snap => { ALL_REPORTS = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(window.renderAdminReports) window.renderAdminReports(); });
     onSnapshot(collection(db, 'live_locations'), snap => { ALL_LIVE_LOCATIONS = {}; snap.docs.forEach(d => { ALL_LIVE_LOCATIONS[d.id] = d.data(); }); if(window.refreshAdminLiveMap) window.refreshAdminLiveMap(); });
   }
-
   window.renderAdminUsersManagement = function() {
-    const queryText = (document.getElementById("adminUserSearch")?.value || "").toLowerCase();
-    const container = document.getElementById("adminUsersListContainer");
-    if (!container) return;
+  const queryText = (document.getElementById("adminUserSearch")?.value || "").toLowerCase();
+  const container = document.getElementById("adminUsersListContainer");
+  if (!container) return;
 
-    const filtered = ALL_USERS.filter(u => 
-      (u.name || "").toLowerCase().includes(queryText) ||
-      (u.email || "").toLowerCase().includes(queryText) ||
-      (u.phone || "").includes(queryText)
-    );
+  const filtered = ALL_USERS.filter(u => 
+    (u.name || "").toLowerCase().includes(queryText) ||
+    (u.email || "").toLowerCase().includes(queryText) ||
+    (u.phone || "").includes(queryText)
+  );
 
-    if (!filtered.length) { 
-      container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No users found.</div>"; 
-      return; 
-    }
+  if (!filtered.length) { 
+    container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No users found.</div>"; 
+    return; 
+  }
 
-    container.innerHTML = filtered.map(u => {
-      const isBlocked = !!u.isBlocked;
-      return `
-        <div class="card" style="padding:12px; margin-bottom:8px; border:1.5px solid ${isBlocked ? '#fca5a5' : '#cbd5e1'}; background:${isBlocked ? '#fff5f5' : '#fff'};">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <b style="font-size:13px;">${esc(u.name || u.displayName || 'User')}</b> 
-              ${isBlocked ? '<span class="role-pill" style="background:#fef2f2; color:#dc2626; font-size:9.5px;">Blocked</span>' : '<span class="role-pill driver" style="font-size:9.5px;">Active</span>'}
-              <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(u.email)} • 📞 ${esc(u.phone || 'No Phone')}</div>
-            </div>
-            <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 9px; font-size:10.5px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
-              ${isBlocked ? 'Unblock' : 'Block'}
-            </button>
-          </div>
-          <div style="display:flex; gap:6px; margin-top:8px;">
-            <button class="uber-cta-btn" style="flex:1; padding:6px; font-size:11px; margin-top:0;" onclick="openDeepInspectModal('${u.uid}')">🔍 Inspect Trips</button>
-            <button class="act-btn orange" style="flex:1; padding:6px; font-size:11px; justify-content:center; border:none;" onclick="openAdminGarageModal('${u.uid}')">🚘 Garage / KYC</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-  };
-
-  window.adminToggleBlockUser = async function(userUid, currentBlockStatus, userName) {
-    if (!isCurrentUserAdmin()) return showToast("⛔ Admin access required!");
-    const action = currentBlockStatus ? "Unblock" : "Block";
-    if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
-
-    try {
-      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-      await updateDoc(doc(window.db, "users", userUid), {
-        isBlocked: !currentBlockStatus,
-        blockReason: !currentBlockStatus ? "" : "Admin Manual Restriction"
-      });
-      showToast(`User ${userName} ${action}ed successfully!`);
-    } catch(e) {
-      showToast("Error: " + e.message);
-    }
-  };
-
-  let currentAdminFilter = 'all';
-
-  window.filterAdminTripsList = function(status) {
-    currentAdminFilter = status;
-    window.renderAdminTripsManagement();
-  };
-
-  window.renderAdminTripsManagement = function() {
-    const container = document.getElementById("adminTripsListContainer");
-    if (!container) return;
-    const rides = window.getRides ? window.getRides() : [];
-    
-    const filtered = currentAdminFilter === 'all' || !currentAdminFilter ? rides : rides.filter(r => r.status === currentAdminFilter);
-    if (!filtered.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No trips found for this filter.</div>"; return; }
-
-    container.innerHTML = filtered.map(r => `
-      <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
+  container.innerHTML = filtered.map(u => {
+    const isBlocked = !!u.isBlocked;
+    return `
+      <div class="card" style="padding:12px; margin-bottom:8px; border:1.5px solid ${isBlocked ? '#fca5a5' : '#cbd5e1'}; background:${isBlocked ? '#fff5f5' : '#fff'};">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
-          <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
-        </div>
-        <div style="font-size:11px; color:#64748b; margin-top:4px;">
-          Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
-          📅 Date: ${esc(r.date || 'N/A')} • ⏰ Time: ${esc(r.time || 'N/A')}
-        </div>
-      </div>
-    `).join("");
-  };
-
-  window.openAdminTripDetails = function(rideId) {
-    const rides = window.getRides ? window.getRides() : [];
-    const reqs = window.getRequests ? window.getRequests() : [];
-    const r = rides.find(x => x.id === rideId);
-    if (!r) return showToast("Trip not found");
-
-    const tripReqs = reqs.filter(q => q.rideId === rideId);
-    
-    let modal = document.getElementById("adminTripDetailsModal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "adminTripDetailsModal";
-      modal.className = "custom-modal-overlay";
-      modal.style.cssText = "display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:2000; align-items:flex-end; justify-content:center;";
-      modal.innerHTML = `
-        <div class="custom-modal-content" style="background:#fff; width:100%; max-width:540px; border-radius:20px 20px 0 0; padding:16px; max-height:88vh; overflow-y:auto;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h3 id="adminTripTitle" style="margin:0; font-size:16px;">🔍 Trip Complete Details</h3>
-            <button style="border:none; background:none; font-size:18px; cursor:pointer;" onclick="closeAdminTripDetails()">✕</button>
+          <div>
+            <b style="font-size:13px;">${esc(u.name || u.displayName || 'User')}</b> 
+            ${isBlocked ? '<span class="role-pill" style="background:#fef2f2; color:#dc2626; font-size:9.5px;">Blocked</span>' : '<span class="role-pill driver" style="font-size:9.5px;">Active</span>'}
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(u.email)} • 📞 ${esc(u.phone || 'No Phone')}</div>
           </div>
-          <div id="adminTripBody"></div>
+          <button class="${isBlocked ? 'green' : 'red'}" style="padding:5px 9px; font-size:10.5px;" onclick="adminToggleBlockUser('${u.uid}', ${isBlocked}, '${esc(u.name || 'User')}')">
+            ${isBlocked ? 'Unblock' : 'Block'}
+          </button>
         </div>
-      `;
-      document.body.appendChild(modal);
-    }
-
-    document.getElementById("adminTripTitle").innerHTML = `🔍 Trip: ${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}`;
-    
-    let reqsHtml = tripReqs.length ? tripReqs.map(q => `
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:8px; margin-top:6px; font-size:11.5px;">
-        <b>${q.type === 'passenger' ? '🧑 Passenger' : '📦 Parcel'}</b>: ${esc(q.passengerName || 'User')} (📞 ${esc(q.passengerPhone || 'N/A')})<br>
-        Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b>
-      </div>
-    `).join('') : '<div style="font-size:11.5px; color:#64748b; margin-top:4px;">No bookings on this trip yet.</div>';
-
-    document.getElementById("adminTripBody").innerHTML = `
-      <div style="font-size:12.5px; line-height:1.6; color:#334155;">
-        <div style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:10px;">
-          <b>🚘 Driver Details:</b><br>
-          Name: <b>${esc(r.driverName || 'N/A')}</b><br>
-          Phone: <a href="tel:${esc(r.driverPhone || '')}" style="color:var(--primary); font-weight:700;">${esc(r.driverPhone || 'N/A')}</a><br>
-          Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="uber-cta-btn" style="flex:1; padding:6px; font-size:11px; margin-top:0;" onclick="openDeepInspectModal('${u.uid}')">🔍 Inspect Trips</button>
+          <button class="act-btn orange" style="flex:1; padding:6px; font-size:11px; justify-content:center; border:none;" onclick="openAdminGarageModal('${u.uid}')">🚘 Garage / KYC</button>
         </div>
-        <div style="background:#f8fafc; padding:10px; border-radius:10px; margin-bottom:10px;">
-          <b>🛣️ Route & Schedule:</b><br>
-          From: ${esc(r.from)}<br>
-          To: ${esc(r.to)}<br>
-          Date: ${esc(r.date || 'N/A')} • Time: ${esc(r.time || 'N/A')}<br>
-          Status: <span class="role-pill ${r.status==='Completed'?'driver':'primary'}">${esc(r.status)}</span>
-        </div>
-        <h4 style="margin:10px 0 4px; font-size:13px;">👥 Passengers & Bookings (${tripReqs.length}):</h4>
-        ${reqsHtml}
-        ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#ef4444; margin-top:14px; padding:10px;" onclick="adminForceCancelTrip('${r.id}')">🚫 Force Cancel This Trip</button>` : ''}
       </div>
     `;
+  }).join("");
+};
 
-    modal.style.display = 'flex';
-  };
+window.adminToggleBlockUser = async function(userUid, currentBlockStatus, userName) {
+  if (!isCurrentUserAdmin()) return showToast("⛔ Admin access required!");
+  const action = currentBlockStatus ? "Unblock" : "Block";
+  if (!confirm(`Are you sure you want to ${action} ${userName}?`)) return;
 
-  window.closeAdminTripDetails = function() {
-    const m = document.getElementById("adminTripDetailsModal");
-    if (m) m.style.display = 'none';
-  };
-
-  window.adminForceCancelTrip = async function(rideId) {
-    const reason = prompt("Enter reason for admin force cancellation:");
-    if (!reason || !reason.trim()) return showToast("❌ Reason is required!");
-    try {
-      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-      await updateDoc(doc(window.db, "rides", rideId), {
-        status: "Cancelled", cancelReason: `Admin Force Cancel: ${reason.trim()}`, cancelledAt: Date.now()
-      });
-      showToast("✅ Trip Force Cancelled!");
-      window.closeAdminTripDetails();
-      if (window.renderAdminTripsManagement) window.renderAdminTripsManagement();
-    } catch(e) { showToast("Error: " + e.message); }
-  };
-
-  window.renderAdminPaymentsLedger = function() {
-    const container = document.getElementById("adminPaymentsContainer");
-    if (!container) return;
-    const reqs = window.getRequests ? window.getRequests() : [];
-    if (!reqs.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No payments found.</div>"; return; }
-
-    container.innerHTML = reqs.map(q => `
-      <div class="card" style="padding:10px; margin-bottom:8px;">
-        <b>${q.type === 'passenger' ? '🧑 Seat' : '📦 Parcel'}</b>: ₹${q.currentPrice}
-        <div style="font-size:11px; color:#64748b;">Status: <b>${q.status}</b></div>
-      </div>
-    `).join("");
-  };
-
-  window.renderAdminParcelsLogistics = function() {
-    const container = document.getElementById("adminParcelsContainer");
-    if (!container) return;
-    const parcels = (window.getRequests ? window.getRequests() : []).filter(q => q.type === 'parcel');
-    if (!parcels.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No parcels found.</div>"; return; }
-
-    container.innerHTML = parcels.map(q => `
-      <div class="card" style="padding:10px; margin-bottom:8px;">
-        📦 <b>Slab:</b> ${esc(q.slab)} | <b>Fare:</b> ₹${q.currentPrice}
-        <div style="font-size:11px; color:#64748b;">Receiver: ${esc(q.recName || q.receiverName)} (${esc(q.recPhone || q.receiverPhone)})</div>
-      </div>
-    `).join("");
-  };
-
-  window.renderAdminAdsList = function() {
-    const box = document.getElementById("adminAdsList");
-    if (!box) return;
-    const ads = window.getAds ? window.getAds() : [];
-    if (!ads.length) { box.innerHTML = "<div style='font-size:12px; color:#64748b;'>No sponsored ads active.</div>"; return; }
-
-    box.innerHTML = ads.map(a => `
-      <div class="item-row" style="margin-bottom:6px;">
-        <div><b>${esc(a.name)}</b> <span style="font-size:10px; color:var(--primary);">${esc(a.category)}</span></div>
-        <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="deleteSponsoredAd('${a.id}')">🗑️</button>
-      </div>
-    `).join("");
-  };
-
-  window.deleteSponsoredAd = async function(adId) {
-    if (!confirm("Delete this ad?")) return;
-    try {
-      const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-      await deleteDoc(doc(window.db, "sponsored_ads", adId));
-      showToast("🗑️ Ad deleted!");
-    } catch(e) { showToast(e.message); }
-  };
-
-  window.renderAdminReports = function() {
-    const container = document.getElementById("adminReportsContainer");
-    if (!container) return;
-    const reports = window.getAllReports ? window.getAllReports() : [];
-    if (!reports.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b;'>No reports.</div>"; return; }
-
-    container.innerHTML = reports.map(rep => `
-      <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
-        <b>🚨 ${esc(rep.type || 'Alert')}</b>
-        <div style="font-size:11px; color:#64748b;">User: ${esc(rep.userName)}</div>
-      </div>
-    `).join("");
-  };
-
-  window.refreshAdminLiveMap = function() {
-    if (!window.adminLiveMapInstance) return;
-    const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
-    if (!window.adminMapMarkers) window.adminMapMarkers = {};
-
-    Object.keys(liveLocs).forEach(rideId => {
-      const loc = liveLocs[rideId];
-      if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
-        const pos = [loc.lat, loc.lng];
-        if (window.adminMapMarkers[rideId]) {
-          window.adminMapMarkers[rideId].setLatLng(pos);
-        } else {
-          const marker = L.marker(pos).addTo(window.adminLiveMapInstance);
-          marker.bindPopup(`🚗 Active Transporter`);
-          window.adminMapMarkers[rideId] = marker;
-        }
-      } else {
-        if (window.adminMapMarkers[rideId]) {
-          window.adminLiveMapInstance.removeLayer(window.adminMapMarkers[rideId]);
-          delete window.adminMapMarkers[rideId];
-        }
-      }
+  try {
+    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await updateDoc(doc(window.db, "users", userUid), {
+      isBlocked: !currentBlockStatus,
+      blockReason: !currentBlockStatus ? "" : "Admin Manual Restriction"
     });
-  };
+    showToast(`User ${userName} ${action}ed successfully!`);
+  } catch(e) {
+    showToast("Error: " + e.message);
+  }
+};
+
+let currentAdminFilter = 'all';
+
+window.filterAdminTripsList = function(status) {
+  currentAdminFilter = status;
+  window.renderAdminTripsManagement();
+};
+
+window.renderAdminTripsManagement = function() {
+  const container = document.getElementById("adminTripsListContainer");
+  if (!container) return;
+  const rides = window.getRides ? window.getRides() : [];
+  
+  const filtered = currentAdminFilter === 'all' || !currentAdminFilter ? rides : rides.filter(r => r.status === currentAdminFilter);
+  if (!filtered.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No trips found for this filter.</div>"; return; }
+
+  container.innerHTML = filtered.map(r => `
+    <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
+        <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
+      </div>
+      <div style="font-size:11px; color:#64748b; margin-top:4px;">
+        Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
+        📅 Date: ${esc(r.date || 'N/A')} • ⏰ Time: ${esc(r.time || 'N/A')}
+      </div>
+    </div>
+  `).join("");
+};
+
+// Admin Trip Details Modal & Force Cancel
+window.openAdminTripDetails = function(rideId) {
+  const rides = window.getRides ? window.getRides() : [];
+  const reqs = window.getRequests ? window.getRequests() : [];
+  const r = rides.find(x => x.id === rideId);
+  if (!r) return showToast("Trip not found");
+
+  const tripReqs = reqs.filter(q => q.rideId === rideId);
+  
+  let modal = document.getElementById("adminTripDetailsModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "adminTripDetailsModal";
+    modal.className = "custom-modal-overlay";
+    modal.style.cssText = "display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:2000; align-items:flex-end; justify-content:center;";
+    modal.innerHTML = `
+      <div class="custom-modal-content" style="background:#fff; width:100%; max-width:540px; border-radius:20px 20px 0 0; padding:16px; max-height:88vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 id="adminTripTitle" style="margin:0; font-size:16px;">🔍 Trip Complete Details</h3>
+          <button style="border:none; background:none; font-size:18px; cursor:pointer;" onclick="closeAdminTripDetails()">✕</button>
+        </div>
+        <div id="adminTripBody"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById("adminTripTitle").innerHTML = `🔍 Trip: ${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}`;
+  
+  let reqsHtml = tripReqs.length ? tripReqs.map(q => `
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:8px; margin-top:6px; font-size:11.5px;">
+      <b>${q.type === 'passenger' ? '🧑 Passenger' : '📦 Parcel'}</b>: ${esc(q.passengerName || 'User')} (📞 ${esc(q.passengerPhone || 'N/A')})<br>
+      Fare: ₹${q.currentPrice} | Status: <b>${q.status}</b>
+    </div>
+  `).join('') : '<div style="font-size:11.5px; color:#64748b; margin-top:4px;">No bookings on this trip yet.</div>';
+
+  document.getElementById("adminTripBody").innerHTML = `
+    <div style="font-size:12.5px; line-height:1.6; color:#334155;">
+      <div style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:10px;">
+        <b>🚘 Driver Details:</b><br>
+        Name: <b>${esc(r.driverName || 'N/A')}</b><br>
+        Phone: <a href="tel:${esc(r.driverPhone || '')}" style="color:var(--primary); font-weight:700;">${esc(r.driverPhone || 'N/A')}</a><br>
+        Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})
+      </div>
+      <div style="background:#f8fafc; padding:10px; border-radius:10px; margin-bottom:10px;">
+        <b>🛣️ Route & Schedule:</b><br>
+        From: ${esc(r.from)}<br>
+        To: ${esc(r.to)}<br>
+        Date: ${esc(r.date || 'N/A')} • Time: ${esc(r.time || 'N/A')}<br>
+        Status: <span class="role-pill ${r.status==='Completed'?'driver':'primary'}">${esc(r.status)}</span>
+      </div>
+      <h4 style="margin:10px 0 4px; font-size:13px;">👥 Passengers & Bookings (${tripReqs.length}):</h4>
+      ${reqsHtml}
+      ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#ef4444; margin-top:14px; padding:10px;" onclick="adminForceCancelTrip('${r.id}')">🚫 Force Cancel This Trip</button>` : ''}
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+};
+
+window.closeAdminTripDetails = function() {
+  const m = document.getElementById("adminTripDetailsModal");
+  if (m) m.style.display = 'none';
+};
+
+window.adminForceCancelTrip = async function(rideId) {
+  const reason = prompt("Enter reason for admin force cancellation:");
+  if (!reason || !reason.trim()) return showToast("❌ Reason is required!");
+  try {
+    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await updateDoc(doc(window.db, "rides", rideId), {
+      status: "Cancelled", cancelReason: `Admin Force Cancel: ${reason.trim()}`, cancelledAt: Date.now()
+    });
+    showToast("✅ Trip Force Cancelled!");
+    window.closeAdminTripDetails();
+    if (window.renderAdminTripsManagement) window.renderAdminTripsManagement();
+  } catch(e) { showToast("Error: " + e.message); }
+};
+
+
+window.renderAdminPaymentsLedger = function() {
+  const container = document.getElementById("adminPaymentsContainer");
+  if (!container) return;
+  const reqs = window.getRequests ? window.getRequests() : [];
+  if (!reqs.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No payments found.</div>"; return; }
+
+  container.innerHTML = reqs.map(q => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      <b>${q.type === 'passenger' ? '🧑 Seat' : '📦 Parcel'}</b>: ₹${q.currentPrice}
+      <div style="font-size:11px; color:#64748b;">Status: <b>${q.status}</b></div>
+    </div>
+  `).join("");
+};
+
+window.renderAdminParcelsLogistics = function() {
+  const container = document.getElementById("adminParcelsContainer");
+  if (!container) return;
+  const parcels = (window.getRequests ? window.getRequests() : []).filter(q => q.type === 'parcel');
+  if (!parcels.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No parcels found.</div>"; return; }
+
+  container.innerHTML = parcels.map(q => `
+    <div class="card" style="padding:10px; margin-bottom:8px;">
+      📦 <b>Slab:</b> ${esc(q.slab)} | <b>Fare:</b> ₹${q.currentPrice}
+      <div style="font-size:11px; color:#64748b;">Receiver: ${esc(q.recName || q.receiverName)} (${esc(q.recPhone || q.receiverPhone)})</div>
+    </div>
+  `).join("");
+};
+
+window.renderAdminAdsList = function() {
+  const box = document.getElementById("adminAdsList");
+  if (!box) return;
+  const ads = window.getAds ? window.getAds() : [];
+  if (!ads.length) { box.innerHTML = "<div style='font-size:12px; color:#64748b;'>No sponsored ads active.</div>"; return; }
+
+  box.innerHTML = ads.map(a => `
+    <div class="item-row" style="margin-bottom:6px;">
+      <div><b>${esc(a.name)}</b> <span style="font-size:10px; color:var(--primary);">${esc(a.category)}</span></div>
+      <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="deleteSponsoredAd('${a.id}')">🗑️</button>
+    </div>
+  `).join("");
+};
+
+window.deleteSponsoredAd = async function(adId) {
+  if (!confirm("Delete this ad?")) return;
+  try {
+    const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await deleteDoc(doc(window.db, "sponsored_ads", adId));
+    showToast("🗑️ Ad deleted!");
+  } catch(e) { showToast(e.message); }
+};
+
+// 📢 पूरा Ads Engine — admin panel "Publish" button bina isके kaam nahi karta tha
+window.publishSponsoredAd = async function() {
+  const name = document.getElementById('adBizName')?.value.trim();
+  const category = document.getElementById('adBizCat')?.value;
+  const landmark = document.getElementById('adRouteTag')?.value.trim();
+  const targetRoute = document.getElementById('adTargetRoute')?.value.trim();
+  const phone = document.getElementById('adBizPhone')?.value.trim();
+
+  if (!name || !landmark || !phone) { showToast('❌ Business Name, Location & Phone are required!'); return; }
+  if (!/^[6-9][0-9]{9}$/.test(phone.replace(/[\s-]/g,''))) { showToast('❌ Enter a valid 10-digit phone number!'); return; }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await addDoc(collection(getFirestore(), "sponsored_ads"), {
+      name, category: category || 'Local Business', landmark, targetRoute: targetRoute || '', phone,
+      createdAt: Date.now()
+    });
+    showToast('🚀 Sponsored Ad Published!');
+    ['adBizName','adRouteTag','adTargetRoute','adBizPhone'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// किसी From→To route पर matching ad ढूंढना (route नाम में substring match)
+function getMatchingAds(from, to) {
+  const ads = window.getAds ? window.getAds() : [];
+  if (!ads.length) return [];
+  const routeText = `${from} ${to}`.toLowerCase();
+  const matched = ads.filter(a => {
+    if (!a.targetRoute) return true; // कोई target route सेट नहीं तो हर जगह दिखेगा (general local ad)
+    return a.targetRoute.toLowerCase().split(/[-,]/).some(part => part.trim() && routeText.includes(part.trim()));
+  });
+  return matched.length ? matched : ads; // कोई सटीक मैच ना मिले तो भी कोई ad दिखा देना (0 driver वाले route पर काम आता है)
+}
+
+function buildAdCard(ad) {
+  return `
+    <div class="card" style="margin-bottom:12px; border:1.5px dashed var(--primary); border-radius:18px; background:#fffbeb;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span class="role-pill parcel" style="font-size:9.5px;">📢 SPONSORED</span>
+        <span style="font-size:10px; color:#b45309; font-weight:700;">${esc(ad.category || 'Local Business')}</span>
+      </div>
+      <div style="font-size:15px; font-weight:800; color:#1e293b;">${esc(ad.name)}</div>
+      <div style="font-size:12px; color:#64748b; margin:4px 0;">📍 ${esc(ad.landmark || '')}</div>
+      <a href="tel:${esc(ad.phone)}" class="uber-cta-btn" style="display:block; text-align:center; padding:9px; font-size:13px; text-decoration:none; margin-top:6px;">📞 Call ${esc(ad.phone)}</a>
+    </div>
+  `;
+}
+
+// खोज नतीजों में हर 2 कार्ड्स के बाद 1 sponsored ad कार्ड डालना; कोई driver ना मिले तो ad card ही दिखाना
+function injectAdsIntoResults(cardsHtmlArray, from, to) {
+  const ads = getMatchingAds(from, to);
+  if (!ads.length) return cardsHtmlArray.join('');
+  if (!cardsHtmlArray.length) return buildAdCard(ads[0]); // कोई ride नहीं मिली → कम से कम ad दिखे
+
+  let out = [];
+  let adIdx = 0;
+  cardsHtmlArray.forEach((card, i) => {
+    out.push(card);
+    if ((i + 1) % 2 === 0 && adIdx < ads.length) { out.push(buildAdCard(ads[adIdx])); adIdx++; }
+  });
+  return out.join('');
+}
+
+
+window.renderAdminReports = function() {
+  const container = document.getElementById("adminReportsContainer");
+  if (!container) return;
+  const reports = window.getAllReports ? window.getAllReports() : [];
+  if (!reports.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b;'>No reports.</div>"; return; }
+
+  container.innerHTML = reports.map(rep => `
+    <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
+      <b>🚨 ${esc(rep.type || 'Alert')}</b>
+      <div style="font-size:11px; color:#64748b;">User: ${esc(rep.userName)}</div>
+    </div>
+  `).join("");
+};
+
+window.refreshAdminLiveMap = function() {
+  if (!window.adminLiveMapInstance) return;
+  const liveLocs = window.getAllLiveLocations ? window.getAllLiveLocations() : {};
+  if (!window.adminMapMarkers) window.adminMapMarkers = {};
+
+  Object.keys(liveLocs).forEach(rideId => {
+    const loc = liveLocs[rideId];
+    if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) && loc.status !== 'offline') {
+      const pos = [loc.lat, loc.lng];
+      if (window.adminMapMarkers[rideId]) {
+        window.adminMapMarkers[rideId].setLatLng(pos);
+      } else {
+        const marker = L.marker(pos).addTo(window.adminLiveMapInstance);
+        marker.bindPopup(`🚗 Active Transporter`);
+        window.adminMapMarkers[rideId] = marker;
+      }
+    } else {
+      if (window.adminMapMarkers[rideId]) {
+        window.adminLiveMapInstance.removeLayer(window.adminMapMarkers[rideId]);
+        delete window.adminMapMarkers[rideId];
+      }
+    }
+  });
+};
+
 
   function syncDriverGPS() {
     if (!currentUser || !navigator.geolocation) return;
-    const inTransitRide = ALL_REQUESTS.find(q => q.driverUid === currentUser.uid && q.status === 'In-Transit');
+    const inTransitRide = ALL_REQUESTS.find(q => q.driverUid === currentUser.uid && ['Confirmed', 'In-Transit'].includes(q.status));
     if (inTransitRide && driverWatchId === null) {
       driverWatchId = navigator.geolocation.watchPosition(async (pos) => {
         try {
           await setDoc(doc(db, 'live_locations', inTransitRide.rideId), {
-            lat: pos.coords.latitude, lng: pos.coords.longitude, updatedAt: Date.now(), status: 'live'
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: Number(pos.coords.accuracy) || null,
+            speed: pos.coords.speed || null,
+            driverUid: currentUser.uid,
+            updatedAt: Date.now(),
+            status: 'live'
           }, { merge: true });
-        } catch(e){}
-      }, () => {}, { enableHighAccuracy: true });
+        } catch(e){ console.warn('Live location write failed:', e.message); }
+      }, (err) => {
+        console.warn('Driver GPS error:', err.message);
+        // GPS fail hone par bhi passenger ko clear signal mile
+        setDoc(doc(db, 'live_locations', inTransitRide.rideId), { status: 'offline', updatedAt: Date.now() }, { merge: true }).catch(()=>{});
+      }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
     } else if (!inTransitRide && driverWatchId !== null) {
       navigator.geolocation.clearWatch(driverWatchId);
       driverWatchId = null;
@@ -1532,28 +1578,29 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   };
 
   window.renderGarageList = function() {
-    const box = document.getElementById("profileGarageList");
-    if (!box || !currentUser) return;
-    const myVehs = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
-    box.innerHTML = myVehs.length ? myVehs.map(v => {
-      const kycBadge = v.kycStatus === 'verified' 
-        ? '<span class="role-pill driver" style="font-size:9.5px;">✅ Verified</span>' 
-        : (v.kycStatus === 'rejected' ? '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626;">🚫 Rejected</span>' : '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending KYC</span>');
-        
-      return `
-        <div class="item-row" style="margin-bottom:8px;">
-          <div class="item-left">
-            <span style="font-size:18px;">${v.type==='Bike'?'🏍️':'🚗'}</span>
-            <div>
-              <div class="item-title">${esc(v.model)} <span style="font-family:monospace; font-size:11px; color:var(--primary);">(${esc(v.plate)})</span></div>
-              <div class="item-sub" style="margin-top:2px;">${kycBadge}</div>
-            </div>
+  const box = document.getElementById("profileGarageList");
+  if (!box || !currentUser) return;
+  const myVehs = ALL_VEHICLES.filter(v => v.userUid === currentUser.uid);
+  box.innerHTML = myVehs.length ? myVehs.map(v => {
+    const kycBadge = v.kycStatus === 'verified' 
+      ? '<span class="role-pill driver" style="font-size:9.5px;">✅ Verified</span>' 
+      : (v.kycStatus === 'rejected' ? '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626;">🚫 Rejected</span>' : '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending KYC</span>');
+      
+    return `
+      <div class="item-row" style="margin-bottom:8px;">
+        <div class="item-left">
+          <span style="font-size:18px;">${v.type==='Bike'?'🏍️':'🚗'}</span>
+          <div>
+            <div class="item-title">${esc(v.model)} <span style="font-family:monospace; font-size:11px; color:var(--primary);">(${esc(v.plate)})</span></div>
+            <div class="item-sub" style="margin-top:2px;">${kycBadge}</div>
           </div>
-          <button style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:14px;" onclick="deleteVehicle('${v.id}')">🗑️</button>
         </div>
-      `;
-    }).join('') : '<div style="font-size:11.5px;color:#64748b;">No registered vehicles. Tap "+ Add Vehicle" above.</div>';
-  };
+        <button style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:14px;" onclick="deleteVehicle('${v.id}')">🗑️</button>
+      </div>
+    `;
+  }).join('') : '<div style="font-size:11.5px;color:#64748b;">No registered vehicles. Tap "+ Add Vehicle" above.</div>';
+};
+
 
   window.renderSavedPlaces = function() {
     const box = document.getElementById("savedPlacesList");
@@ -1597,7 +1644,7 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     if (!isValidIndianPlate(plate)) return showToast("❌ Invalid Indian plate (e.g. MH35AB1234)!");
 
     try {
-      await addDoc(collection(db, "user_vehicles"), { type, model, plate, userUid: currentUser.uid, userEmail: currentUser.email, kycStatus: 'pending', created: Date.now() });
+      await addDoc(collection(db, "user_vehicles"), { type, model, plate, userUid: currentUser.uid, userEmail: currentUser.email, created: Date.now() });
       document.getElementById("newVehModel").value = "";
       document.getElementById("newVehPlate").value = "";
       closeModal("addVehicleModal");
@@ -1629,58 +1676,6 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
     try { await deleteDoc(doc(db, "saved_places", id)); showToast("🗑️ Location removed."); } catch(e) { showToast(e.message); }
   };
 
-    // 🚘 GARAGE KYC ADMIN MODAL & HANDLERS
-  window.openAdminGarageModal = async function(userUid) {
-    const vehicles = window.getAllVehicles ? window.getAllVehicles().filter(v => v.userUid === userUid) : [];
-    
-    let modal = document.getElementById("adminGarageModal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "adminGarageModal";
-      modal.className = "custom-modal-overlay";
-      modal.style.cssText = "display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:2000; align-items:flex-end; justify-content:center;";
-      modal.innerHTML = `
-        <div class="custom-modal-content" style="background:#fff; width:100%; max-width:540px; border-radius:20px 20px 0 0; padding:16px; max-height:88vh; overflow-y:auto;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h3 style="margin:0; font-size:16px;">🚘 Manage User Garage & KYC</h3>
-            <button style="border:none; background:none; font-size:18px; cursor:pointer;" onclick="document.getElementById('adminGarageModal').style.display='none'">✕</button>
-          </div>
-          <div id="adminGarageModalBody"></div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    }
-
-    const bodyEl = document.getElementById("adminGarageModalBody");
-    if (!vehicles.length) {
-      bodyEl.innerHTML = `<div style="font-size:12px; color:#64748b; padding:10px; text-align:center;">This user has no registered vehicles.</div>`;
-    } else {
-      bodyEl.innerHTML = vehicles.map(v => `
-        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; border-radius:10px; margin-bottom:8px;">
-          <b>${esc(v.model)}</b> (${esc(v.plate)}) - <span style="text-transform:uppercase; font-size:11px;">${esc(v.type)}</span><br>
-          <div style="font-size:11.5px; color:#64748b; margin:6px 0;">Current KYC Status: <b>${esc(v.kycStatus || 'pending')}</b></div>
-          <div style="display:flex; gap:6px;">
-            <button class="green" style="padding:6px 10px; font-size:11px;" onclick="adminUpdateVehicleKyc('${v.id}', 'verified')">✅ Verify KYC</button>
-            <button class="red" style="padding:6px 10px; font-size:11px;" onclick="adminUpdateVehicleKyc('${v.id}', 'rejected')">🚫 Reject KYC</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    modal.style.display = 'flex';
-  };
-
-  window.adminUpdateVehicleKyc = async function(vehicleId, status) {
-    try {
-      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-      await updateDoc(doc(window.db, "user_vehicles", vehicleId), { kycStatus: status });
-      showToast(`✅ Vehicle KYC updated to ${status}!`);
-      document.getElementById('adminGarageModal').style.display = 'none';
-    } catch(e) {
-      showToast("Error: " + e.message);
-    }
-  };
-
   function updateAdminMetrics() {
     const el = document.getElementById("kpiTotalUsers");
     if(!el) return;
@@ -1696,20 +1691,28 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
 
 <!-- UI CONTROLLERS & INTERACTION ENGINE -->
 <script>
+// ==========================================
+// 📱 BOTTOM NAVIGATION (TAB SWITCHING LOGIC)
+// ==========================================
 window.showPage = function(pageId, btnEl) {
+  // सारे पेजेज को छुपाना
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // सिर्फ जो क्लिक हुआ है उसे दिखाना
   const targetPage = document.getElementById(pageId);
   if(targetPage) targetPage.classList.add('active');
   
+  // सारे बटन्स से एक्टिव कलर हटाना
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  // जो बटन क्लिक हुआ है उसे एक्टिव कलर (नीला) करना
   if (btnEl) btnEl.classList.add('active');
 
+  // मैप का साइज फिक्स करना (ताकि मैप आधा न दिखे)
   setTimeout(() => {
     try {
       if (pageId === 'rides' && typeof rideMap !== 'undefined') rideMap.invalidateSize();
       if (pageId === 'parcel' && typeof parcelMap !== 'undefined') parcelMap.invalidateSize();
       if (pageId === 'post' && typeof postMap !== 'undefined') postMap.invalidateSize();
-    } catch(e) {}
+    } catch(e) { console.warn("Map resize ignored"); }
   }, 120);
 };
 
@@ -1979,7 +1982,42 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 function openBagModal() { openModal('bagModal'); }
 function openVehicleFilterModal() { openModal('vehicleFilterModal'); }
 function openPaymentModeModal() { openModal('paymentModeModal'); }
-function openFleetModal() { openModal('fleetModal'); }
+function openFleetModal() {
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  const container = document.getElementById('fleetModalItems');
+  if (!container) return;
+
+  if (!user) { showToast('❌ Please login first to see your garage!'); return; }
+
+  const myVehicles = (window.getAllVehicles ? window.getAllVehicles() : []).filter(v => v.userUid === user.uid);
+
+  let html = '';
+  if (!myVehicles.length) {
+    html += `<div style="font-size:12px; color:#64748b; padding:10px; text-align:center;">You have no registered vehicles yet. Add one from your Profile → Garage.</div>`;
+  } else {
+    html += myVehicles.map(v => {
+      const kyc = v.kycStatus || 'pending';
+      const kycBadge = kyc === 'verified'
+        ? '<span class="role-pill driver" style="font-size:9.5px;">✅ Verified</span>'
+        : (kyc === 'rejected' ? '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626;">🚫 Rejected</span>' : '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending KYC</span>');
+      const icon = v.type === 'Bike' ? '🏍️' : v.type === 'Auto' ? '🛺' : (v.type === 'Pickup' || v.type === 'Truck') ? '🚚' : v.type === 'Van' ? '🚐' : v.type === 'Private Bus' ? '🚌' : '🚗';
+      const seats = v.type === 'Bike' ? 1 : (v.type === 'Auto' ? 3 : 4);
+      return `<div class="modal-option-item" onclick="pickFleet('${esc(v.type)}', '${esc(v.model)}', '${esc(v.plate)}', '${icon}', ${seats}, 100, this, '${kyc}')">
+        <div><b>${icon} ${esc(v.model)} (${esc(v.plate)})</b><div style="font-size:11px;color:#64748b; margin-top:2px;">${esc(v.type)} • ${seats} Seats ${kycBadge}</div></div>
+        <div class="check-box-circle"></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Commuter options — institutional, not personally owned, so no KYC required
+  html += `
+    <div class="modal-option-item" onclick="pickFleet('Bus', 'State Transport Bus', 'ST-BUS', '🚌', 0, 80, this, 'verified')"><div><b>🚌 State Transport Bus</b><div style="font-size:11px;color:#64748b;">Daily Commuter • Parcel Carry</div></div><div class="check-box-circle"></div></div>
+    <div class="modal-option-item" onclick="pickFleet('Train', 'Indian Railways', 'RAILWAY', '🚆', 0, 70, this, 'verified')"><div><b>🚆 Indian Railways</b><div style="font-size:11px;color:#64748b;">Direct Track • Logistics Only</div></div><div class="check-box-circle"></div></div>
+  `;
+
+  container.innerHTML = html;
+  openModal('fleetModal');
+}
 function openParcelModal() { openModal('parcelModal'); }
 function openTermsModal() { openModal('termsModal'); }
 function openProfileEditModal() { openModal('editProfileModal'); }
@@ -2035,9 +2073,10 @@ function pickPaymentMode(mode, label, el) {
   closeModal('paymentModeModal');
 }
 
-function pickFleet(vehType, title, num, icon, seats, fare, el) {
+function pickFleet(vehType, title, num, icon, seats, fare, el, kycStatus) {
   selectedVehicleType = vehType;
   selectedVehicleSeats = seats;
+  window.selectedVehicleKyc = kycStatus || 'pending';
   document.getElementById('selectedVehIco').textContent = icon;
   document.getElementById('selectedVehTitle').textContent = `${title} (${num})`;
   document.getElementById('pVehicle').value = vehType;
@@ -2247,15 +2286,92 @@ function shareLiveTripWhatsApp(from, to, driverName, driverPhone, rideId) {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
 }
 
+let selectedRatingTags = new Set();
+
 function setRating(stars) { currentRatingValue = stars; document.querySelectorAll("#starsContainer span").forEach((el, i) => el.style.color = i < stars ? "#ff9f1c" : "#cbd5e1"); }
+
+function toggleRatingTag(tag, el) {
+  if (selectedRatingTags.has(tag)) { selectedRatingTags.delete(tag); el.classList.remove('active'); }
+  else { selectedRatingTags.add(tag); el.classList.add('active'); }
+}
+
+// रेटिंग मॉडल खोलना — पूरा रिक्वेस्ट कॉन्टेक्स्ट (किसे रेट करना है, route) के साथ
+let ratingTargetData = null;
+window.openRatingModal = function(qid) {
+  const q = (window.getRequests ? window.getRequests() : []).find(r => r.id === qid);
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  if (!q || !user) return;
+
+  const isDriver = (q.driverUid === user.uid);
+  ratingTargetReqId = qid;
+  ratingTargetData = {
+    ratedUid: isDriver ? q.passengerUid : q.driverUid,
+    ratedName: isDriver ? (q.passengerName || 'Passenger') : (q.driverName || 'Driver'),
+    raterRole: isDriver ? 'Driver' : 'Passenger',
+    from: q.from, to: q.to
+  };
+
+  currentRatingValue = 5;
+  selectedRatingTags.clear();
+  document.querySelectorAll("#ratingTagsContainer .rating-tag-chip").forEach(el => el.classList.remove('active'));
+  document.querySelectorAll("#starsContainer span").forEach(el => el.style.color = "#ff9f1c");
+  const reviewBox = document.getElementById("ratingReviewText"); if (reviewBox) reviewBox.value = "";
+  const titleEl = document.getElementById("ratingModalTitle"); if (titleEl) titleEl.textContent = `Rate ${esc(ratingTargetData.ratedName)}`;
+
+  document.getElementById("ratingModal").style.display = "flex";
+};
+
 async function submitRatingReview() {
-  if (ratingTargetReqId) {
-    try {
-      const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-      await updateDoc(doc(window.db, "requests", ratingTargetReqId), { isRated: true, ratingStars: currentRatingValue });
-    } catch(e){}
+  if (!ratingTargetReqId || !ratingTargetData) {
+    document.getElementById("ratingModal").style.display = "none";
+    return;
   }
-  document.getElementById("ratingModal").style.display = "none"; showToast("⭐ Feedback Submitted!");
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  const reviewText = (document.getElementById("ratingReviewText")?.value || "").trim();
+
+  try {
+    const { getFirestore, collection, addDoc, doc, updateDoc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    const ratingData = {
+      requestId: ratingTargetReqId,
+      raterUid: user ? user.uid : null,
+      raterName: user ? (user.displayName || 'User') : 'Anonymous',
+      raterRole: ratingTargetData.raterRole,
+      ratedUid: ratingTargetData.ratedUid,
+      ratedName: ratingTargetData.ratedName,
+      from: ratingTargetData.from,
+      to: ratingTargetData.to,
+      stars: currentRatingValue,
+      tags: Array.from(selectedRatingTags),
+      review: reviewText,
+      createdAt: Date.now()
+    };
+
+    // 1. dedicated ratings collection में पूरा record सेव करना
+    await addDoc(collection(db, "ratings"), ratingData);
+
+    // 2. request doc पर भी flag रखना (quick lookup के लिए)
+    await updateDoc(doc(db, "requests", ratingTargetReqId), { isRated: true, ratingStars: currentRatingValue });
+
+    // 3. रेट किए गए user की aggregate rating अपडेट करना (ताकि search results में असली rating दिखे)
+    if (ratingTargetData.ratedUid) {
+      const userRef = doc(db, "users", ratingTargetData.ratedUid);
+      const userSnap = await getDoc(userRef);
+      const prevSum = (userSnap.exists() && userSnap.data().ratingSum) || 0;
+      const prevCount = (userSnap.exists() && userSnap.data().ratingCount) || 0;
+      const newSum = prevSum + currentRatingValue;
+      const newCount = prevCount + 1;
+      await setDoc(userRef, { ratingSum: newSum, ratingCount: newCount, avgRating: Math.round((newSum / newCount) * 10) / 10 }, { merge: true });
+    }
+
+    showToast("⭐ Feedback Submitted!");
+  } catch(e) {
+    showToast("❌ Could not submit rating: " + e.message);
+  }
+
+  ratingTargetReqId = null; ratingTargetData = null;
+  document.getElementById("ratingModal").style.display = "none";
 }
 
 async function publishPostTrip() {
@@ -2433,7 +2549,7 @@ window.openDeepInspectModal = function(userUid) {
         let geom = typeof activeTrip.geometry === "string" ? JSON.parse(activeTrip.geometry) : activeTrip.geometry;
         const line = L.geoJSON(geom, { style: { color: "#1261ff", weight: 5 } }).addTo(deepInspectMapInstance);
         deepInspectMapInstance.fitBounds(line.getBounds(), { padding: [20, 20] });
-      } catch(e) {}
+      } catch(e) { console.warn("Polyline render error", e); }
     }
   }, 250);
 };
@@ -2442,6 +2558,8 @@ window.closeDeepInspectModal = function() {
   document.getElementById("deepInspectModal").style.display = "none";
 };
 
+
+// 🔢 बैंकिंग ऐप जैसा स्मूथ पिन पैड लॉजिक
 window.handlePinInput = function(n) {
   const el = document.getElementById('pin' + n);
   if (!el) return;
@@ -2456,205 +2574,1532 @@ window.handlePinKeyDown = function(e, n) {
     document.getElementById('pin' + (n - 1))?.focus();
   }
 };
-</script>
+// 🔍 1. SMART FIND RIDES (CORRIDOR MATCHING)
+window.findAvailableRides = async function() {
+  const from = document.getElementById('rFrom').value.trim();
+  const to = document.getElementById('rTo').value.trim();
+  const ladiesOnly = document.getElementById('rLadiesOnly')?.checked;
+  const seatsNeed = Number(document.getElementById('lblSeatsFilter')?.innerText.replace(/\D/g, '')) || 1;
+  const box = document.getElementById('rideResultsList');
+  
+  if (!from || !to) return showToast("❌ Enter Pickup and Destination!");
+  box.innerHTML = `⏳ Scanning Intercity Corridor...`;
 
-<script>
-/* ================================================================
-   SAFARSHARE — PERFECT BUSINESS ENGINE BRIDGE
-   Modern app.html UI + business/state/security logic ported from
-   parfect.html. UI remains app.html; data contract stays Firestore.
-   ================================================================ */
-(() => {
-  'use strict';
-  const FIRESTORE = 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-  const state = { tracking:new Map(), ratingId:null, ratingStars:0, ratingTags:new Set(), chatUnsub:null, driverWatch:null, activeDriverRides:new Set() };
-  const code4=()=>String(Math.floor(1000+Math.random()*9000));
-  const clean4=v=>String(v??'').replace(/\D/g,'').slice(0,4);
-  const user=()=>window.getCurrentUser?.();
-  const db=()=>window.db;
-  const toast=m=>window.showToast?.(m);
-  const safe=v=>Number.isFinite(Number(v))?Number(v):0;
-  const esc2=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  try {
+    const pFromCoord = await geocode(from); // Requires a basic geocode function
+    const pToCoord = await geocode(to);
+    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
+    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
+    const maxCorridorKm = 10.0; // 10 KM Radius
 
-  async function fs(){ return await import(FIRESTORE); }
-  async function freshRequest(id){ const {doc,getDoc}=await fs(); const s=await getDoc(doc(db(),'requests',id)); if(!s.exists()) throw new Error('Request not found'); return {id:s.id,...s.data()}; }
-  async function freshRide(id){ const {doc,getDoc}=await fs(); const s=await getDoc(doc(db(),'rides',id)); if(!s.exists()) throw new Error('Ride not found'); return {id:s.id,...s.data()}; }
+    const allRides = window.getRides ? window.getRides() : [];
+    const matched = [];
 
-  /* ---------- Secure request state machine ---------- */
-  window.acceptBooking = async function(qid){
-    try{
-      const me=user(); if(!me) throw new Error('Please login first');
-      const q=await freshRequest(qid);
-      if(q.driverUid!==me.uid) throw new Error('Only assigned driver can accept this request');
-      if(!['Pending','Counter Offered'].includes(q.status)) throw new Error('Request is not pending');
-      const {doc,updateDoc}=await fs();
-      await updateDoc(doc(db(),'requests',qid),{status:'Accepted',acceptedAt:Date.now(),acceptedBy:me.uid,startOtp:clean4(q.startOtp)||code4(),dropOtp:clean4(q.dropOtp)||code4()});
-      toast('✅ Request accepted. Passenger must confirm payment/booking.');
-    }catch(e){toast('❌ '+e.message)}
-  };
+    allRides.forEach(r => {
+      if (r.status !== 'Active' || !r.passenger || r.seats < seatsNeed) return;
+      if (ladiesOnly && !r.isLadiesOnly) return;
+      if (r.driverUid === (currentUser?.uid)) return; // Khud ki trip hide karein
 
-  window.reserveCapacity = async function(qOrId,mode){
-    try{
-      const me=user(); if(!me) throw new Error('Please login first');
-      const q=typeof qOrId==='string'?await freshRequest(qOrId):await freshRequest(qOrId.id);
-      if(q.passengerUid!==me.uid) throw new Error('Only passenger can confirm booking');
-      if(q.status!=='Accepted') throw new Error('Booking must be Accepted first');
-      const {doc,getDoc,updateDoc}=await fs();
-      const rideRef=doc(db(),'rides',q.rideId); const rs=await getDoc(rideRef);
-      if(q.type==='passenger' && rs.exists()){
-        const available=safe(rs.data().seats), need=Math.max(1,safe(q.numSeats)||1);
-        if(available<need) throw new Error('Not enough seats available');
-        await updateDoc(rideRef,{seats:Math.max(0,available-need),updatedAt:Date.now()});
+      let isMatch = false;
+      let geom = typeof r.geometry === 'string' ? JSON.parse(r.geometry) : r.geometry;
+
+      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const line = turf.lineString(geom.coordinates);
+        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+        const np1 = turf.nearestPointOnLine(line, pPickupPt);
+        const np2 = turf.nearestPointOnLine(line, pDropPt);
+
+        // Direction & Distance check
+        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          isMatch = true;
+        }
       }
-      await updateDoc(doc(db(),'requests',q.id),{status:'Confirmed',paymentMode:mode||'cash_pickup',paymentStatus:'Pending',confirmedAt:Date.now(),startOtp:clean4(q.startOtp)||code4(),dropOtp:clean4(q.dropOtp)||code4()});
-      toast('✅ Booking confirmed. Start PIN generated.');
-      window.renderActivityFeed?.();
-    }catch(e){toast('❌ '+e.message)}
-  };
 
-  window.choosePayment = async function(qid){
-    const mode=prompt('Payment mode: type cash_pickup or driver_qr','cash_pickup');
-    if(mode===null)return;
-    await window.reserveCapacity(qid,mode.trim()||'cash_pickup');
-  };
+      if (isMatch) matched.push(r);
+    });
 
-  window.counterRequest = async function(qid){
-    try{
-      const me=user(); if(!me) throw new Error('Please login first');
-      const q=await freshRequest(qid);
-      if(q.driverUid!==me.uid && q.passengerUid!==me.uid) throw new Error('Not authorized');
-      if(!['Pending','Accepted','Counter Offered'].includes(q.status)) throw new Error('Counter offer unavailable now');
-      const price=Number(prompt('Enter your new fare',String(q.currentPrice||q.originalPrice||0)));
-      if(!Number.isFinite(price)||price<=0) throw new Error('Enter valid fare');
-      const who=q.driverUid===me.uid?'Driver':'Passenger';
-      const {doc,updateDoc}=await fs();
-      await updateDoc(doc(db(),'requests',qid),{status:'Counter Offered',currentPrice:Math.round(price),lastCounterBy:who,counterAt:Date.now(),counterBy:me.uid});
-      toast('🔄 New fare offered: ₹'+Math.round(price));
-      window.renderActivityFeed?.();
-    }catch(e){toast('❌ '+e.message)}
-  };
-  window.acceptOffer = async function(qid){ await window.acceptBooking(qid); };
+    box.innerHTML = matched.length ? matched.map(r => `
+      <div class="request" style="margin-top:8px;">
+        <div class="card-top-row"><span class="role-pill driver">${esc(r.vehicle)}</span><span style="font-weight:800;color:var(--primary);">₹${r.seatPrice}/seat</span></div>
+        <div style="font-size:12px;font-weight:700;">${cleanLocation(r.from)} ➔ ${cleanLocation(r.to)}</div>
+        <div style="font-size:11px;color:#64748b;margin:4px 0;">Driver: <b>${esc(r.driverName)}</b> • ${r.seats} Seats Left</div>
+        <button class="uber-cta-btn" style="padding:8px;font-size:12px;" onclick="bookRideRequest('${r.id}', ${r.seatPrice}, '${esc(r.driverUid)}', '${esc(r.driverName)}', '${esc(r.driverPhone)}', '${esc(r.from)}', '${esc(r.to)}')">✅ Book Seat Now</button>
+      </div>
+    `).join('') : '<div style="font-size:11.5px;color:#64748b;padding:10px;text-align:center;">No direct rides matching 10 KM corridor.</div>';
+  } catch(e) { box.innerHTML = "❌ Error finding rides."; }
+};
 
-  window.cancelWithReasonPrompt = async function(qid,role){
-    const reason=prompt('Enter mandatory cancellation reason:'); if(!reason?.trim())return toast('❌ Reason is required!');
-    try{ const me=user(); const q=await freshRequest(qid); if(!me|| (q.driverUid!==me.uid&&q.passengerUid!==me.uid&&!window.isUserAdmin?.())) throw new Error('Not authorized'); const {doc,updateDoc}=await fs(); await updateDoc(doc(db(),'requests',qid),{status:'Cancelled',cancelReason:reason.trim(),cancelledBy:role||'User',cancelledAt:Date.now(),updatedAt:Date.now()}); toast('🚫 Booking cancelled.'); window.renderActivityFeed?.(); }catch(e){toast('❌ '+e.message)}
-  };
-  window.cancelRequest=window.cancelWithReasonPrompt;
+// 📦 2. SMART PARCEL TRANSPORTERS (Turf.js corridor-matched — parity with findAvailableRides)
+window.findParcelTransporters = async function() {
+  const from = document.getElementById('xFrom').value.trim();
+  const to = document.getElementById('xTo').value.trim();
+  const rName = document.getElementById('xRecName').value.trim();
+  const rPhone = document.getElementById('xRecPhone').value.trim();
+  const slab = document.getElementById('xSlab').value;
+  const box = document.getElementById('parcelResultsList');
 
-  window.cancelTripPrompt = async function(rideId){
-    const reason=prompt('Enter reason for cancelling your trip:'); if(!reason?.trim())return toast('❌ Reason is required!');
-    try{const me=user(),r=await freshRide(rideId);if(!me|| (r.driverUid!==me.uid&&!window.isUserAdmin?.()))throw new Error('Not authorized');const {doc,updateDoc}=await fs();await updateDoc(doc(db(),'rides',rideId),{status:'Cancelled',cancelReason:reason.trim(),cancelledBy:me.uid,cancelledAt:Date.now(),updatedAt:Date.now()});toast('🚫 Trip cancelled.');window.renderActivityFeed?.();}catch(e){toast('❌ '+e.message)}
-  };
-  window.cancelTrip=window.cancelTripPrompt;
+  if (!from || !to) return showToast("❌ Enter Pickup and Delivery locations!");
+  if (!rName || rPhone.length !== 10) return showToast("❌ Enter Receiver Name & 10-digit Phone!");
 
-  /* ---------- Secure PINs: always verify fresh Firestore state ---------- */
-  async function pinPrompt(title,callback){
-    const modal=document.getElementById('pinModal'); if(!modal)return callback(prompt(title,'')||'');
-    document.getElementById('pinModalTitle').textContent=title; [1,2,3,4].forEach(i=>{const e=document.getElementById('pin'+i);if(e)e.value='';}); modal.style.display='flex';
-    state.pinCallback=callback; document.getElementById('pin1')?.focus();
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  const isLocalMode = document.getElementById("rideRadarToggleBadge")?.classList.contains("local-mode");
+  const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
+
+  box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Logistics Corridor...</div>`;
+
+  try {
+    const pFromCoord = await geocode(from, "xFrom");
+    const pToCoord = await geocode(to, "xTo");
+    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
+    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
+
+    const allRides = window.getRides ? window.getRides() : [];
+
+    // Slab-specific pricing must be active on the driver's posting (same rule as original app)
+    const candidates = allRides.filter(r => {
+      if (user && r.driverUid === user.uid) return false;
+      if (r.status !== 'Active' || !r.parcel) return false;
+      if (slab === 'doc') return Boolean(r.typeDoc && Number(r.docPrice) > 0);
+      if (slab === 'bag') return Boolean(r.typeBag && Number(r.bagPrice) > 0);
+      if (slab === 'cargo') return Boolean(r.typeCargo && Number(r.cargoPrice) > 0);
+      if (slab === 'full_vehicle') return Boolean(Number(r.fullVehiclePrice) > 0);
+      return false;
+    });
+
+    const matched = [];
+    candidates.forEach(r => {
+      let geom = typeof r.geometry === 'string' ? (() => { try { return JSON.parse(r.geometry); } catch(e){ return null; } })() : r.geometry;
+      let isMatch = false;
+
+      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const line = turf.lineString(geom.coordinates);
+        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+        const np1 = turf.nearestPointOnLine(line, pPickupPt);
+        const np2 = turf.nearestPointOnLine(line, pDropPt);
+        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
+        const price = slab === 'doc' ? r.docPrice : slab === 'bag' ? r.bagPrice : slab === 'cargo' ? r.cargoPrice : (r.fullVehiclePrice || 100);
+        matched.push({ ...r, price });
+      }
+    });
+
+    const cardsArr = matched.map(r => `
+      <div class="card" style="margin-bottom:12px; border: 1.5px solid var(--border-light); border-radius:18px;">
+        <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
+          <div class="dv-info">
+            <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary);">
+            <div>
+              <div class="dv-name">${esc(r.driverName || 'Transporter')} ⭐ ${((window.getUsers ? window.getUsers() : []).find(u => u.uid === r.driverUid)?.avgRating) || 'New'}</div>
+              <div class="dv-sub">${esc(r.vehicle)} (${esc(r.carNumber || '')})</div>
+            </div>
+          </div>
+          <div class="fare-tag" style="color:var(--success); font-size:18px;">₹${r.price}</div>
+        </div>
+        <div class="route-timeline">
+          <div class="route-node">${esc(cleanLocation(r.from))}</div>
+          <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
+        </div>
+        <div class="chips-scroller" style="margin-bottom:10px;">
+          <span class="role-pill parcel">✅ ${maxCorridorKm}km Logistics Corridor</span>
+          <span class="role-pill driver">⏰ ${esc(r.time || '')}</span>
+        </div>
+        <button class="uber-cta-btn" style="padding:10px; font-size:13px;" onclick="parcelRequest('${r.id}', '${slab}', ${r.price})">📦 Send with this Captain • ₹${r.price}</button>
+      </div>
+    `);
+
+    const matchingAds = getMatchingAds(from, to);
+    box.innerHTML = (matched.length || matchingAds.length) ? injectAdsIntoResults(cardsArr, from, to) : `<div style="text-align:center; padding:30px; color:#64748b; background:#fff; border-radius:18px; border:1px solid #e2e8f0;">
+        <div style="font-size:36px; margin-bottom:10px;">📦</div>
+        <h3 style="margin:0 0 6px; color:#1e293b;">No Transporters Found</h3>
+        <p style="font-size:12px; margin:0;">No one supporting this parcel type within the ${maxCorridorKm}km corridor right now.</p>
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`;
   }
-  window.submitPinModal=async function(){const entered=[1,2,3,4].map(i=>document.getElementById('pin'+i)?.value||'').join('');if(entered.length!==4)return toast('❌ Enter all 4 digits');try{await state.pinCallback?.(entered)}catch(e){toast('❌ '+e.message)}};
-  window.closePinModal=function(){const m=document.getElementById('pinModal');if(m)m.style.display='none';state.pinCallback=null;[1,2,3,4].forEach(i=>{const e=document.getElementById('pin'+i);if(e)e.value=''})};
-  window.verifyStartOtpPrompt=async function(qid){
-    await pinPrompt('Enter START PIN',async entered=>{
-      const me=user(),q=await freshRequest(qid); if(!me||q.driverUid!==me.uid)throw new Error('Only assigned driver can start trip'); if(q.status!=='Confirmed')throw new Error('Trip is not confirmed'); if(clean4(q.startOtp)!==clean4(entered))throw new Error('Wrong Start PIN');
-      const {doc,updateDoc}=await fs(); await updateDoc(doc(db(),'requests',qid),{status:'In-Transit',startedAt:Date.now(),startedBy:me.uid,paymentStatus:q.paymentStatus||'Pending',updatedAt:Date.now()}); window.closePinModal();toast('🚗 Start PIN verified — Ride is In-Transit'); syncDriverGPS();window.renderActivityFeed?.();
+};
+// ==========================================
+// 🟢 SMART FIND RIDES ENGINE (MODERN UI INTEGRATION)
+// ==========================================
+window.findAvailableRides = async function() {
+  // 1. नए UI (app.html) से इनपुट्स पढ़ना
+  const from = document.getElementById("rFrom").value.trim();
+  const to = document.getElementById("rTo").value.trim();
+  
+  // DateTime Combined से Date और Time अलग करना
+  const dateTime = document.getElementById("rDateTimeCombined").value;
+  const date = dateTime ? dateTime.split("T")[0] : "";
+  const time = dateTime ? dateTime.split("T")[1] : "";
+  
+  // Filters
+  const ladiesOnly = document.getElementById("rLadiesOnly").checked;
+  // व्हीकल फ़िल्टर और सीट्स (ग्लोबल वैरिएबल्स जो मोडल से सेट होते हैं)
+  const vehicle = window.selectedVehicleType || ""; 
+  const seatsNeed = window.selectedVehicleSeats || 1; 
+  
+  const user = window.getCurrentUser();
+  const box = document.getElementById("rideResultsList"); // नया रिज़ल्ट बॉक्स
+
+  // कॉरिडोर मोड (डिफ़ॉल्ट 10 KM या रडार टॉगल के हिसाब से)
+  const isLocalMode = document.getElementById("rideRadarToggleBadge").classList.contains("local-mode");
+  const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
+
+  if (!from || !to) { 
+    showToast("❌ Please enter Pickup and Drop locations!"); 
+    return; 
+  }
+  
+  box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Corridor Radar...</div>`;
+
+  try {
+    // 2. Geocoding (लोकेशन को कोऑर्डिनेट्स में बदलना)
+    const pFromCoord = await geocode(from, "rFrom");
+    const pToCoord = await geocode(to, "rTo");
+    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
+    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isToday = (!date || date === todayStr);
+
+    // 3. स्मार्ट डेटाबेस फ़िल्टरिंग
+    const allRides = window.getRides().filter(r => {
+      if (user && r.driverUid === user.uid) return false; // खुद की ट्रिप नहीं दिखेगी
+      if (r.status !== "Active") return false;
+      if (!r.passenger || safeNumber(r.seats) < seatsNeed) return false;
+      if (vehicle && r.vehicle !== vehicle) return false;
+      if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
+
+      // टाइम विंडो (±2 Hours)
+      if (isToday) {
+        if (r.date && r.date !== todayStr) return false;
+      } else {
+        if (date && r.date !== date) return false;
+      }
+      return true;
     });
-  };
-  window.verifyStartOtp=window.verifyStartOtpPrompt;
-  window.verifyDropOtpPrompt=async function(qid){
-    await pinPrompt('Enter DROP PIN',async entered=>{
-      const me=user(),q=await freshRequest(qid); if(!me||q.driverUid!==me.uid)throw new Error('Only assigned driver can complete trip'); if(q.status!=='In-Transit')throw new Error('Trip is not In-Transit'); if(clean4(q.dropOtp)!==clean4(entered))throw new Error('Wrong Drop PIN');
-      const {doc,updateDoc}=await fs(); await updateDoc(doc(db(),'requests',qid),{status:'Completed',completedAt:Date.now(),completedBy:me.uid,updatedAt:Date.now()}); window.closePinModal();toast('🏁 Trip completed');window.openRatingModal?.(qid);syncDriverGPS();window.renderActivityFeed?.();
+
+    const matched = [];
+
+    // 4. Turf.js Spatial Route Matching
+    allRides.forEach(trip => {
+      let geom = trip.geometry;
+      if (typeof geom === "string") {
+        try { geom = JSON.parse(geom); } catch(e) { geom = null; }
+      }
+
+      let isMatch = false;
+
+      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const line = turf.lineString(geom.coordinates);
+        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+        const np1 = turf.nearestPointOnLine(line, pPickupPt);
+        const np2 = turf.nearestPointOnLine(line, pDropPt);
+
+        // पिकअप और ड्रॉप दोनों कॉरिडोर के अंदर हों और सही दिशा में हों
+        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          isMatch = true;
+          let travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
+          const fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+          matched.push({ ...trip, travelKm, fare });
+        }
+      }
     });
+
+    // 5. मॉडर्न UI कार्ड्स रेंडर करना
+    const rideCardsArr = matched.map(r => `
+        <div class="card" style="margin-bottom:12px; border: 1.5px solid var(--border-light); border-radius:18px;">
+          <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
+            <div class="dv-info">
+              <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary);">
+              <div>
+                <div class="dv-name">${esc(r.driverName || r.name || 'Driver')} ⭐ ${((window.getUsers ? window.getUsers() : []).find(u => u.uid === r.driverUid)?.avgRating) || 'New'}</div>
+                <div class="dv-sub">${esc(r.carModel || r.vehicle)} (${esc(r.carNumber || '')})</div>
+              </div>
+            </div>
+            <div class="fare-tag" style="color:var(--success); font-size:18px;">₹${r.fare}/seat</div>
+          </div>
+          
+          <div class="route-timeline">
+            <div class="route-node">${esc(cleanLocation(r.from))}</div>
+            <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
+          </div>
+          
+          <div class="chips-scroller" style="margin-bottom:10px;">
+            <span class="role-pill driver">📅 ${esc(r.date)} • ⏰ ${esc(r.time)}</span>
+            <span class="role-pill passenger">💺 ${esc(r.seats)} Seats Left</span>
+            <span class="role-pill parcel">✅ ${maxCorridorKm}km Radar</span>
+            ${r.isLadiesOnly ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">🌸 Women Driven</span>' : ''}
+            ${r.isFamilyOnBoard ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">👨‍👩‍👧 Family Safe</span>' : ''}
+          </div>
+          
+          <div style="display: flex; gap: 8px;">
+            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">
+              ✅ Book Now
+            </button>
+            <button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content:center; border:none;" onclick="counterRequest('${r.id}')">
+              🔄 Offer Fare
+            </button>
+          </div>
+        </div>`);
+
+    const matchingRideAds = getMatchingAds(from, to);
+    if (matched.length || matchingRideAds.length) {
+      box.innerHTML = injectAdsIntoResults(rideCardsArr, from, to);
+    } else {
+      box.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; background:#fff; border-radius:18px; border:1px solid #e2e8f0;">
+        <div style="font-size:36px; margin-bottom:10px;">🚗</div>
+        <h3 style="margin:0 0 6px; color:#1e293b;">No Rides Found</h3>
+        <p style="font-size:12px; margin:0;">We couldn't find any active trips within the ${maxCorridorKm}km corridor right now.</p>
+      </div>`;
+    }
+  } catch(e) { 
+    box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; 
+  }
+};
+// ==========================================
+// 🚗 SMART POST TRIP ENGINE (MODERN UI INTEGRATION)
+// ==========================================
+window.publishPostTrip = async function() {
+  const user = window.getCurrentUser();
+  if(!user) {
+    showToast("❌ Please login with Google first!");
+    if(window.googleLogin) window.googleLogin();
+    return;
+  }
+  if(user.isBlocked) {
+    showToast("❌ Your account is restricted by Admin.");
+    return;
+  }
+
+  // 🛡️ KYC ENFORCEMENT: unverified vehicles cannot post a trip
+  const kyc = window.selectedVehicleKyc || 'pending';
+  if (kyc !== 'verified') {
+    showToast(kyc === 'rejected'
+      ? "🚫 This vehicle's KYC was rejected by Admin. Choose a verified vehicle."
+      : "⏳ This vehicle is pending KYC verification. Please wait for Admin approval before posting a trip.");
+    return;
+  }
+
+  // 1. नए UI से Inputs पढ़ना
+  const from = document.getElementById("pFrom").value.trim();
+  const to = document.getElementById("pTo").value.trim();
+  
+  // Date & Time (Combined Chip से)
+  const dateTime = document.getElementById("pDateTimeCombined").value;
+  let date = "", time = "";
+  if (dateTime) {
+    [date, time] = dateTime.split("T");
+  } else {
+    // अगर यूज़र ने टाइम नहीं चुना तो डिफ़ॉल्ट 'Now' मान लेंगे
+    const n = new Date();
+    date = n.toISOString().split("T")[0];
+    time = n.toTimeString().split("T")[1].substring(0,5);
+  }
+
+  // 2. व्हीकल, सीट्स और प्राइस (Fleet Modal और UI से)
+  const vehicleType = document.getElementById("pVehicle").value || "Car";
+  const vehiclePlate = document.getElementById("pVehicleNo").value || "MH35AB1234";
+  const seats = Number(document.getElementById("pSeats").value) || 3;
+  const seatPrice = Number(document.getElementById("pPrice").value) || 150;
+  
+  // Toggles (Daily, Ladies, Return Trip)
+  const isLadiesOnly = document.getElementById("pLadiesOnly").checked;
+  const isDaily = document.getElementById("pDailyCommuter").checked;
+  const alsoReturn = document.getElementById("pHasReturnTrip").checked;
+  const returnTime = document.getElementById("pReturnTime") ? document.getElementById("pReturnTime").value : "";
+
+  // 3. पार्सल स्लैब्स (Parcel Modal के Checkmarks से पढ़ना)
+  const docEl = document.getElementById("chk_doc");
+  const bagEl = document.getElementById("chk_bag");
+  const cargoEl = document.getElementById("chk_cargo");
+  const fullEl = document.getElementById("chk_full");
+  
+  const typeDoc = docEl && docEl.textContent.includes("✓");
+  const typeBag = bagEl && bagEl.textContent.includes("✓");
+  const typeCargo = cargoEl && cargoEl.textContent.includes("✓");
+  const typeFull = fullEl && fullEl.textContent.includes("✓");
+  
+  const acceptsParcel = typeDoc || typeBag || typeCargo || typeFull;
+  
+  const docPrice = typeDoc ? 60 : 0;
+  const bagPrice = typeBag ? 100 : 0;
+  const cargoPrice = typeCargo ? 150 : 0;
+  const fullVehiclePrice = typeFull ? Number(document.getElementById("pFullVehicleCustomPrice").value || 800) : 0;
+
+  // वैलिडेशन
+  if(!from || !to) { showToast("❌ Please enter Starting Point and Destination!"); return; }
+  if(from.toLowerCase() === to.toLowerCase()) { showToast("❌ From and To cannot be the same!"); return; }
+  if(seats < 1 && !acceptsParcel) { showToast("❌ Choose at least 1 Seat or Accept Parcels!"); return; }
+
+  showToast("⏳ Calculating fast route & publishing trip...");
+
+  // 4. OSRM Route Geometry (Live Map Drawing Logic)
+  let geometryStr = null;
+  let routeDistanceKm = null;
+  let routeDurationMin = null;
+
+  try {
+    const fC = await geocode(from, "pFrom");
+    const tC = await geocode(to, "pTo");
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fC[1]},${fC[0]};${tC[1]},${tC[0]}?overview=full&geometries=geojson`;
+    const res = await fetch(osrmUrl);
+    const data = await res.json();
+    
+    if (data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      geometryStr = JSON.stringify(route.geometry);
+      routeDistanceKm = Number((route.distance / 1000).toFixed(1));
+      routeDurationMin = Math.round(route.duration / 60);
+    }
+  } catch(e) {
+    console.warn("Routing fallback...", e);
+  }
+
+  // 5. Firebase डेटा स्ट्रक्चर (परफेक्ट वाला)
+  const baseData = {
+    driverUid: user.uid,
+    driverName: user.displayName || 'Driver',
+    driverEmail: user.email || '',
+    driverDp: user.photoURL || '',
+    driverPhone: user.phone || '',
+    from, to, date, time,
+    status: 'Active',
+    created: Date.now(),
+    updatedAt: Date.now(),
+    passenger: seats > 0,
+    parcel: acceptsParcel,
+    seats, seatPrice,
+    typeDoc, typeBag, typeCargo,
+    docPrice, bagPrice, cargoPrice, fullVehiclePrice,
+    isCommuterMode: false,
+    isDaily,
+    isLadiesOnly,
+    isFamilyOnBoard: false,
+    vehicle: vehicleType,
+    carModel: vehicleType, // Modern UI picks this from fleet card
+    carNumber: vehiclePlate,
+    geometry: geometryStr,
+    routeDistanceKm,
+    routeDurationMin,
+    routeSource: geometryStr ? 'OSRM' : null
   };
-  window.verifyDropOtp=window.verifyDropOtpPrompt;
 
-  /* ---------- Rating + review/tags ---------- */
-  window.setRating=function(stars){state.ratingStars=Math.max(1,Math.min(5,Number(stars)||0));document.querySelectorAll('#starsContainer span').forEach((e,i)=>e.style.color=i<state.ratingStars?'#f59e0b':'#cbd5e1')};
-  window.toggleRatingChip=function(el){el.classList.toggle('selected');const t=el.textContent.trim();state.ratingTags.has(t)?state.ratingTags.delete(t):state.ratingTags.add(t)};
-  window.openRatingModal=function(qid){state.ratingId=qid;state.ratingStars=0;state.ratingTags.clear();document.querySelectorAll('#starsContainer span').forEach(e=>e.style.color='#cbd5e1');document.querySelectorAll('.rating-chips .chip-btn').forEach(e=>e.classList.remove('selected'));const r=document.getElementById('ratingReviewText');if(r)r.value='';const m=document.getElementById('ratingModal');if(m)m.style.display='flex'};
-  window.submitRatingReview=async function(){try{if(!state.ratingStars)throw new Error('Please select a star rating');const me=user();if(!me)throw new Error('Please login');const {collection,addDoc,doc,updateDoc}=await fs();await addDoc(collection(db(),'ratings'),{requestId:state.ratingId,userUid:me.uid,userName:me.displayName||me.name||'User',stars:state.ratingStars,tags:[...state.ratingTags],review:document.getElementById('ratingReviewText')?.value.trim()||'',createdAt:Date.now()});if(state.ratingId)await updateDoc(doc(db(),'requests',state.ratingId),{isRated:true,ratingStars:state.ratingStars});document.getElementById('ratingModal').style.display='none';toast('⭐ Review submitted');}catch(e){toast('❌ '+e.message)}};
+  try {
+    // डायनामिक Firebase इम्पोर्ट
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    
+    // मेन ट्रिप पब्लिश करना
+    const firstRef = await addDoc(collection(db, 'rides'), baseData);
 
-  /* ---------- Corridor matching: coordinates first, text fallback ---------- */
-  function hav(a,b){if(!a||!b)return Infinity;const R=6371000,p=Math.PI/180,dLat=(b.lat-a.lat)*p,dLon=(b.lon-a.lon)*p;const x=Math.sin(dLat/2)**2+Math.cos(a.lat*p)*Math.cos(b.lat*p)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
-  async function geocodeText(q){try{const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q='+encodeURIComponent(q);const r=await fetch(u);const d=await r.json();return d[0]?{lat:Number(d[0].lat),lon:Number(d[0].lon)}:null}catch(e){return null}}
-  function getMarker(id){try{if(id==='rFrom')return ridePickupMarker?.getLatLng();if(id==='rTo')return rideDropMarker?.getLatLng();if(id==='xFrom')return parcelPickupMarker?.getLatLng();if(id==='xTo')return parcelDropMarker?.getLatLng();if(id==='pFrom')return postPickupMarker?.getLatLng();if(id==='pTo')return postDropMarker?.getLatLng()}catch(e){}return null}
-  async function resolvePair(fromId,toId,from,to){const a=getMarker(fromId),b=getMarker(toId);if(a&&b&&Math.abs(a.lat-21.4588)+Math.abs(a.lng-80.1961)>0.00001)return {a:{lat:a.lat,lon:a.lng},b:{lat:b.lat,lon:b.lng}};const ga=await geocodeText(from),gb=await geocodeText(to);return {a:ga,b:gb}}
-  function textMatch(r,from,to){const f=(from||'').toLowerCase(),t=(to||'').toLowerCase(),rf=(r.from||'').toLowerCase(),rt=(r.to||'').toLowerCase();return (rf.includes(f)||f.includes(rf))&&(rt.includes(t)||t.includes(rt))}
-  async function matchRides(from,to,fromId,toId){const rides=(window.getRides?.()||[]).filter(r=>r.status==='Active'&&safe(r.seats)>0);const pair=await resolvePair(fromId,toId,from,to);return rides.map(r=>{let score=textMatch(r,from,to)?100:0;if(pair.a&&pair.b&&r.fromCoords&&r.toCoords){const d1=hav(pair.a,r.fromCoords),d2=hav(pair.b,r.toCoords);score+=Math.max(0,100-(d1+d2)/1000)}return {...r,__score:score}}).filter(r=>r.__score>0).sort((a,b)=>b.__score-a.__score)}
+    // अगर रिटर्न ट्रिप (Return Trip) ऑन है
+    if(alsoReturn && returnTime) {
+      const returnData = {
+        ...baseData,
+        from: to,   // उल्टा रूट
+        to: from,   // उल्टा रूट
+        time: returnTime,
+        returnOf: firstRef.id,
+        isReturnTrip: true,
+        created: Date.now() + 1,
+        updatedAt: Date.now() + 1
+      };
+      await addDoc(collection(db, 'rides'), returnData);
+    }
 
-  window.findAvailableRides=async function(){const from=document.getElementById('rFrom')?.value.trim(),to=document.getElementById('rTo')?.value.trim();if(!from||!to)return toast('❌ Enter Pickup and Destination!');const box=document.getElementById('rideResultsList');box.innerHTML='<div class="small">🔎 Finding corridor matches...</div>';const matches=await matchRides(from,to,'rFrom','rTo');box.innerHTML=matches.length?matches.map(r=>`<div class="request" style="margin-top:8px"><div class="card-top-row"><span class="role-pill driver">${esc2(r.vehicle)}</span><span style="font-weight:800;color:var(--primary)">₹${safe(r.seatPrice)}/seat</span></div><div style="font-size:12px;font-weight:700">${esc2(r.from)} ➔ ${esc2(r.to)}</div><div style="font-size:11px;color:#64748b;margin:4px 0">Driver: <b>${esc2(r.driverName)}</b> • ${safe(r.seats)} Seats Available</div><button class="uber-cta-btn" style="padding:8px;font-size:12px" onclick="bookRideRequest('${r.id}',${safe(r.seatPrice)},'${esc2(r.driverUid)}','${esc2(r.driverName)}','${esc2(r.driverPhone)}','${esc2(from)}','${esc2(to)}')">Book Seat</button></div>`).join(''):'<div class="small">No corridor-matching rides found.</div>'};
+    showToast(`🚀 Trip posted successfully: ${from} → ${to}`);
+    
+    // फॉर्म क्लियर करना
+    document.getElementById("pFrom").value = "";
+    document.getElementById("pTo").value = "";
+    document.getElementById("pHasReturnTrip").checked = false;
+    
+    // सीधे Activity टैब में भेज देना (ताकि अपनी पोस्ट की हुई ट्रिप दिख जाए)
+    setTimeout(() => {
+      // Modern UI showPage function call
+      showPage("activity", document.querySelectorAll(".nav-item")[3]);
+    }, 800);
 
-  window.bookRideRequest=async function(rideId,price,dUid,dName,dPhone,from,to){try{const me=user();if(!me)throw new Error('Please login');const r=await freshRide(rideId);if(r.status!=='Active')throw new Error('Ride is no longer active');const seats=Math.max(1,Number(window.selectedSeatCount||1));if(safe(r.seats)<seats)throw new Error('Not enough seats');const {collection,addDoc}=await fs();await addDoc(collection(db(),'requests'),{rideId,type:'passenger',numSeats:seats,originalPrice:safe(price),currentPrice:safe(price),status:'Pending',passengerUid:me.uid,passengerName:me.displayName,passengerPhone:me.phone||'',driverUid:dUid,driverName:dName,driverPhone:dPhone,from,to,travelKm:safe(r.distanceKm),created:Date.now(),updatedAt:Date.now()});toast('✅ Booking request sent');window.showPage?.('activity',document.querySelector('.nav-item[data-page="activity"]'));window.renderActivityFeed?.()}catch(e){toast('❌ '+e.message)}};
+  } catch(e) {
+    console.error(e);
+    showToast("❌ Trip post failed: " + e.message);
+  }
+};
+// ==========================================
+// 💺 STEP 3: BOOKING & PARCEL REQUEST ENGINE (MODERN UI)
+// ==========================================
 
-  window.findParcelTransporters=async function(){const from=document.getElementById('xFrom')?.value.trim(),to=document.getElementById('xTo')?.value.trim(),rn=document.getElementById('xRecName')?.value.trim(),rp=document.getElementById('xRecPhone')?.value.trim();if(!from||!to)return toast('❌ Enter pickup and delivery locations');if(!rn||!/^[6-9]\d{9}$/.test(rp||''))return toast('❌ Enter valid receiver name and 10-digit phone');const box=document.getElementById('parcelResultsList');box.innerHTML='<div class="small">🔎 Finding corridor transporters...</div>';const matches=await matchRides(from,to,'xFrom','xTo');box.innerHTML=matches.length?matches.map(r=>`<div class="request" style="margin-top:8px"><div class="card-top-row"><span class="role-pill parcel">📦 Parcel Space</span><span style="font-weight:800;color:var(--primary)">₹${parcelFare(document.getElementById('xSlab')?.value,r)}</span></div><div style="font-size:12px;font-weight:700">${esc2(r.from)} ➔ ${esc2(r.to)}</div><div class="small">Transporter: <b>${esc2(r.driverName)}</b> • ${esc2(r.vehicle)}</div><button class="uber-cta-btn" style="padding:8px;font-size:12px" onclick="bookParcelRequest('${r.id}',${parcelFare(document.getElementById('xSlab')?.value,r)},'${esc2(r.driverUid)}','${esc2(r.driverName)}','${esc2(r.driverPhone)}','${esc2(from)}','${esc2(to)}','${esc2(rn)}','${esc2(rp)}')">Send with this Captain</button></div>`).join(''):'<div class="small">No corridor transporters found.</div>'};
-  function parcelFare(slab,r){const s=String(slab||'bag').toLowerCase();if(s.includes('doc'))return safe(r.docPrice)||50;if(s.includes('cargo'))return safe(r.cargoPrice)||150;return safe(r.bagPrice)||100}
-  window.bookParcelRequest=async function(rideId,price,dUid,dName,dPhone,from,to,recName,recPhone){try{const me=user();if(!me)throw new Error('Please login');const r=await freshRide(rideId);if(r.status!=='Active')throw new Error('Ride is no longer active');const {collection,addDoc}=await fs();await addDoc(collection(db(),'requests'),{rideId,type:'parcel',slab:document.getElementById('xSlab')?.value||'bag',currentPrice:safe(price),originalPrice:safe(price),status:'Pending',paymentSettlement:document.getElementById('xParcelPayMode')?.value||'sender_paid',passengerUid:me.uid,passengerName:me.displayName,passengerPhone:me.phone||'',receiverName:recName,receiverPhone:recPhone,recName,recPhone,driverUid:dUid,driverName:dName,driverPhone:dPhone,from,to,created:Date.now(),updatedAt:Date.now()});toast('📦 Parcel request sent');window.showPage?.('activity');window.renderActivityFeed?.()}catch(e){toast('❌ '+e.message)}};
+// 1. Seat Booking Request (पैसेंजर बुकिंग)
+window.seatRequest = async function(rideId, fare, travelKm) {
+  const user = window.getCurrentUser();
+  if (!user) {
+    showToast("❌ Please login with Google first!");
+    if(window.googleLogin) window.googleLogin();
+    return;
+  }
 
-  /* ---------- Complete post-trip engine using modern UI fields ---------- */
-  window.publishPostTrip=async function(){
-    try{
-      const me=user();if(!me)throw new Error('Please login first');if(me.isBlocked)throw new Error('Your account is restricted');
-      const from=document.getElementById('pFrom')?.value.trim(),to=document.getElementById('pTo')?.value.trim();if(!from||!to)throw new Error('Enter From and To locations');if(from.toLowerCase()===to.toLowerCase())throw new Error('From and To cannot be same');
-      const vehNo=document.getElementById('pVehicleNo')?.value.trim();const vehType=document.getElementById('pVehicle')?.value||window.selectedVehicleType||'Car';
-      const vehicles=me.vehicles||[];const v=vehicles.find(x=>x.plate===vehNo||x.number===vehNo||x.model===vehType);
-      if(vehicles.length && vehNo && v && v.kycStatus && v.kycStatus!=='verified')throw new Error('Selected vehicle is pending KYC verification');
-      if(vehicles.length && vehNo && !v)throw new Error('Selected vehicle is not in your garage');
-      const seats=Math.max(0,Number(document.getElementById('pSeats')?.value||0));const price=Math.max(0,Number(document.getElementById('pPrice')?.value||0));if(seats===0&&price===0)throw new Error('Set seats or parcel fare');
-      const dt=document.getElementById('pDateTimeCombined')?.value||'';const date=dt?new Date(dt).toISOString().slice(0,10):new Date().toISOString().slice(0,10);const time=dt?new Date(dt).toTimeString().slice(0,5):'Today';
-      let geometry=null,distanceKm=null,durationMin=null;const route=window.fetchedDriverRoutes?.[window.selectedRouteIdx||0];if(route){geometry=route.geometry;distanceKm=route.distance/1000;durationMin=route.duration/60}
-      const p1=getMarker('pFrom'),p2=getMarker('pTo');const {collection,addDoc}=await fs();const ref=await addDoc(collection(db(),'rides'),{from,to,fromCoords:p1?{lat:p1.lat,lon:p1.lng}:null,toCoords:p2?{lat:p2.lat,lon:p2.lng}:null,geometry,distanceKm,durationMin,seatPrice:price,seats,vehicle:vehType,carNumber:vehNo,driverUid:me.uid,driverName:me.displayName,driverPhone:me.phone||'',status:'Active',hasReturn:!!document.getElementById('pHasReturnTrip')?.checked,returnTime:document.getElementById('pReturnTime')?.value||null,isLadiesOnly:!!document.getElementById('pLadiesOnly')?.checked,isCommuterMode:false,parcel:seats===0||true,created:Date.now(),updatedAt:Date.now()});toast('🚗 Trip published successfully');window.showPage?.('activity');window.renderActivityFeed?.();return ref.id;
-    }catch(e){toast('❌ '+e.message)}
-  };
+  // UI से डेटा लेना
+  const from = document.getElementById("rFrom").value.trim();
+  const to = document.getElementById("rTo").value.trim();
+  const seatsNeed = window.selectedVehicleSeats || 1;
+  const dateTime = document.getElementById("rDateTimeCombined").value;
+  const date = dateTime ? dateTime.split("T")[0] : new Date().toISOString().split("T")[0];
 
-  /* ---------- Multi-ride driver GPS ---------- */
-  async function writeGPS(pos){const me=user();if(!me||!state.activeDriverRides.size)return;const {doc,setDoc}=await fs();const now=Date.now();await Promise.all([...state.activeDriverRides].map(id=>setDoc(doc(db(),'live_locations',id),{rideId:id,driverUid:me.uid,lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:Number(pos.coords.accuracy)||null,heading:Number.isFinite(pos.coords.heading)?pos.coords.heading:null,speed:Number.isFinite(pos.coords.speed)?pos.coords.speed:null,updatedAt:now,status:'live'},{merge:true})))}
-  function syncDriverGPS(){const me=user();if(!me)return;const ids=new Set((window.getRequests?.()||[]).filter(q=>q.driverUid===me.uid&&['Confirmed','In-Transit'].includes(q.status)).map(q=>q.rideId).filter(Boolean));state.activeDriverRides=ids;if(ids.size&&navigator.geolocation&&state.driverWatch===null)state.driverWatch=navigator.geolocation.watchPosition(writeGPS,()=>{}, {enableHighAccuracy:true,maximumAge:5000,timeout:15000});if(!ids.size&&state.driverWatch!==null){navigator.geolocation.clearWatch(state.driverWatch);state.driverWatch=null}}
-  window.stopDriverLiveTracking=()=>{if(state.driverWatch!==null)navigator.geolocation.clearWatch(state.driverWatch);state.driverWatch=null;state.activeDriverRides.clear()};
+  const ride = window.getRides().find(r => r.id === rideId);
+  if (!ride) { showToast("❌ Ride not found!"); return; }
 
-  /* ---------- Passenger live tracking ---------- */
-  window.startTrackingForRequest=async function(qid){
-    const box=document.getElementById('liveTrackingBox')||document.getElementById('activityFeedList');if(!box)return;try{const {doc,onSnapshot}=await fs();const ref=doc(db(),'live_locations',qid);if(state.tracking.has(qid))state.tracking.get(qid).unsub();let map=null,marker=null;const mapId='ssTrack_'+qid;let holder=document.getElementById(mapId);if(!holder){holder=document.createElement('div');holder.id=mapId;holder.style='height:220px;margin:8px 0;border-radius:14px;overflow:hidden';box.prepend(holder)}map=L.map(holder).setView([21.4588,80.1961],11);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);const unsub=onSnapshot(ref,s=>{if(!s.exists())return;const d=s.data();if(!Number.isFinite(Number(d.lat))||!Number.isFinite(Number(d.lng)))return;const p=[Number(d.lat),Number(d.lng)];if(!marker)marker=L.marker(p).addTo(map);else marker.setLatLng(p);map.setView(p,15)});state.tracking.set(qid,{map,unsub});toast('📍 Live driver tracking started')}catch(e){toast('❌ '+e.message)}};
-  window.stopTrackingForRequest=function(qid){const x=state.tracking.get(qid);if(!x)return;try{x.unsub?.();x.map?.remove()}catch(e){}state.tracking.delete(qid)};
-  window.toggleLiveTrackingBox=function(qid){state.tracking.has(qid)?window.stopTrackingForRequest(qid):window.startTrackingForRequest(qid)};
-  window.triggerEmergencySOS=async function(){try{const me=user();if(!me)throw new Error('Please login');const {collection,addDoc}=await fs();await addDoc(collection(db(),'reports'),{type:'SOS Alert',userUid:me.uid,userName:me.displayName||'User',phone:me.phone||'',reason:'Emergency SOS',createdAt:Date.now()});toast('🚨 SOS alert sent to SafarShare admin');window.open('tel:112','_self')}catch(e){toast('❌ '+e.message)}};
+  try {
+    const { getFirestore, collection, addDoc, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
 
-  /* ---------- Saved places ---------- */
-  window.savePlace=async function(){try{const me=user();if(!me)throw new Error('Login first');const title=document.getElementById('savedPlaceTitle')?.value.trim(),address=document.getElementById('savedPlaceAddress')?.value.trim();if(!title||!address)throw new Error('Title and address required');const {collection,addDoc}=await fs();await addDoc(collection(db(),'saved_places'),{uid:me.uid,title,address,createdAt:Date.now()});toast('📍 Place saved');document.getElementById('addSavedPlaceModal').style.display='none'}catch(e){toast('❌ '+e.message)}};
+    // 🪑 SEAT OVERBOOKING GUARD: Firestore से fresh seat count check karna
+    // (local cache mein thodi der ka lag ho sakta hai — race condition se bachne ke liye)
+    const freshRideSnap = await getDoc(doc(db, 'rides', rideId));
+    const freshSeats = freshRideSnap.exists() ? Number(freshRideSnap.data().seats || 0) : 0;
+    if (freshSeats < seatsNeed) {
+      showToast(`❌ Sorry, only ${freshSeats} seat(s) left now. Someone just booked ahead of you.`);
+      if (window.findAvailableRides) window.findAvailableRides(); // list turant refresh karna
+      return;
+    }
 
-  /* ---------- Realtime chat ---------- */
-  window.openChat=async function(qid,driverPhone){const modal=document.getElementById('chatModal'),box=document.getElementById('chatMessages');if(!modal||!box)return;modal.style.display='flex';document.getElementById('chatTitle').innerHTML='💬 Live Chat';if(state.chatUnsub)state.chatUnsub();const {collection,query,orderBy,onSnapshot}=await fs();const q=query(collection(db(),'requests',qid,'messages'),orderBy('createdAt','asc'));state.chatUnsub=onSnapshot(q,s=>{const me=user();box.innerHTML=s.docs.map(d=>{const x=d.data();return `<div style="padding:6px 9px;margin:4px 0;background:${x.senderUid===me?.uid?'#e8f5ff':'#f1f5f9'};border-radius:10px"><b>${esc2(x.senderName||'User')}</b><div>${esc2(x.text||'')}</div></div>`}).join('')||'<div class="small">No messages yet.</div>';box.scrollTop=box.scrollHeight})};
-  window.closeChat=function(){document.getElementById('chatModal')?.style.setProperty('display','none');state.chatUnsub?.();state.chatUnsub=null};
-  window.sendChatMessage=async function(){try{const me=user(),text=document.getElementById('chatInputText')?.value.trim(),qid=window.currentChatRequestId||state.chatId;if(!me||!text||!qid)return;const {collection,addDoc}=await fs();await addDoc(collection(db(),'requests',qid,'messages'),{text,senderUid:me.uid,senderName:me.displayName||'User',createdAt:Date.now()});document.getElementById('chatInputText').value=''}catch(e){toast('❌ '+e.message)}};
+    const totalPrice = Number(fare) * seatsNeed;
 
-  /* ---------- Sponsored ads / test-data compatibility ---------- */
-  window.publishSponsoredAd=async function(){try{if(!window.isUserAdmin?.())throw new Error('Admin only');const name=document.getElementById('adBizName')?.value.trim(),category=document.getElementById('adBizCat')?.value||'',locationTag=document.getElementById('adRouteTag')?.value.trim(),targetRoute=document.getElementById('adTargetRoute')?.value.trim(),phone=document.getElementById('adBizPhone')?.value.trim();if(!name||!locationTag||!phone)throw new Error('Business Name, Location and Phone are required');const {collection,addDoc}=await fs();await addDoc(collection(db(),'sponsored_ads'),{name,category,locationTag,targetRoute,phone,imageUrl:document.getElementById('adBizImage')?.value.trim()||'',mapUrl:document.getElementById('adBizMap')?.value.trim()||'',socialUrl:document.getElementById('adBizSocial')?.value.trim()||'',created:Date.now()});toast('🚀 Sponsored Ad published');document.getElementById('adminAdsModal')?.style.setProperty('display','none')}catch(e){toast('❌ '+e.message)}};
-  window.clearAllTestData=async function(){if(!window.isUserAdmin?.())return toast('❌ Admin only');if(!confirm('Delete all rides and booking requests?'))return;try{const {collection,getDocs,deleteDoc,doc}=await fs();for(const c of ['rides','requests']){const s=await getDocs(collection(db(),c));await Promise.all(s.docs.map(d=>deleteDoc(doc(db(),c,d.id))))}toast('🧹 Test data cleared')}catch(e){toast('❌ '+e.message)}};
-  /* ---------- Admin advanced controls ---------- */
-  window.adminForceCancelTrip=async function(id){if(!window.isUserAdmin?.())return toast('❌ Admin only');try{const {doc,updateDoc}=await fs();await updateDoc(doc(db(),'rides',id),{status:'Cancelled',cancelReason:'Force cancelled by admin',cancelledBy:'admin',cancelledAt:Date.now(),updatedAt:Date.now()});toast('🚫 Trip force-cancelled')}catch(e){toast('❌ '+e.message)}};
-  window.adminVerifyVehicle=async function(uid,vehicleId,status='verified'){if(!window.isUserAdmin?.())return toast('❌ Admin only');try{const {doc,getDoc,updateDoc}=await fs();const r=doc(db(),'users',uid),s=await getDoc(r);if(!s.exists())throw new Error('User not found');const vs=s.data().vehicles||[];const nv=vs.map(v=>v.id===vehicleId?{...v,kycStatus:status,kycUpdatedAt:Date.now()}:v);await updateDoc(r,{vehicles:nv,updatedAt:Date.now()});toast('✅ Vehicle KYC updated')}catch(e){toast('❌ '+e.message)}};
-  window.adminRejectVehicle=(uid,vehicleId)=>window.adminVerifyVehicle(uid,vehicleId,'rejected');
-  window.adminToggleBlockUser=async function(uid,blocked,name){if(!window.isUserAdmin?.())return toast('❌ Admin only');try{const {doc,updateDoc}=await fs();await updateDoc(doc(db(),'users',uid),{isBlocked:!blocked,blockReason:!blocked?'Blocked by admin':'',blockedAt:!blocked?Date.now():null});toast((!blocked?'🚫 Blocked ':'✅ Unblocked ')+(name||'user'))}catch(e){toast('❌ '+e.message)}};
+    await addDoc(collection(db, "requests"), {
+      rideId: rideId,
+      driverUid: ride.driverUid,
+      driverName: ride.driverName || ride.name || "Driver",
+      driverPhone: ride.driverPhone || "",
+      passengerUid: user.uid,
+      passengerName: user.displayName || user.name || "User",
+      passengerPhone: user.phone || "",
+      passengerEmail: user.email || "",
+      type: "passenger",
+      numSeats: seatsNeed,
+      originalPrice: totalPrice,
+      currentPrice: totalPrice,
+      from: from,
+      to: to,
+      date: date,
+      travelKm: travelKm,
+      status: "Pending", // शुरुआत में पेंडिंग रहेगा
+      bookingScope: document.getElementById("rideRadarToggleBadge").classList.contains("local-mode") ? "local" : "intercity",
+      created: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
 
-  /* ---------- Wallet/earnings ---------- */
-  window.updateWalletLedger=function(){const me=user(),el=document.getElementById('userTotalEarnings');if(!el)return;if(!me){el.textContent='0';return}const total=(window.getRequests?.()||[]).filter(q=>q.driverUid===me.uid&&['Completed','Paid'].includes(q.status)).reduce((s,q)=>s+safe(q.currentPrice||q.originalPrice),0);el.textContent=Math.round(total)};
+    showToast("✅ Seat request sent to driver!");
+    // बुकिंग होते ही सीधे Activity टैब पर भेजें
+    setTimeout(() => showPage("activity", document.querySelectorAll(".nav-item")[3]), 800);
+  } catch (e) {
+    console.error("Seat request error:", e);
+    showToast("❌ Booking failed: " + e.message);
+  }
+};
 
-  /* ---------- Modern activity renderer with complete state actions ---------- */
-  window.renderActivityFeed=function(){const me=user(),feed=document.getElementById('activityFeedList');if(!feed)return;if(!me){feed.innerHTML='<div style="text-align:center;padding:40px;color:#64748b">🔐 Please login to view activity.</div>';return}const reqs=(window.getRequests?.()||[]).filter(q=>q.passengerUid===me.uid||q.driverUid===me.uid);const rides=(window.getRides?.()||[]).filter(r=>r.driverUid===me.uid);let list=reqs;if(window.currentSubTab==='pending')list=list.filter(q=>['Pending','Accepted','Counter Offered'].includes(q.status));else if(window.currentSubTab==='history')list=list.filter(q=>['Completed','Cancelled'].includes(q.status));else list=list.filter(q=>['Confirmed','In-Transit'].includes(q.status));
-    const cards=list.map(q=>{const isDriver=q.driverUid===me.uid;const action=[];if(isDriver&&['Pending','Counter Offered'].includes(q.status))action.push(`<button class="act-btn green" onclick="acceptBooking('${q.id}')">✅ Accept</button>`,`<button class="act-btn orange" onclick="counterRequest('${q.id}')">↔ Counter</button>`);if(!isDriver&&['Pending','Accepted','Counter Offered'].includes(q.status))action.push(`<button class="act-btn orange" onclick="counterRequest('${q.id}')">↔ Counter</button>`);if(!isDriver&&q.status==='Accepted')action.push(`<button class="act-btn primary" onclick="choosePayment('${q.id}')">💳 Confirm Booking</button>`);if(isDriver&&q.status==='Confirmed')action.push(`<button class="act-btn green" onclick="verifyStartOtpPrompt('${q.id}')">🔑 START PIN</button>`);if(isDriver&&q.status==='In-Transit')action.push(`<button class="act-btn green" onclick="verifyDropOtpPrompt('${q.id}')">🏁 DROP PIN</button>`);if(!isDriver&&['Confirmed','In-Transit'].includes(q.status))action.push(`<button class="act-btn" onclick="toggleLiveTrackingBox('${q.id}')">📍 Track Live</button>`);if(q.status==='In-Transit'&&!isDriver)action.push(`<button class="act-btn red" onclick="triggerEmergencySOS()">🚨 SOS</button>`);if(!['Completed','Cancelled'].includes(q.status))action.push(`<button class="act-btn red" onclick="cancelWithReasonPrompt('${q.id}','${isDriver?'Driver':'Passenger'}')">✖ Cancel</button>`);if(q.status==='Completed'&&!q.isRated&&!isDriver)action.push(`<button class="act-btn primary" onclick="openRatingModal('${q.id}')">⭐ Rate</button>`);return `<div class="request"><div class="card-top-row"><span class="role-pill ${q.type==='passenger'?'passenger':'parcel'}">${q.type==='passenger'?'🧑 Passenger':'📦 Parcel'}</span><span class="status-badge live">${esc2(q.status)}</span></div><div class="route-timeline"><div class="route-node">${esc2(q.from)}</div><div class="route-node drop">${esc2(q.to)}</div></div><div class="driver-veh-row"><div><div class="dv-name">${esc2(isDriver?(q.passengerName||'Passenger'):(q.driverName||'Driver'))}</div><div class="dv-sub">${esc2(q.vehicle||'SafarShare')}</div></div><div class="fare-tag">₹${safe(q.currentPrice||q.originalPrice)}</div></div>${q.startOtp&&q.status==='Confirmed'&&!isDriver?`<div class="pin-badge"><span class="pin-label">START PIN</span><span class="pin-code">${esc2(q.startOtp)}</span></div>`:''}${q.dropOtp&&q.status==='In-Transit'&&!isDriver?`<div class="pin-badge" style="background:#00a884"><span class="pin-label">DROP PIN</span><span class="pin-code">${esc2(q.dropOtp)}</span></div>`:''}<div class="action-buttons-group">${action.join('')}</div></div>`}).join('');const posted=window.currentSubTab==='active'?(rides.filter(r=>r.status==='Active').map(r=>`<div class="request"><div class="card-top-row"><span class="role-pill driver">🚗 Posted Trip</span><span class="status-badge live">Active</span></div><div class="route-timeline"><div class="route-node">${esc2(r.from)}</div><div class="route-node drop">${esc2(r.to)}</div></div><div class="small">₹${safe(r.seatPrice)}/seat • ${safe(r.seats)} seats</div><div class="action-buttons-group"><button class="act-btn red" onclick="cancelTripPrompt('${r.id}')">✖ Cancel Trip</button></div></div>`).join('')):'';feed.innerHTML=cards+posted||'<div style="text-align:center;padding:30px;color:#64748b">No activity in this tab.</div>';window.updateWalletLedger?.();syncDriverGPS()};
+// 2. Parcel Delivery Request (पार्सल रिक्वेस्ट)
+window.parcelRequest = async function(rideId, slab, price) {
+  const user = window.getCurrentUser();
+  if (!user) {
+    showToast("❌ Please login with Google first!");
+    if(window.googleLogin) window.googleLogin();
+    return;
+  }
 
-  /* Keep app UI tab state visible to engine */
-  Object.defineProperty(window,'currentSubTab',{configurable:true,get:()=>window.__ssSubTab||'active',set:v=>window.__ssSubTab=v});
-  const oldSwitch=window.switchActivityTab;window.switchActivityTab=function(tab,btn){window.__ssSubTab=tab;document.querySelectorAll('.act-tab-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');window.renderActivityFeed()};
+  const from = document.getElementById("xFrom").value.trim();
+  const to = document.getElementById("xTo").value.trim();
+  const dateTime = document.getElementById("xDateTimeCombined").value;
+  const date = dateTime ? dateTime.split("T")[0] : new Date().toISOString().split("T")[0];
+  
+  const recName = document.getElementById("xRecName").value.trim();
+  const recPhone = document.getElementById("xRecPhone").value.trim();
+  const paymentSettlement = document.getElementById("xParcelPayMode").value || "sender_paid";
 
-  /* aliases required by app UI */
-  window.postTrip=window.publishPostTrip; window.findRides=window.findAvailableRides; window.findParcel=window.findParcelTransporters;
-  window.shareLiveWhatsapp=window.shareLiveTripWhatsApp;
+  if (!from || !to) { showToast("❌ Pickup and drop locations are required!"); return; }
+  if (!recName || !recPhone) { showToast("❌ Receiver Name and Mobile Number are required!"); return; }
+  
+  // मोबाइल नंबर वैलिडेशन (10 अंकों का)
+  const cleanPhone = recPhone.replace(/[\s-+]/g, '').replace(/^91/, '');
+  if (!/^[6-9][0-9]{9}$/.test(cleanPhone)) { showToast("❌ Enter valid 10-digit receiver mobile number!"); return; }
 
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){window.renderActivityFeed?.();window.updateWalletLedger?.();syncDriverGPS()}});
-  window.addEventListener('load',()=>setTimeout(()=>{window.renderActivityFeed?.();syncDriverGPS()},800));
-})();
+  const ride = window.getRides().find(r => r.id === rideId);
+  if (!ride) { showToast("❌ Transporter not found!"); return; }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    await addDoc(collection(db, "requests"), {
+      rideId: rideId,
+      driverUid: ride.driverUid,
+      driverName: ride.driverName || ride.name || "Driver",
+      driverPhone: ride.driverPhone || "",
+      passengerUid: user.uid,
+      passengerName: user.displayName || user.name || "User",
+      passengerPhone: user.phone || "",
+      passengerEmail: user.email || "",
+      type: "parcel",
+      slab: slab,
+      originalPrice: Number(price),
+      currentPrice: Number(price),
+      from: from,
+      to: to,
+      date: date,
+      recName: recName,
+      recPhone: cleanPhone,
+      paymentSettlement: paymentSettlement,
+      status: "Pending",
+      bookingScope: document.getElementById("parcelRadarToggleBadge").classList.contains("local-mode") ? "local" : "intercity",
+      created: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    showToast("✅ Parcel request sent to transporter!");
+    setTimeout(() => showPage("activity", document.querySelectorAll(".nav-item")[3]), 800);
+  } catch (e) {
+    console.error("Parcel request error:", e);
+    showToast("❌ Request failed: " + e.message);
+  }
+};
+
+// 3. Counter Offer Fare (किराया कम-ज़्यादा करना)
+window.counterRequest = async function(qid) {
+  const user = window.getCurrentUser();
+  if(!user) { showToast("❌ Please login first!"); return; }
+
+  try {
+    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const reqRef = doc(db, 'requests', qid);
+    const snap = await getDoc(reqRef);
+    
+    if(!snap.exists()) { showToast("❌ Request not found!"); return; }
+    const q = {id: snap.id, ...snap.data()};
+    
+    if(q.driverUid !== user.uid && q.passengerUid !== user.uid) { showToast("❌ Not authorized!"); return; }
+    if(!['Pending','Counter Offered'].includes(q.status)) { showToast("❌ Counter offer is closed for this status."); return; }
+
+    const val = prompt('Enter new fare (₹):', String(q.currentPrice || q.originalPrice || ''));
+    if(val === null) return;
+    
+    const price = Number(String(val).replace(/[^0-9.]/g,''));
+    if(!Number.isFinite(price) || price <= 0) { showToast("❌ Enter valid fare."); return; }
+    
+    const who = (q.driverUid === user.uid) ? 'Driver' : 'Passenger';
+    
+    // Firestore अपडेट करना
+    await updateDoc(reqRef, {
+      status: 'Counter Offered',
+      currentPrice: Math.round(price),
+      lastCounterBy: who,
+      counterAt: Date.now(),
+      counterBy: user.uid,
+      updatedAt: Date.now()
+    });
+    
+    showToast(`🔄 New fare offered: ₹${Math.round(price)}`);
+  } catch(e) {
+    showToast('❌ ' + e.message);
+  }
+};
+// ==========================================
+// 📋 STEP 4: ACTIVITY TAB & ACTIONS ENGINE
+// ==========================================
+
+let currentActivityTab = 'active';
+
+// 1. एक्टिविटी के अंदर टैब्स बदलने का फंक्शन
+window.switchActivityTab = function(tab, btn) {
+  document.querySelectorAll('.act-tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  
+  currentActivityTab = tab;
+  renderActivityFeed(); // टैब बदलते ही डेटा रीफ्रेश करें
+};
+
+// 2. एक्टिविटी फीड रेंडर करने का मास्टर फंक्शन
+window.renderActivityFeed = function() {
+  const user = window.getCurrentUser();
+  const box = document.getElementById("activityFeedList");
+  
+  if (!user) {
+    box.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b;">
+      <div style="font-size:36px; margin-bottom:10px;">👤</div>
+      <h3 style="margin:0 0 6px; color:#1e293b;">Login Required</h3>
+      <p style="font-size:12px; margin:0;">Please login to view your activity.</p>
+    </div>`;
+    return;
+  }
+
+  // डेटाबेस से अपनी रिक्वेस्ट्स और ट्रिप्स फ़िल्टर करना
+  const allReqs = window.getRequests().filter(x => x.passengerUid === user.uid || x.driverUid === user.uid);
+  const allTrips = window.getRides().filter(r => r.driverUid === user.uid);
+
+  // 💰 Wallet/Earnings ledger: sum of completed trips where this user was the driver
+  const earningsEl = document.getElementById("userTotalEarnings");
+  if (earningsEl) {
+    const totalEarned = allReqs
+      .filter(q => q.driverUid === user.uid && q.status === 'Completed')
+      .reduce((sum, q) => sum + (Number(q.currentPrice) || 0), 0);
+    earningsEl.textContent = totalEarned;
+  }
+
+  let feedHtml = "";
+
+  if (currentActivityTab === 'pending') {
+    // Pending Tab: पेंडिंग और काउंटर ऑफर वाली रिक्वेस्ट्स
+    const pendingReqs = allReqs.filter(q => ['Pending', 'Counter Offered'].includes(q.status));
+    if (!pendingReqs.length) feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No pending requests.</div>`;
+    else feedHtml = pendingReqs.map(q => generateRequestCardHtml(q, user)).join('');
+  } 
+  else if (currentActivityTab === 'active') {
+    // Active Tab: आपकी लाइव ट्रिप्स और कन्फर्म बुकिंग्स
+    const activeTrips = allTrips.filter(r => r.status === 'Active');
+    const activeReqs = allReqs.filter(q => ['Accepted', 'Confirmed', 'In-Transit'].includes(q.status));
+    
+    if (!activeTrips.length && !activeReqs.length) {
+      feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No active trips or bookings right now.</div>`;
+    } else {
+      feedHtml += activeTrips.map(r => generateTripCardHtml(r)).join('');
+      feedHtml += activeReqs.map(q => generateRequestCardHtml(q, user)).join('');
+    }
+  } 
+  else if (currentActivityTab === 'history') {
+    // History Tab: पूरी हो चुकी या कैंसल हुई ट्रिप्स
+    const historyTrips = allTrips.filter(r => ['Completed', 'Cancelled'].includes(r.status));
+    const historyReqs = allReqs.filter(q => ['Completed', 'Cancelled', 'Paid'].includes(q.status));
+    
+    if (!historyTrips.length && !historyReqs.length) {
+      feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No history available.</div>`;
+    } else {
+      feedHtml += historyTrips.map(r => generateTripCardHtml(r)).join('');
+      feedHtml += historyReqs.map(q => generateRequestCardHtml(q, user)).join('');
+    }
+  }
+
+  box.innerHTML = feedHtml;
+};
+
+// 3. मॉडर्न UI वाले ट्रिप कार्ड जेनरेट करना (My Posted Trips)
+function generateTripCardHtml(r) {
+  return `
+    <div class="card">
+      <div class="card-top-row">
+        <b style="font-size:14px;">🚗 My Posted Trip</b>
+        <span class="role-pill ${r.status === 'Active' ? 'driver' : 'parcel'}">${r.status}</span>
+      </div>
+      <div class="route-timeline">
+        <div class="route-node">${esc(cleanLocation(r.from))}</div>
+        <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
+      </div>
+      <div class="small" style="color:#64748b; margin-bottom:10px;">📅 ${r.date} • ⏰ ${r.time} | 🚘 ${r.vehicle}</div>
+      <div class="action-buttons-group">
+        ${r.status === 'Active' ? `<button class="red" onclick="cancelTrip('${r.id}')">🚫 Cancel Trip</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// 4. मॉडर्न UI वाले रिक्वेस्ट कार्ड जेनरेट करना (Bookings)
+function generateRequestCardHtml(q, user) {
+  const isDriver = (q.driverUid === user.uid);
+  const isPassenger = (q.type === 'passenger');
+  const title = isPassenger ? `🧑 Seat Request (${q.numSeats || 1})` : `📦 Parcel Delivery`;
+  const roleText = isDriver ? 'As Driver' : (isPassenger ? 'As Passenger' : 'As Sender');
+  const otherUid = isDriver ? q.passengerUid : q.driverUid;
+  const otherName = isDriver ? (q.passengerName || 'Passenger') : (q.driverName || 'Driver');
+  const otherPhone = isDriver ? (q.passengerPhone || 'N/A') : (q.driverPhone || 'N/A');
+
+  let actionBtns = "";
+  // पेंडिंग एक्शन्स (ड्राइवर Accept करेगा, पैसेंजर Cancel कर सकता है)
+  if (q.status === 'Pending' || q.status === 'Counter Offered') {
+    if (isDriver) {
+      actionBtns = `
+        <button class="green" onclick='acceptOffer(${JSON.stringify(q).replace(/"/g, '&quot;')})'>✅ Accept ₹${q.currentPrice}</button>
+        <button class="red" onclick="cancelRequest('${q.id}', true)">✖ Reject</button>
+      `;
+    } else {
+      actionBtns = `
+        <button class="red" onclick="cancelRequest('${q.id}', false)">✖ Cancel Request</button>
+        <span class="small" style="color:#d97706; font-weight:bold;">⏳ Waiting for driver...</span>
+      `;
+    }
+  }
+  // एक्सेप्ट होने के बाद (पैसेंजर पेमेंट मोड चुनकर बुकिंग पक्की करेगा)
+  else if (q.status === 'Accepted' && !isDriver) {
+    actionBtns = `
+      <div style="width:100%; background:#eff6ff; padding:10px; border-radius:10px; border:1px solid #bfdbfe; margin-top:8px;">
+        <p style="margin:0 0 6px; font-size:12px; font-weight:700;">💳 Confirm Payment Mode:</p>
+        <label style="font-size:13px; font-weight:600;"><input type="radio" name="pay_${q.id}" value="cash_pickup" checked> 💵 Cash on Pickup</label><br>
+        <label style="font-size:13px; font-weight:600;"><input type="radio" name="pay_${q.id}" value="driver_qr"> 📲 Scan Driver UPI QR</label>
+        <div style="display:flex; gap:6px; margin-top:10px;">
+          <button class="primary full" onclick="choosePayment('${q.id}')">Confirm Booking</button>
+        </div>
+      </div>
+    `;
+  }
+  else if (q.status === 'Cancelled' || q.status === 'Rejected') {
+    actionBtns = `<div style="font-size:11.5px; color:var(--danger);">${q.cancelReason ? `Reason: ${esc(q.cancelReason)}` : 'This booking was cancelled.'}</div>`;
+  }
+  else if (q.status === 'Completed' && !q.isRated) {
+    actionBtns = `<button class="orange" onclick="openRatingModal('${q.id}')">⭐ Rate ${esc(otherName)}</button>`;
+  }
+
+  // लाइव एक्शन्स (Confirmed → Start PIN, In-Transit → Drop PIN + Live Tracking + SOS)
+  let activeActions = "";
+  if (q.status === 'Confirmed') {
+    activeActions = !isDriver
+      ? `<div class="pin-badge"><span class="pin-label">YOUR START PIN</span><span class="pin-code">${q.startOtp}</span></div>`
+      : `<button class="green full" onclick="verifyStartOtp('${q.id}', '${q.startOtp}')">🔑 Enter Passenger PIN</button>`;
+  } else if (q.status === 'In-Transit') {
+    activeActions = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        ${!isDriver
+          ? `<div class="pin-badge" style="background:#00a884;"><span class="pin-label">YOUR DROP PIN</span><span class="pin-code">${q.dropOtp}</span></div>`
+          : `<button class="green full" onclick="verifyDropOtp('${q.id}', '${q.dropOtp}', '${esc(q.rideId||'')}')">🏁 Enter Drop PIN</button>`}
+        <div style="display:flex; gap:6px;">
+          <button class="act-btn" style="flex:1; justify-content:center;" onclick="toggleLiveTrackingBox('${q.id}')">📍 Track Live</button>
+          <button class="act-btn red" style="flex:1; justify-content:center;" onclick="triggerSOS('${q.id}')">🚨 SOS</button>
+        </div>
+        <div id="trackMap_${q.id}" style="display:none; width:100%; height:180px; border-radius:12px; overflow:hidden; margin-top:4px;"></div>
+      </div>
+    `;
+  }
+
+  const canChat = ['Confirmed', 'In-Transit', 'Completed'].includes(q.status);
+
+  return `
+    <div class="request">
+      <div class="card-top-row">
+        <b style="font-size:14px;">${title}</b>
+        <span class="role-pill ${isDriver ? 'driver' : 'passenger'}">${roleText}</span>
+      </div>
+      <div class="route-timeline">
+        <div class="route-node">${esc(cleanLocation(q.from))}</div>
+        <div class="route-node drop">${esc(cleanLocation(q.to))}</div>
+      </div>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px; margin-bottom:8px; display:flex; justify-content:space-between;">
+        <span style="font-size:13px;">Fare: <b>₹${q.currentPrice}</b></span>
+        <span style="color:var(--primary); font-weight:bold; font-size:13px;">${q.status}</span>
+      </div>
+
+      <div class="action-buttons-group">
+        ${actionBtns}
+      </div>
+      <div style="margin-top:8px;">
+        ${activeActions}
+      </div>
+      ${canChat ? `
+      <div style="display:flex; gap:6px; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
+        <button class="act-btn" style="flex:1; justify-content:center;" onclick="openChat('${q.id}', '${esc(otherPhone)}')">💬 Chat</button>
+        <button class="act-btn" style="justify-content:center; color:#94a3b8;" onclick="reportRequestPrompt('${q.id}', '${esc(otherUid||'')}', '${esc(otherName)}')">⚠️ Report</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+
+// ==========================================
+// ⚙️ ACTION LOGIC (Firebase Updates)
+// ==========================================
+
+// ड्राइवर द्वारा रिक्वेस्ट एक्सेप्ट करना
+window.acceptOffer = async function(q) {
+  try {
+    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await updateDoc(doc(getFirestore(), 'requests', q.id), {
+      status: 'Accepted', acceptedBy: window.getCurrentUser().uid, acceptedAt: Date.now()
+    });
+    showToast('✅ Fare accepted. Passenger can now confirm booking.');
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// बुकिंग/रिक्वेस्ट कैंसल करना
+window.cancelRequest = async function(reqId, isDriver) {
+  const reason = prompt("Enter cancellation reason:");
+  if (reason === null) return;
+  try {
+    const { getFirestore, doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    // 🪑 SEAT RESTORE: agar seats already deduct ho chuki thi (Confirmed/In-Transit), toh cancel hone par wapas add karna
+    const reqSnap = await getDoc(doc(db, 'requests', reqId));
+    if (reqSnap.exists()) {
+      const reqData = reqSnap.data();
+      const seatsWereDeducted = ['Confirmed', 'In-Transit'].includes(reqData.status);
+      if (seatsWereDeducted && reqData.type === 'passenger' && reqData.rideId) {
+        const rideRef = doc(db, 'rides', reqData.rideId);
+        const rideSnap = await getDoc(rideRef);
+        if (rideSnap.exists()) {
+          const currentSeats = Number(rideSnap.data().seats || 0);
+          const seatsToRestore = Number(reqData.numSeats || 1);
+          await updateDoc(rideRef, { seats: currentSeats + seatsToRestore });
+        }
+      }
+    }
+
+    await updateDoc(doc(db, 'requests', reqId), {
+      status: "Cancelled", cancelReason: reason.trim() || "No reason", cancelledBy: isDriver ? "Driver" : "Passenger", cancelledAt: Date.now()
+    });
+    showToast("🚫 Request Cancelled.");
+  } catch(e) { showToast("❌ Error: " + e.message); }
+};
+
+window.cancelTrip = async function(rideId) {
+  const reason = prompt("Reason for cancelling trip:");
+  if (reason === null) return;
+  try {
+    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await updateDoc(doc(getFirestore(), "rides", rideId), {
+      status: "Cancelled", cancelReason: reason.trim(), cancelledAt: Date.now()
+    });
+    showToast("✅ Trip Cancelled.");
+  } catch(e) { showToast("❌ Error: " + e.message); }
+};
+
+// पैसेंजर द्वारा पेमेंट मोड चुनकर बुकिंग पक्की करना (Generating OTPs)
+window.choosePayment = function(qid) {
+  const qObj = window.getRequests().find(a => a.id === qid);
+  const selectedMode = document.querySelector(`input[name="pay_${qid}"]:checked`).value;
+  if(qObj) reserveCapacity(qObj, selectedMode);
+};
+
+window.reserveCapacity = async function(q, selectedMode) {
+  try {
+    const { getFirestore, doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    
+    // 4-अंकों का सिक्योर पिन जनरेट करना
+    const startOtp = Math.floor(1000 + Math.random()*9000).toString();
+    const dropOtp = Math.floor(1000 + Math.random()*9000).toString();
+
+    await updateDoc(doc(db, 'requests', q.id), {
+      status: 'Confirmed', paymentMode: selectedMode, confirmedAt: Date.now(), startOtp, dropOtp
+    });
+
+    // ड्राइवर की ट्रिप से सीटें कम करना (Deduct Seats)
+    if (q.type === 'passenger' && q.rideId) {
+      const rideRef = doc(db, 'rides', q.rideId);
+      const rideSnap = await getDoc(rideRef);
+      if (rideSnap.exists()) {
+        const currentSeats = Number(rideSnap.data().seats || 0);
+        const bookedSeats = Number(q.numSeats || 1);
+        await updateDoc(rideRef, { seats: Math.max(0, currentSeats - bookedSeats) });
+      }
+    }
+    showToast('✅ Booking Confirmed! Start PIN generated.');
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// नोट: एक छोटी सी फिक्स - ताकि पेज लोड होते ही Activity फीड अपडेट हो जाए
+window.renderRequests = window.renderActivityFeed;
+window.renderTrips = window.renderActivityFeed;
+// ==========================================
+// 🔐 STEP 5: OTP PIN SYSTEM & LIVE TRACKING
+// ==========================================
+
+let pinAction = null; // यह बताएगा कि स्टार्ट पिन डाल रहे हैं या ड्रॉप पिन
+
+// 1. 4-Box PIN Input Logic (ऑटो-फोकस और बैकस्पेस)
+function clean4(v) { return String(v ?? '').replace(/\D/g, '').slice(0, 4); }
+
+window.handlePinInput = function(n) {
+  const el = document.getElementById('pin' + n);
+  if (!el) return;
+  el.value = clean4(el.value);
+  if (el.value && n < 4) document.getElementById('pin' + (n + 1))?.focus();
+};
+
+window.handlePinKeyDown = function(e, n) {
+  if (e.key === 'Backspace' && !document.getElementById('pin' + n)?.value && n > 1) {
+    document.getElementById('pin' + (n - 1))?.focus();
+  }
+};
+
+window.closePinModal = function() {
+  document.getElementById('pinModal').style.display = 'none';
+  pinAction = null;
+  [1, 2, 3, 4].forEach(i => { const e = document.getElementById('pin' + i); if (e) e.value = ''; });
+};
+
+function openPinModal(title, icon, actionFunction) {
+  pinAction = actionFunction;
+  document.getElementById('pinModalTitle').textContent = title;
+  document.getElementById('pinModalIcon').textContent = icon;
+  [1, 2, 3, 4].forEach(i => { const e = document.getElementById('pin' + i); if (e) e.value = ''; });
+  document.getElementById('pinModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('pin1')?.focus(), 100);
+}
+
+// पिन सबमिट करना
+window.submitPinModal = async function() {
+  const entered = [1, 2, 3, 4].map(i => document.getElementById('pin' + i)?.value || '').join('');
+  if (entered.length !== 4) { showToast('❌ Enter all 4 digits!'); return; }
+  if (!pinAction) return;
+  
+  try { 
+    await pinAction(entered); 
+  } catch (e) { 
+    showToast('❌ ' + (e.message || 'Verification failed')); 
+  }
+};
+
+// 2. Start OTP Verification (ट्रिप शुरू करना)
+window.verifyStartOtp = function(qid, expectedFromUi) {
+  openPinModal('Enter 4-Digit START PIN', '🔑', async (enteredOtp) => {
+    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const snap = await getDoc(doc(db, 'requests', qid));
+    
+    if (!snap.exists()) throw new Error('Request not found');
+    const qData = snap.data();
+    
+    if (enteredOtp !== String(qData.startOtp || expectedFromUi)) throw new Error('Wrong Start PIN!');
+    
+    // स्टेटस बदलकर In-Transit करना
+    await updateDoc(doc(db, 'requests', qid), {
+      status: 'In-Transit', 
+      startedAt: Date.now(), 
+      startedBy: window.getCurrentUser().uid
+    });
+    
+    closePinModal();
+    showToast('🚗 Start PIN verified! Ride is now In-Transit.');
+  });
+};
+
+// 3. Drop OTP Verification (ट्रिप खत्म करना)
+window.verifyDropOtp = function(qid, expectedFromUi, rideId) {
+  openPinModal('Enter 4-Digit DROP PIN', '🏁', async (enteredOtp) => {
+    const { getFirestore, doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const snap = await getDoc(doc(db, 'requests', qid));
+    
+    if (!snap.exists()) throw new Error('Request not found');
+    const qData = snap.data();
+    
+    if (enteredOtp !== String(qData.dropOtp || expectedFromUi)) throw new Error('Wrong Drop PIN!');
+    
+    // स्टेटस बदलकर Completed करना
+    await updateDoc(doc(db, 'requests', qid), {
+      status: 'Completed', 
+      completedAt: Date.now(), 
+      completedBy: window.getCurrentUser().uid
+    });
+    
+    closePinModal();
+    showToast('🏁 Drop PIN verified! Trip completed successfully.');
+    
+    // ट्रिप खत्म होते ही रेटिंग मोडल खोलना (अगर उपलब्ध हो)
+    if (window.openRatingModal) window.openRatingModal(qid);
+  });
+};
+
+// ==========================================
+// 📍 PASSENGER LIVE TRACKING (Leaflet Map)
+// ==========================================
+
+let passengerTrackMaps = {};
+let activeTrackingIds = new Set();
+
+window.toggleLiveTrackingBox = function(reqId) {
+  const mapBox = document.getElementById(`trackMap_${reqId}`);
+  if (!mapBox) return;
+  
+  if (mapBox.style.display === 'block') { 
+    // ट्रैकिंग बंद करना
+    const state = passengerTrackMaps[reqId];
+    if (state) {
+      try { if (state.locationUnsub) state.locationUnsub(); } catch(e){}
+      try { if (state.map) state.map.remove(); } catch(e){}
+      delete passengerTrackMaps[reqId];
+      activeTrackingIds.delete(reqId);
+    }
+    mapBox.style.display = 'none'; 
+  } else {
+    // ट्रैकिंग चालू करना
+    const req = window.getRequests().find(r => r.id === reqId);
+    if (!req) return;
+    
+    activeTrackingIds.add(reqId);
+    mapBox.style.display = 'block';
+
+    // Leaflet Map सेटअप
+    const map = L.map(`trackMap_${reqId}`).setView([21.4588, 80.1961], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+    
+    const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28,28], iconAnchor: [14,14] });
+    const marker = L.marker([21.4588, 80.1961], { icon: carIcon }).addTo(map);
+    marker.bindPopup('🚗 Waiting for transporter GPS...');
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.style.cssText = "font-size:11px; color:#64748b; margin-top:4px; text-align:center; font-weight:bold;";
+    statusDiv.textContent = '⏳ Waiting for driver live GPS...';
+    mapBox.appendChild(statusDiv);
+
+    passengerTrackMaps[reqId] = { map, marker, status: statusDiv, locationUnsub: null };
+    
+    // मैप का साइज़ ठीक करने के लिए हल्का सा डिले
+    setTimeout(() => map.invalidateSize(), 200);
+
+    // Firestore से लाइव लोकेशन डेटा सुनना (Listen to GPS)
+    import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then(({ getFirestore, doc, onSnapshot }) => {
+      const db = getFirestore();
+      
+      passengerTrackMaps[reqId].locationUnsub = onSnapshot(doc(db, 'live_locations', req.rideId), snap => {
+        if (!snap.exists()) { statusDiv.textContent = '⏳ Driver GPS not shared yet...'; return; }
+        const d = snap.data();
+        
+        if (d.status === 'offline') { 
+          statusDiv.style.color = 'var(--danger)'; 
+          statusDiv.textContent = '🔴 Driver GPS unavailable / Offline'; 
+          return; 
+        }
+        
+        if (!Number.isFinite(Number(d.lat)) || !Number.isFinite(Number(d.lng))) return;
+        
+        const pos = [Number(d.lat), Number(d.lng)];
+        marker.setLatLng(pos);
+        map.setView(pos, Math.max(map.getZoom(), 15), { animate: true });
+        
+        // GPS की टाइमिंग चेक करना (कितना पुराना है)
+        const ageSecs = Math.max(0, Math.round((Date.now() - (Number(d.updatedAt) || Date.now())) / 1000));
+        statusDiv.style.color = ageSecs <= 15 ? '#16a34a' : '#d97706';
+        statusDiv.textContent = ageSecs <= 15 ? `🟢 Live • Updated ${ageSecs}s ago` : `🟠 GPS delayed • ${ageSecs}s ago`;
+      });
+    });
+  }
+};
+// ==========================================
+// 💬 STEP 6: LIVE CHAT & ⭐ RATING ENGINE
+// ==========================================
+
+// ------------------------------------------
+// 1. LIVE CHAT SYSTEM
+// ------------------------------------------
+let currentChatRequestId = null;
+let chatUnsubscribe = null;
+
+window.openChat = async function(requestId, driverPhone) {
+  // 🔒 CHAT LIFECYCLE ENFORCEMENT: Pending/Rejected/Cancelled → locked
+  const reqData = (window.getRequests ? window.getRequests() : []).find(r => r.id === requestId);
+  if (reqData && ['Pending', 'Counter Offered', 'Cancelled', 'Rejected'].includes(reqData.status)) {
+    showToast(reqData.status === 'Pending' || reqData.status === 'Counter Offered'
+      ? "🔒 Chat unlocks once the booking is Confirmed."
+      : "🔒 This chat is closed — the booking was cancelled.");
+    return;
+  }
+  const isReadOnly = ['Completed'].includes(reqData?.status);
+
+  currentChatRequestId = requestId;
+  const modal = document.getElementById("chatModal");
+  const messagesBox = document.getElementById("chatMessages");
+  const titleEl = document.getElementById("chatTitle");
+  
+  if (!modal || !messagesBox) return;
+
+  // टाइटल में कॉल करने का बटन भी जोड़ना
+  titleEl.innerHTML = `💬 Live Chat ${driverPhone && driverPhone !== 'N/A' ? `• <a href="tel:${driverPhone}" style="color:#fff; text-decoration:none; background:rgba(0,0,0,0.2); padding:4px 8px; border-radius:8px; font-size:12px;">📞 Call</a>` : ''}`;
+  messagesBox.innerHTML = "<div style='text-align:center; padding:10px; color:#64748b; font-size:12px;'>Loading chat...</div>";
+  modal.style.display = "flex";
+
+  const inputRow = document.getElementById("chatInputText");
+  if (inputRow) {
+    inputRow.disabled = isReadOnly;
+    inputRow.placeholder = isReadOnly ? "🔒 Chat closed — trip completed" : "Type a message...";
+  }
+
+  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+
+  try {
+    const { getFirestore, collection, query, orderBy, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const chatRef = collection(db, "requests", requestId, "messages");
+    const q = query(chatRef, orderBy("createdAt", "asc"));
+
+    // रियल-टाइम मैसेज सिंक (Firestore Listener)
+    chatUnsubscribe = onSnapshot(q, (snapshot) => {
+      const u = window.getCurrentUser();
+      if (!snapshot.docs.length) {
+        messagesBox.innerHTML = "<div style='text-align:center; padding:10px; color:#64748b; font-size:12px;'>No messages yet. Say hello! 👋</div>";
+        return;
+      }
+
+      messagesBox.innerHTML = snapshot.docs.map(docSnap => {
+        const msg = docSnap.data();
+        const isSentByMe = u && msg.senderUid === u.uid;
+        return `
+          <div class="chat-msg ${isSentByMe ? 'sent' : 'received'}">
+            <div style="font-size:10px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${esc(msg.senderName || 'User')}</div>
+            <div>${esc(msg.text)}</div>
+          </div>
+        `;
+      }).join("");
+      
+      // नया मैसेज आने पर स्क्रॉल को सबसे नीचे ले जाना
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    });
+  } catch(e) { 
+    console.error(e); 
+    messagesBox.innerHTML = "<div style='color:red; text-align:center;'>Chat error!</div>";
+  }
+};
+
+window.closeChat = function() {
+  const modal = document.getElementById("chatModal");
+  if (modal) modal.style.display = "none";
+  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+  currentChatRequestId = null;
+};
+
+window.sendChatMessage = async function() {
+  const input = document.getElementById("chatInputText");
+  const text = input ? input.value.trim() : "";
+  const u = window.getCurrentUser();
+
+  if (!text || !currentChatRequestId || !u) return;
+
+  // 🔒 Re-check lifecycle status before allowing send (in case status changed mid-chat)
+  const reqData = (window.getRequests ? window.getRequests() : []).find(r => r.id === currentChatRequestId);
+  if (reqData && ['Completed', 'Cancelled', 'Rejected'].includes(reqData.status)) {
+    showToast("🔒 This chat is closed.");
+    return;
+  }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
+      text: text, 
+      senderUid: u.uid, 
+      senderName: u.displayName || "User", 
+      createdAt: Date.now()
+    });
+    input.value = ""; 
+    input.focus();
+  } catch(e) { 
+    showToast("❌ Error sending message: " + e.message); 
+  }
+};
+
+// Enter बटन दबाने पर मैसेज सेंड करना
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("chatInputText")?.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      window.sendChatMessage();
+    }
+  });
+});
+
+
+// ==========================================
+// 🚨 REPORTS PIPELINE (was entirely missing — admin panel could read reports
+// but nothing in the app could ever write one)
+// ==========================================
+window.submitReport = async function(type, targetUid, targetName, requestId, reason) {
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+    const user = window.getCurrentUser ? window.getCurrentUser() : null;
+    await addDoc(collection(db, "reports"), {
+      type: type || 'General',
+      reporterUid: user ? user.uid : null,
+      reporterName: user ? (user.displayName || 'Anonymous') : 'Anonymous',
+      targetUid: targetUid || null,
+      targetName: targetName || null,
+      requestId: requestId || null,
+      reason: reason || '',
+      status: 'open',
+      createdAt: Date.now()
+    });
+    showToast("✅ Report submitted. Admin will review it shortly.");
+  } catch(e) {
+    showToast("❌ Could not submit report: " + e.message);
+  }
+};
+
+window.reportRequestPrompt = function(qid, targetUid, targetName) {
+  const reason = prompt(`Report ${targetName || 'this user'} — please describe the issue:`);
+  if (reason === null || !reason.trim()) return;
+  window.submitReport('User Report', targetUid, targetName, qid, reason.trim());
+};
+
+// ==========================================
+// 🆘 EMERGENCY SOS (was completely absent — dials nowhere, reports nowhere)
+// ==========================================
+window.triggerSOS = function(qid) {
+  const q = (window.getRequests ? window.getRequests() : []).find(r => r.id === qid);
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  const liveLoc = (q && q.rideId && window.getAllLiveLocations) ? window.getAllLiveLocations()[q.rideId] : null;
+
+  const routeText = q ? `${cleanLocation(q.from)} → ${cleanLocation(q.to)}` : 'Unknown route';
+  const locText = liveLoc ? ` | Last known GPS: ${liveLoc.lat}, ${liveLoc.lng}` : ' | GPS not available';
+
+  // 1. Admin ko turant report bhejna (audit trail ke liye)
+  window.submitReport('🚨 SOS EMERGENCY', null, null, qid, `Emergency SOS triggered on trip ${routeText}${locText}`);
+
+  showToast("🚨 SOS Alert sent to Admin. Connecting to Emergency Services...");
+
+  // 2. National emergency number dial karna
+  setTimeout(() => { window.location.href = "tel:112"; }, 600);
+};
+
+
+
+// ------------------------------------------
+// 1. PROFILE DETAILS SAVING LOGIC
+// ------------------------------------------
+window.saveProfileDetails = async function() {
+  const user = window.getCurrentUser();
+  if (!user) { showToast("❌ Please login first!"); return; }
+
+  // नए UI वाले इनपुट्स
+  const name = document.getElementById("editProfName").value.trim();
+  const phoneInput = document.getElementById("editProfPhone").value.trim();
+  const gender = document.getElementById("editProfGender").value;
+
+  if (!name) { showToast("❌ Full Name is required!"); return; }
+  
+  // फोन नंबर वैलिडेशन (सिर्फ अंक)
+  const cleanPhone = phoneInput.replace(/[\s-+]/g, '').replace(/^91/, '');
+  if (!/^[6-9][0-9]{9}$/.test(cleanPhone)) { showToast("❌ Enter valid 10-digit Indian mobile number!"); return; }
+
+  try {
+    const { getFirestore, doc, updateDoc, collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    // डुप्लिकेट नंबर चेक करना (ताकि एक ही नंबर 2 खातों में न हो)
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("phone", "==", cleanPhone));
+    const querySnapshot = await getDocs(q);
+    
+    let isDuplicate = false;
+    querySnapshot.forEach((docSnap) => {
+      if (docSnap.id !== user.uid) isDuplicate = true;
+    });
+
+    if (isDuplicate) { showToast("⚠️ This mobile number is already used by another account."); return; }
+
+    // डेटाबेस अपडेट करना
+    await updateDoc(doc(db, "users", user.uid), {
+      name: name,
+      phone: cleanPhone,
+      gender: gender,
+      lastActive: Date.now()
+    });
+
+    // UI में तुरंत नाम और डिटेल्स अपडेट करना
+    document.getElementById("profDisplayName").textContent = name;
+    document.getElementById("profPhoneGender").textContent = `📞 +91 ${cleanPhone} | ${gender === 'Male' ? '🧑 Male' : (gender === 'Female' ? '👩 Female' : '⚪ Other')}`;
+    document.getElementById("userDisplay").textContent = name.split(' ')[0];
+    
+    closeModal('editProfileModal');
+    showToast("✅ Profile Details Saved Successfully!");
+  } catch(e) {
+    console.error("Profile save error:", e);
+    showToast("❌ Error saving profile: " + e.message);
+  }
+};
+
+// ------------------------------------------
+// 2. GARAGE / VEHICLE MANAGEMENT
+// ------------------------------------------
+window.addVehicleToGarage = async function() {
+  const user = window.getCurrentUser();
+  if (!user) { showToast("❌ Please login first!"); return; }
+
+  // नए UI के इनपुट्स
+  const type = document.getElementById("newVehType").value;
+  const model = document.getElementById("newVehModel").value.trim();
+  const plateRaw = document.getElementById("newVehPlate").value.trim();
+
+  if (!model) { showToast("❌ Vehicle model name required!"); return; }
+  
+  // नंबर प्लेट वैलिडेशन (MH35AB1234 या 22BH1234AA)
+  const cleanPlate = plateRaw.replace(/[\s-]/g, '').toUpperCase();
+  const standardRegex = /^[A-Z]{2}[0-9]{2}[A-Z]{0,3}[0-9]{4}$/;
+  const bhRegex = /^[0-9]{2}BH[0-9]{4}[A-Z]{1,2}$/;
+  
+  if (!standardRegex.test(cleanPlate) && !bhRegex.test(cleanPlate)) {
+    showToast("❌ Invalid Indian plate! e.g. MH35AB1234 or 22BH1234AA");
+    return;
+  }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    await addDoc(collection(db, "user_vehicles"), {
+      type, 
+      model, 
+      plate: cleanPlate,
+      userUid: user.uid,
+      userEmail: user.email,
+      created: Date.now(),
+      kycStatus: 'pending' // Admin द्वारा वेरीफाई होने के लिए पेंडिंग
+    });
+
+    document.getElementById("newVehModel").value = "";
+    document.getElementById("newVehPlate").value = "";
+    
+    closeModal('addVehicleModal');
+    showToast("✅ Vehicle saved! Waiting for Admin KYC verification.");
+  } catch(e) {
+    showToast("❌ Error saving vehicle: " + e.message);
+  }
+};
+
+window.removeVehicleFromGarage = async function(docId) {
+  const user = window.getCurrentUser();
+  if (!user) return;
+  
+  if (confirm("Are you sure you want to remove this vehicle from your garage?")) {
+    try {
+      const { getFirestore, doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+      await deleteDoc(doc(getFirestore(), "user_vehicles", docId));
+      showToast("🗑️ Vehicle removed from garage.");
+    } catch(e) { showToast("❌ Error: " + e.message); }
+  }
+};
+
+// UI में गैराज लिस्ट रेंडर करना
+window.renderGarageList = function() {
+  const user = window.getCurrentUser();
+  const box = document.getElementById("profileGarageList");
+  if (!box) return;
+
+  if (!user || !user.vehicles || !user.vehicles.length) { 
+    box.innerHTML = "<div class='small muted' style='font-size:11.5px;color:#64748b;'>No vehicles added yet. Click + Add Vehicle above.</div>"; 
+    return; 
+  }
+  
+  box.innerHTML = user.vehicles.map(v => {
+    let kycBadge = "";
+    let borderColor = "#e2e8f0";
+    if (v.kycStatus === 'verified') {
+      kycBadge = '<span class="role-pill driver" style="font-size:9.5px;">✅ KYC Verified</span>';
+    } else if (v.kycStatus === 'rejected') {
+      kycBadge = '<span class="role-pill" style="font-size:9.5px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">🚫 Rejected</span>';
+      borderColor = "#fca5a5";
+    } else {
+      kycBadge = '<span class="role-pill parcel" style="font-size:9.5px;">⏳ Pending Admin Check</span>';
+      borderColor = "#fde68a";
+    }
+      
+    return `
+    <div class="item-row" style="border-color:${borderColor}; margin-bottom:8px;">
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <b style="font-size:13px; font-family:monospace;">${esc(v.plate)}</b>
+          <span style="font-size:11px; font-weight:700; color:#475569;">${esc(v.type)}</span>
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-top:3px; display:flex; justify-content:space-between;">
+          <span>Model: <b>${esc(v.model)}</b></span>
+          ${kycBadge}
+        </div>
+      </div>
+      <button class="red" style="padding:4px 8px; font-size:11px; margin-left:10px;" onclick="removeVehicleFromGarage('${v.id}')">🗑️</button>
+    </div>
+  `}).join("");
+};
+
+// ------------------------------------------
+// 3. SAVED PLACES MANAGEMENT
+// ------------------------------------------
+window.saveNewPlace = async function() {
+  const user = window.getCurrentUser();
+  if (!user) { showToast("❌ Please login first!"); return; }
+
+  const title = document.getElementById("savedPlaceTitle").value.trim();
+  const address = document.getElementById("savedPlaceAddress").value.trim();
+
+  if (!title || !address) { showToast("❌ Enter both Title and Address!"); return; }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const db = getFirestore();
+
+    await addDoc(collection(db, 'saved_places'), {
+      userUid: user.uid,
+      title: title,
+      address: address,
+      createdAt: Date.now()
+    });
+
+    document.getElementById("savedPlaceTitle").value = "";
+    document.getElementById("savedPlaceAddress").value = "";
+    
+    closeModal('addSavedPlaceModal');
+    showToast("✅ Location saved to your places!");
+  } catch(e) {
+    showToast("❌ Error: " + e.message);
+  }
+};
+
+window.renderSavedPlaces = function() {
+  const user = window.getCurrentUser();
+  const box = document.getElementById("savedPlacesList");
+  if (!box) return;
+
+  if (!user) {
+    box.innerHTML = "<div class='small muted' style='font-size:11.5px;color:#64748b;'>Sign in to view saved places.</div>";
+    return;
+  }
+
+  // ALL_PLACES ग्लोबल एरे है जो Firebase onSnapshot से डेटा लाता है
+  const myPlaces = (typeof ALL_PLACES !== 'undefined' ? ALL_PLACES : []).filter(p => p.userUid === user.uid);
+
+  if (!myPlaces.length) {
+    box.innerHTML = "<div class='small muted' style='font-size:11.5px;color:#64748b;'>No saved places. Add Home/Office for quick access.</div>";
+    return;
+  }
+
+  box.innerHTML = myPlaces.map(p => `
+    <div class="item-row" style="margin-bottom:8px;">
+      <div style="flex:1;">
+        <b style="font-size:12.5px; color:var(--text-main);">📍 ${esc(p.title)}</b>
+        <div style="font-size:10.5px; color:#64748b; margin-top:2px;">${esc(p.address)}</div>
+      </div>
+      <button class="secondary" style="padding:4px 8px; font-size:11px; border:none; background:transparent; color:var(--danger);" onclick="deleteSavedPlace('${p.id}')">✖</button>
+    </div>
+  `).join("");
+};
+
+window.deleteSavedPlace = async function(docId) {
+  if (!confirm("Remove this saved place?")) return;
+  try {
+    const { getFirestore, doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await deleteDoc(doc(getFirestore(), "saved_places", docId));
+    showToast("🗑️ Place removed.");
+  } catch(e) { showToast("❌ Error: " + e.message); }
+};
+
+window.clearAllTestData = async function() {
+  if (!confirm("🚨 DANGER: Are you sure you want to delete ALL trips and requests?")) return;
+  try {
+    const { collection, getDocs, deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    
+    const ridesSnap = await getDocs(collection(window.db, "rides"));
+    ridesSnap.forEach(async (d) => await deleteDoc(doc(window.db, "rides", d.id)));
+    
+    const reqsSnap = await getDocs(collection(window.db, "requests"));
+    reqsSnap.forEach(async (d) => await deleteDoc(doc(window.db, "requests", d.id)));
+    
+    showToast("🧹 All test data cleared successfully!");
+  } catch(e) {
+    showToast("Error clearing data: " + e.message);
+  }
+};
+
 </script>
+
 </body>
 </html>
