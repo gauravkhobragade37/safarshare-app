@@ -2,14 +2,14 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
-// Initialize the Firebase app in the service worker
+// Initialize the Firebase app in the service worker with YOUR REAL CONFIG
 firebase.initializeApp({
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_FIREBASE_APP_ID"
+  apiKey: "AIzaSyAdv9cNM-CIYEigks0OysevRlavcFEm1UM",
+  authDomain: "safarshare-7fc91.firebaseapp.com",
+  projectId: "safarshare-7fc91",
+  storageBucket: "safarshare-7fc91.firebasestorage.app",
+  messagingSenderId: "838587520163",
+  appId: "1:838587520163:web:8b84c6954939093a61db16"
 });
 
 const messaging = firebase.messaging();
@@ -17,11 +17,13 @@ const messaging = firebase.messaging();
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification.title;
+  
+  const notificationTitle = payload.notification?.title || 'SafarShare Alert';
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/icon.png'
+    body: payload.notification?.body || 'You have a new update on SafarShare.',
+    icon: 'https://cdn-icons-png.flaticon.com/512/1048/1048313.png' // Default Car Icon
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
