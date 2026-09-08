@@ -4534,7 +4534,46 @@ window.geocode = async function(query) {
 
 // 1. Missing safeNumber Fix (इससे Find Ride का एरर हटेगा)
 function safeNumber(v) { return Number(v) || 0; }
+// 📢 Ads Engine Global Functions (ये सर्च रिज़ल्ट्स को क्रैश होने से बचाएंगे)
+function getMatchingAds(from, to) {
+  const ads = window.getAds ? window.getAds() : [];
+  if (!ads.length) return [];
+  const routeText = `${from} ${to}`.toLowerCase();
+  const matched = ads.filter(a => {
+    if (!a.targetRoute) return true; 
+    return a.targetRoute.toLowerCase().split(/[-,]/).some(part => part.trim() && routeText.includes(part.trim()));
+  });
+  return matched.length ? matched : ads; 
+}
 
+function buildAdCard(ad) {
+  return `
+    <div class="card" style="margin-bottom:12px; border:1.5px dashed var(--primary); border-radius:18px; background:#fffbeb;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span class="role-pill parcel" style="font-size:9.5px;">📢 SPONSORED</span>
+        <span style="font-size:10px; color:#b45309; font-weight:700;">${esc(ad.category || 'Local Business')}</span>
+      </div>
+      <div style="font-size:15px; font-weight:800; color:#1e293b;">${esc(ad.name)}</div>
+      <div style="font-size:12px; color:#64748b; margin:4px 0;">📍 ${esc(ad.landmark || '')}</div>
+      <a href="tel:${esc(ad.phone)}" class="uber-cta-btn" style="display:block; text-align:center; padding:9px; font-size:13px; text-decoration:none; margin-top:6px;">📞 Call ${esc(ad.phone)}</a>
+    </div>
+  `;
+}
+
+function injectAdsIntoResults(cardsHtmlArray, from, to) {
+  const ads = getMatchingAds(from, to);
+  if (!ads.length) return cardsHtmlArray.join('');
+  if (!cardsHtmlArray.length) return buildAdCard(ads[0]); 
+
+  let out = [];
+  let adIdx = 0;
+  cardsHtmlArray.forEach((card, i) => {
+    out.push(card);
+    if ((i + 1) % 2 === 0 && adIdx < ads.length) { out.push(buildAdCard(ads[adIdx])); adIdx++; }
+  });
+  return out.join('');
+}
+  
 
 </script>
 
