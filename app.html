@@ -800,6 +800,15 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   </div>
 </div>
 
+<div class="custom-modal-overlay" id="bookingPaymentModal" onclick="closeModal('bookingPaymentModal')">
+  <div class="custom-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header-row"><div class="modal-title">💳 Choose Payment Mode</div><button style="border:none;background:none;font-size:18px;font-weight:800;cursor:pointer;" onclick="closeModal('bookingPaymentModal')">✕</button></div>
+    <div class="modal-option-item selected" onclick="pickBookingPaymentMode('cash_pickup', this)"><div><b>💵 Cash on Pickup</b><div style="font-size:11px;color:#64748b;">Pay the driver directly in cash</div></div><div class="check-box-circle">✓</div></div>
+    <div class="modal-option-item" onclick="pickBookingPaymentMode('driver_qr', this)"><div><b>📱 Scan Driver UPI QR</b><div style="font-size:11px;color:#64748b;">Pay via UPI at pickup</div></div><div class="check-box-circle"></div></div>
+    <button class="uber-cta-btn" style="margin-top:10px;" onclick="confirmBookingPaymentChoice()">Send Request</button>
+  </div>
+</div>
+
 <div class="custom-modal-overlay" id="paymentModeModal" onclick="closeModal('paymentModeModal')">
   <div class="custom-modal-content" onclick="event.stopPropagation()">
     <div class="modal-header-row"><div class="modal-title">💳 Select Payment Mode</div><button style="border:none;background:none;font-size:18px;font-weight:800;cursor:pointer;" onclick="closeModal('paymentModeModal')">✕</button></div>
@@ -888,6 +897,44 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
       <input id="chatInputText" type="text" placeholder="Write message..." style="flex:1; padding:8px; border-radius:8px; border:1px solid #cbd5e1; outline:none;">
       <button class="uber-cta-btn" style="width:auto; padding:8px 14px; margin-top:0;" onclick="sendChatMessage()">Send</button>
     </div>
+  </div>
+</div>
+<!-- ✏️ EDIT TRIP MODAL -->
+<div class="custom-modal-overlay" id="editTripModal" onclick="closeModal('editTripModal')">
+  <div class="custom-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header-row">
+      <div class="modal-title">✏️ Edit Trip Details</div>
+      <button style="border:none;background:none;font-size:18px;font-weight:800;cursor:pointer;" onclick="closeModal('editTripModal')">✕</button>
+    </div>
+    
+    <div style="font-size:11.5px; color:#64748b; margin-bottom:12px; line-height:1.4;" id="editTripRouteText">
+      Route Loading...
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+      <div class="input-card" style="margin-bottom:0;">
+        <span style="font-size:12px;">👥 Seats</span>
+        <input type="number" id="editTripSeats" placeholder="Seats Left" min="0" max="6">
+      </div>
+      <div class="input-card" style="margin-bottom:0;">
+        <span style="font-size:12px; font-weight:800; color:var(--primary);">₹ Fare</span>
+        <input type="number" id="editTripPrice" placeholder="Per Seat">
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+      <div class="input-card" style="margin-bottom:0;">
+        <span style="font-size:12px;">📅 Date</span>
+        <input type="date" id="editTripDate">
+      </div>
+      <div class="input-card" style="margin-bottom:0;">
+        <span style="font-size:12px;">⏰ Time</span>
+        <input type="time" id="editTripTime">
+      </div>
+    </div>
+
+    <input type="hidden" id="editTripId">
+    <button class="uber-cta-btn" onclick="saveEditedTrip()">💾 Save Changes</button>
   </div>
 </div>
 
@@ -989,7 +1036,8 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
   import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const VAPID_KEY = "YOUR_VAPID_KEY"; // 🔑 REPLACE THIS: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → generate/copy key pair
+  const VAPID_KEY = "BFJtAYPAICOPY0n6d-QOPLI-MpDlD_n1Wyr1P91pEikkDYdohfaGyBVPe9CbqPw0BTn6Ccgq1j34aq-cEIb5Ugg"; 
+
 
   window.initializePushNotifications = async function() {
     if (VAPID_KEY === "YOUR_VAPID_KEY") {
@@ -2383,8 +2431,10 @@ async function submitRatingReview() {
     // 1. dedicated ratings collection में पूरा record सेव करना
     await addDoc(collection(db, "ratings"), ratingData);
 
-    // 2. request doc पर भी flag रखना (quick lookup के लिए)
-    await updateDoc(doc(db, "requests", ratingTargetReqId), { isRated: true, ratingStars: currentRatingValue });
+    // 2. request doc पर role-specific flag रखना — पहले सिर्फ एक साझा isRated flag था,
+    // जिससे अगर एक तरफ rate कर दे तो दूसरे तरफ का "⭐ Rate" बटन भी गलती से गायब हो जाता था
+    const ratedFlagField = ratingTargetData.raterRole === 'Driver' ? 'driverRated' : 'passengerRated';
+    await updateDoc(doc(db, "requests", ratingTargetReqId), { [ratedFlagField]: true, isRated: true, ratingStars: currentRatingValue });
 
     // 3. रेट किए गए user की aggregate rating अपडेट करना (ताकि search results में असली rating दिखे)
     if (ratingTargetData.ratedUid) {
@@ -2968,7 +3018,7 @@ window.findAvailableRides = async function() {
           </div>
           
           <div style="display: flex; gap: 8px;">
-            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="seatRequest('${r.id}', ${r.fare}, ${r.travelKm})">
+            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">
               ✅ Book Now
                       ${currentRadarMode === 'intercity' ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="counterRequest('${r.id}')">🔄 Offer Fare</button>` : ''}
 
@@ -3163,7 +3213,39 @@ window.publishPostTrip = async function() {
 // ==========================================
 
 // 1. Seat Booking Request (पैसेंजर बुकिंग)
-window.seatRequest = async function(rideId, fare, travelKm) {
+// 💳 Booking से पहले Payment Mode चुनना (Accept के बाद अलग स्टेप नहीं चाहिए)
+let pendingBooking = null;
+let pendingBookingPaymentMode = 'cash_pickup';
+
+window.openBookingPaymentModal = function(rideId, fare, travelKm) {
+  pendingBooking = { rideId, fare, travelKm };
+  pendingBookingPaymentMode = 'cash_pickup';
+  const modal = document.getElementById('bookingPaymentModal');
+  modal.querySelectorAll('.modal-option-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === 0);
+    const cb = el.querySelector('.check-box-circle'); if (cb) cb.textContent = i === 0 ? '✓' : '';
+  });
+  openModal('bookingPaymentModal');
+};
+
+window.pickBookingPaymentMode = function(mode, el) {
+  pendingBookingPaymentMode = mode;
+  document.querySelectorAll('#bookingPaymentModal .modal-option-item').forEach(item => {
+    item.classList.remove('selected');
+    const cb = item.querySelector('.check-box-circle'); if (cb) cb.textContent = '';
+  });
+  el.classList.add('selected');
+  const cb = el.querySelector('.check-box-circle'); if (cb) cb.textContent = '✓';
+};
+
+window.confirmBookingPaymentChoice = function() {
+  if (!pendingBooking) return;
+  closeModal('bookingPaymentModal');
+  window.seatRequest(pendingBooking.rideId, pendingBooking.fare, pendingBooking.travelKm, pendingBookingPaymentMode);
+  pendingBooking = null;
+};
+
+window.seatRequest = async function(rideId, fare, travelKm, paymentMode) {
   const user = window.getCurrentUser();
   if (!user) {
     showToast("❌ Please login with Google first!");
@@ -3215,6 +3297,7 @@ window.seatRequest = async function(rideId, fare, travelKm) {
       date: date,
       travelKm: travelKm,
       status: "Pending", // शुरुआत में पेंडिंग रहेगा
+      paymentMode: paymentMode || 'cash_pickup', // 💳 पैसेंजर ने रिक्वेस्ट भेजने से पहले ही चुन लिया
       bookingScope: document.getElementById("rideRadarToggleBadge").classList.contains("local-mode") ? "local" : "intercity",
       created: Date.now(),
       createdAt: Date.now(),
@@ -3433,7 +3516,8 @@ function generateTripCardHtml(r) {
       </div>
       <div class="small" style="color:#64748b; margin-bottom:10px;">📅 ${r.date} • ⏰ ${r.time} | 🚘 ${r.vehicle} ${r.seats ? '• 💺 ' + r.seats + ' seats left' : ''}</div>
       <div class="action-buttons-group">
-        ${r.status === 'Active' ? `<button class="wa-btn" onclick='shareOnWhatsApp(${JSON.stringify(r)})'>📲 Share on WhatsApp</button>` : ''}
+        ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#25D366; color:white; padding:10px; font-size:12px; border:none; margin-top:0;" onclick='shareOnWhatsApp(${JSON.stringify(r).replace(/'/g, "&apos;")})'>💬 Share on WhatsApp</button>` : ''}
+
         ${showEditBtn ? `<button class="secondary" style="padding:7px 11px; font-size:11px;" onclick="openEditTripModal('${r.id}')">✏️ Edit Trip</button>` : ''}
         ${r.status === 'Active' ? `<button class="red" onclick="cancelTrip('${r.id}')">🚫 Cancel Trip</button>` : ''}
       </div>
@@ -3452,19 +3536,20 @@ function generateRequestCardHtml(q, user) {
   const otherName = isDriver ? (q.passengerName || 'Passenger') : (q.driverName || 'Driver');
   const otherPhone = isDriver ? (q.passengerPhone || 'N/A') : (q.driverPhone || 'N/A');
 
-  const isConfirmed = ["Accepted", "Confirmed", "In-Transit"].includes(q.status);
+  const isConfirmed = ["Confirmed", "In-Transit", "Completed"].includes(q.status);
+  const isIntercity = q.bookingScope === 'intercity';
 
   let statusText = q.status || 'Pending';
   if (q.status === 'Countered_By_Driver') statusText = 'Countered by Driver';
 
   let actionBtns = "";
 
-  // 1. Pending ya Counter Request (Driver ke liye Accept, Re-offer, Reject / Passenger ke liye Waiting)
+  // 1. Pending ya Counter Request (Driver ke liye Accept/Reject, aur sirf INTERCITY mein Re-offer bhi)
   if (q.status === 'Pending' || q.status === 'Counter_Requested' || q.status === 'Counter Offered') {
     if (isDriver) {
       actionBtns = `
         <button class="uber-cta-btn" style="background:#10b981; flex:1;" onclick='acceptOffer(${JSON.stringify(q).replace(/"/g, '&quot;')})'>✅ Accept</button>
-        <button class="orange" style="flex:1;" onclick="let p=prompt('Enter your re-offer price (₹):', '${q.price || q.fare || q.currentPrice || 0}'); if(p) sendDriverReOffer('${q.id}', p);">🔄 Re-offer</button>
+        ${isIntercity ? `<button class="orange" style="flex:1;" onclick="let p=prompt('Enter your re-offer price (₹):', '${q.price || q.fare || q.currentPrice || 0}'); if(p) sendDriverReOffer('${q.id}', p);">🔄 Re-offer</button>` : ''}
         <button class="red" style="flex:1;" onclick="cancelRequest('${q.id}', true)">❌ Reject</button>
       `;
     } else {
@@ -3474,46 +3559,46 @@ function generateRequestCardHtml(q, user) {
       `;
     }
   }
-  // 2. Agar Driver ne Re-offer bheja hai (Passenger ke liye)
+  // 2. Agar Driver ne Re-offer bheja hai (Passenger ke liye) — Accept karte hi seedha Confirm ho jaayega
   else if (!isDriver && q.status === 'Countered_By_Driver') {
     actionBtns = `
-      <button class="uber-cta-btn" style="background:#10b981; flex:1;" onclick="updateRequestStatus('${q.id}', 'Accepted')">✅ Accept ₹${q.price || q.currentPrice}</button>
+      <button class="uber-cta-btn" style="background:#10b981; flex:1;" onclick="updateRequestStatus('${q.id}', 'Accepted')">✅ Accept & Confirm ₹${q.price || q.currentPrice}</button>
       <button class="red" style="flex:1;" onclick="cancelRequest('${q.id}', false)">❌ Reject</button>
     `;
   }
-  // 3. Driver accept kar chuka hai, ab Passenger payment mode chun kar booking pक्की karega
-  else if (q.status === 'Accepted' && !isDriver) {
-    actionBtns = `
-      <div style="width:100%; background:#eff6ff; padding:10px; border-radius:10px; border:1px solid #bfdbfe; margin-top:8px;">
-        <p style="margin:0 0 6px; font-size:12px; font-weight:700;">💳 Confirm Payment Mode:</p>
-        <label style="font-size:13px; font-weight:600;"><input type="radio" name="pay_${q.id}" value="cash_pickup" checked> 💵 Cash on Pickup</label><br>
-        <label style="font-size:13px; font-weight:600;"><input type="radio" name="pay_${q.id}" value="driver_qr"> 📱 Scan Driver UPI QR</label>
-        <div style="display:flex; gap:6px; margin-top:10px;">
-          <button class="primary full" onclick="choosePayment('${q.id}')">Confirm Booking</button>
-        </div>
-      </div>
-    `;
-  }
-  // 4. Agar Cancel ya Reject ho gaya ho
+  // 3. Agar Cancel ya Reject ho gaya ho
   else if (q.status === 'Cancelled' || q.status === 'Rejected') {
     actionBtns = `<div style="font-size:11.5px; color:var(--danger);">${q.cancelReason ? 'Reason: ' + esc(q.cancelReason) : 'This booking was cancelled.'}</div>`;
   }
-  // 5. Confirmed state: Call (Chat already available in the footer below — avoids a duplicate/broken button)
+  // 4. Confirmed/In-Transit/Completed: Call + (Driver ke liye) Navigate to pickup/drop
   else if (isConfirmed) {
+    const navTarget = q.status === 'In-Transit' ? q.to : q.from; // Confirmed → pickup की तरफ, In-Transit → drop की तरफ
+    const navLabel = q.status === 'In-Transit' ? '🧭 Navigate to Drop' : '🧭 Navigate to Pickup';
     actionBtns = `
       <a href="tel:${esc(otherPhone)}" class="act-btn" style="background:#0ea5e9; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; text-align:center; flex:1;">📞 Call ${esc(otherName)}</a>
+      ${isDriver ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(cleanLocation(navTarget || ''))}" target="_blank" class="act-btn" style="background:#4285F4; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; text-align:center; flex:1;">${navLabel}</a>` : ''}
     `;
   }
-  else if (q.status === 'Completed' && !q.isRated) {
-    actionBtns = `<button class="orange" onclick="openRatingModal('${q.id}')">⭐ Rate ${esc(otherName)}</button>`;
+  else if (q.status === 'Completed') {
+    // 🔧 FIX: पहले एक ही साझा isRated flag था — जिससे एक तरफ rate करते ही दूसरे तरफ का बटन भी गलती से गायब हो जाता था।
+    // अब हर तरफ अपना अलग flag है (driverRated / passengerRated), दोनों independently rate कर सकते हैं।
+    const alreadyRated = isDriver ? q.driverRated : q.passengerRated;
+    if (!alreadyRated) actionBtns = `<button class="orange" onclick="openRatingModal('${q.id}')">⭐ Rate ${esc(otherName)}</button>`;
   }
 
-  // लाइव एक्शन्स (Confirmed → Start PIN, In-Transit → Drop PIN + Live Tracking + SOS)
+  // लाइव एक्शन्स (Confirmed → Start PIN + Live Tracking, In-Transit → Drop PIN + Live Tracking + SOS + Share)
   let activeActions = "";
   if (q.status === 'Confirmed') {
-    activeActions = !isDriver
-      ? `<div class="pin-badge"><span class="pin-label">YOUR START PIN</span><span class="pin-code">${q.startOtp}</span></div>`
-      : `<button class="green full" onclick="verifyStartOtp('${q.id}', '${q.startOtp}')">🔑 Enter Passenger PIN</button>`;
+    activeActions = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        ${!isDriver
+          ? `<div class="pin-badge"><span class="pin-label">YOUR START PIN</span><span class="pin-code">${q.startOtp}</span></div>`
+          : `<button class="green full" onclick="verifyStartOtp('${q.id}', '${q.startOtp}')">🔑 Enter Passenger PIN</button>`}
+        ${!isDriver ? `
+        <button class="act-btn" style="justify-content:center;" onclick="toggleLiveTrackingBox('${q.id}')">📍 Track Driver Arriving</button>
+        <div id="trackMap_${q.id}" style="display:none; width:100%; height:180px; border-radius:12px; overflow:hidden; margin-top:4px;"></div>` : ''}
+      </div>
+    `;
   } else if (q.status === 'In-Transit') {
     activeActions = `
       <div style="display:flex; flex-direction:column; gap:6px;">
@@ -3524,12 +3609,19 @@ function generateRequestCardHtml(q, user) {
           <button class="act-btn" style="flex:1; justify-content:center;" onclick="toggleLiveTrackingBox('${q.id}')">📍 Track Live</button>
           <button class="act-btn red" style="flex:1; justify-content:center;" onclick="triggerSOS('${q.id}')">🚨 SOS</button>
         </div>
+        ${!isDriver ? `<button class="wa-btn" onclick="shareLiveTripOnWhatsApp('${q.id}')">📲 Share Live Trip with Family</button>` : ''}
         <div id="trackMap_${q.id}" style="display:none; width:100%; height:180px; border-radius:12px; overflow:hidden; margin-top:4px;"></div>
       </div>
     `;
   }
 
   const canChat = ['Confirmed', 'In-Transit', 'Completed'].includes(q.status);
+
+  // 📦 Parcel होने पर Driver को receiver का नाम/नंबर भी दिखाना ज़रूरी है (delivery के लिए)
+  const receiverInfoHtml = (isDriver && !isPassenger && q.recName) ? `
+      <div class="small" style="color:#0f766e; background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:6px 8px; margin-bottom:8px;">
+        📦 <b>Receiver:</b> ${esc(q.recName)} • 📞 ${esc(q.recPhone || 'N/A')}
+      </div>` : '';
 
   return `
     <div class="request" style="border-left: 4px solid ${isConfirmed ? '#10b981' : '#f59e0b'};">
@@ -3543,6 +3635,8 @@ function generateRequestCardHtml(q, user) {
         <div class="route-node" style="font-size:12px;">📍 From: ${esc(cleanLocation(q.from || 'N/A'))}</div>
         <div class="route-node drop" style="font-size:12px;">🎯 To: ${esc(cleanLocation(q.to || 'N/A'))}</div>
       </div>
+
+      ${receiverInfoHtml}
 
       <div class="small" style="color:#64748b; margin-bottom:8px;">
         👤 <b>${esc(otherName)}</b>${canChat ? ` • 📞 ${esc(otherPhone)}` : ` • 📞 🔒 unlocks after booking is confirmed`}<br>
@@ -3574,11 +3668,9 @@ function generateRequestCardHtml(q, user) {
 // ड्राइवर द्वारा रिक्वेस्ट एक्सेप्ट करना
 window.acceptOffer = async function(q) {
   try {
-    const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), 'requests', q.id), {
-      status: 'Accepted', acceptedBy: window.getCurrentUser().uid, acceptedAt: Date.now()
-    });
-    showToast('✅ Fare accepted. Passenger can now confirm booking.');
+    // 💳 Payment mode passenger ne request bhejte waqt hi choose kar liya tha —
+    // ab Accept karte hi seedha booking Confirm ho jaayegi, koi extra step nahi
+    await window.reserveCapacity(q, q.paymentMode || 'cash_pickup');
   } catch(e) { showToast('❌ ' + e.message); }
 };
 
@@ -3792,12 +3884,27 @@ window.toggleLiveTrackingBox = function(reqId) {
     activeTrackingIds.add(reqId);
     mapBox.style.display = 'block';
 
-    // Leaflet Map सेटअप
+    // Leaflet Map सेटअप (OpenStreetMap tiles — Google Maps नहीं, कोई API key नहीं चाहिए)
     const map = L.map(`trackMap_${reqId}`).setView([21.4588, 80.1961], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-    
+
+    // 🛣️ Ride ke actual route (From → To) ko polyline se dikhana, agar geometry available ho
+    const ride = (window.getRides ? window.getRides() : []).find(r => r.id === req.rideId);
+    let destLatLng = null;
+    if (ride) {
+      let geom = typeof ride.geometry === 'string' ? (() => { try { return JSON.parse(ride.geometry); } catch(e){ return null; } })() : ride.geometry;
+      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
+        const latlngs = geom.coordinates.map(c => [c[1], c[0]]); // GeoJSON [lng,lat] → Leaflet [lat,lng]
+        L.polyline(latlngs, { color: '#4285F4', weight: 5, opacity: 0.8 }).addTo(map);
+        destLatLng = latlngs[latlngs.length - 1];
+        L.marker(destLatLng, { icon: L.divIcon({ html: '🏁', className: 'car-pin', iconSize: [26,26], iconAnchor: [13,13] }) })
+          .addTo(map).bindPopup(`🎯 Destination: ${cleanLocation(req.to)}`);
+        map.fitBounds(latlngs, { padding: [30, 30] });
+      }
+    }
+
     const carIcon = L.divIcon({ html: '🚗', className: 'car-pin', iconSize: [28,28], iconAnchor: [14,14] });
-    const marker = L.marker([21.4588, 80.1961], { icon: carIcon }).addTo(map);
+    const marker = L.marker(destLatLng || [21.4588, 80.1961], { icon: carIcon }).addTo(map);
     marker.bindPopup('🚗 Waiting for transporter GPS...');
     
     const statusDiv = document.createElement('div');
@@ -4265,44 +4372,132 @@ window.updateRequestStatus = async function(requestId, newStatus) {
     const { getFirestore, doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
     const db = getFirestore();
     const reqSnap = await getDoc(doc(db, "requests", requestId));
-    const reqData = reqSnap.exists() ? reqSnap.data() : {};
-    const updatePayload = { status: newStatus, updatedAt: Date.now() };
-    // Countered_By_Driver से Accepted में जाते वक्त driver का re-offer price ही final fare बनेगा
-    if (newStatus === 'Accepted' && reqData.price) {
-      updatePayload.currentPrice = reqData.price;
+    const reqData = reqSnap.exists() ? { id: requestId, ...reqSnap.data() } : null;
+    if (!reqData) { showToast("❌ Request not found!"); return; }
+
+    if (newStatus === 'Accepted') {
+      // Countered_By_Driver का re-offer price ही अब final fare बनेगा
+      if (reqData.price) reqData.currentPrice = reqData.price;
+      // 💳 Payment mode पहले ही चुना जा चुका था — सीधा Confirm कर देना, कोई extra step नहीं
+      await window.reserveCapacity(reqData, reqData.paymentMode || 'cash_pickup');
+      return;
     }
-    await updateDoc(doc(db, "requests", requestId), updatePayload);
-    showToast(newStatus === 'Accepted' ? '✅ Offer Accepted!' : `Status updated to ${newStatus}`);
+
+    await updateDoc(doc(db, "requests", requestId), { status: newStatus, updatedAt: Date.now() });
+    showToast(`Status updated to ${newStatus}`);
   } catch(e) { showToast("❌ " + e.message); }
 };
 
 // ट्रिप को WhatsApp पर शेयर करना
-window.shareOnWhatsApp = function(r) {
-  const text = `🚗 Ride Available on SafarShare!\n📍 From: ${cleanLocation(r.from)}\n🎯 To: ${cleanLocation(r.to)}\n📅 ${r.date} • ⏰ ${r.time}\n💺 Seats: ${r.seats || 'N/A'} | ₹${r.seatPrice || r.fare || ''}/seat\n\nBook now on SafarShare app!`;
+// 👨‍👩‍👧 In-Transit trip ki details + current live location family ke saath WhatsApp पर share karna
+window.shareLiveTripOnWhatsApp = async function(reqId) {
+  const req = (window.getRequests ? window.getRequests() : []).find(r => r.id === reqId);
+  if (!req) return;
+
+  let locationLine = '';
+  try {
+    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const snap = await getDoc(doc(getFirestore(), 'live_locations', req.rideId));
+    if (snap.exists()) {
+      const d = snap.data();
+      if (Number.isFinite(Number(d.lat)) && Number.isFinite(Number(d.lng))) {
+        locationLine = `\n📍 *Live Location Right Now:*\nhttps://www.google.com/maps?q=${d.lat},${d.lng}\n`;
+      }
+    }
+  } catch(e) { /* location optional, trip details ke saath bhi bhej denge */ }
+
+  const text = `🚗 *My SafarShare Trip is Live!*\n📍 From: ${cleanLocation(req.from)}\n🎯 To: ${cleanLocation(req.to)}\n👤 Driver: ${req.driverName || 'N/A'} • 📞 ${req.driverPhone || 'N/A'}${locationLine}\n_Sharing so you know I'm safe on the way._`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 };
 
-// ट्रिप एडिट करना — कोई active booking ना हो तभी allowed (generateTripCardHtml पहले से यह check करता है)
-window.openEditTripModal = async function(rideId) {
+window.shareOnWhatsApp = function(r) {
+  const appLink = "https://gauravkhobragade37.github.io/safarshare-app/app.html";
+  
+  let text = `🚗 *SafarShare Trip Update!*\n`;
+  text += `📍 *From:* ${cleanLocation(r.from)}\n`;
+  text += `🎯 *To:* ${cleanLocation(r.to)}\n`;
+  text += `📅 *Date:* ${r.date} • ⏰ *Time:* ${r.time}\n`;
+  text += `🚘 *Vehicle:* ${r.vehicle || r.carModel || 'N/A'}\n\n`;
+
+  // अगर ट्रिप में पैसेंजर सीट्स अवेलेबल हैं
+  if (r.passenger && r.seats > 0) {
+    text += `💺 *Passenger Seats:* ${r.seats} Left | ₹${r.seatPrice || r.fare || 0}/seat\n`;
+  }
+
+  // अगर ट्रिप में पार्सल एक्सेप्ट किया जा रहा है
+  if (r.parcel) {
+    text += `📦 *Accepting Parcels / Luggage:*\n`;
+    if (r.typeDoc) text += `  📄 Document: ₹${r.docPrice}\n`;
+    if (r.typeBag) text += `  🎒 Box (≤5kg): ₹${r.bagPrice}\n`;
+    if (r.typeCargo) text += `  📦 Cargo (>5kg): ₹${r.cargoPrice}\n`;
+    if (r.fullVehiclePrice) text += `  🚛 Full Space: ₹${r.fullVehiclePrice}\n`;
+  }
+
+  text += `\n👉 *Book directly here:*\n${appLink}`;
+  
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+};
+
+
+// ट्रिप एडिट मोडल खोलना और पहले से डेटा भरना (Pre-fill)
+window.openEditTripModal = function(rideId) {
   const ride = (window.getRides ? window.getRides() : []).find(r => r.id === rideId);
   if (!ride) { showToast("❌ Trip not found!"); return; }
 
-  const newSeats = prompt("Update seats available:", ride.seats || 1);
-  if (newSeats === null) return;
-  const newPrice = prompt("Update price per seat (₹):", ride.seatPrice || ride.fare || 0);
-  if (newPrice === null) return;
+  // डेटा सेट करना
+  document.getElementById('editTripId').value = rideId;
+  document.getElementById('editTripRouteText').innerHTML = `<b>📍 From:</b> ${cleanLocation(ride.from)}<br><b>🎯 To:</b> ${cleanLocation(ride.to)}`;
+  
+  document.getElementById('editTripSeats').value = ride.seats || 0;
+  document.getElementById('editTripPrice').value = ride.seatPrice || ride.fare || 0;
+  
+  // Date and Time Handle करना
+  document.getElementById('editTripDate').value = ride.date || new Date().toISOString().split('T')[0];
+  
+  let timeVal = ride.time || '';
+  if (timeVal.toLowerCase() === 'today' || !timeVal.includes(':')) {
+    timeVal = new Date().toTimeString().split(" ")[0].substring(0,5);
+  }
+  document.getElementById('editTripTime').value = timeVal;
 
-  const seatsNum = Number(newSeats), priceNum = Number(newPrice);
+  // मोडल ओपन करना
+  document.getElementById('editTripModal').style.display = 'flex';
+};
+
+// एक ही बार में पूरा एडिट डेटा सेव करना
+window.saveEditedTrip = async function() {
+  const rideId = document.getElementById('editTripId').value;
+  if (!rideId) return;
+
+  const seatsNum = Number(document.getElementById('editTripSeats').value);
+  const priceNum = Number(document.getElementById('editTripPrice').value);
+  const dateVal = document.getElementById('editTripDate').value;
+  const timeVal = document.getElementById('editTripTime').value;
+
   if (isNaN(seatsNum) || seatsNum < 0 || isNaN(priceNum) || priceNum < 0) {
-    showToast("❌ Enter valid numbers!"); return;
+    showToast("❌ Enter valid numbers for seats and price!"); return;
+  }
+  if (!dateVal || !timeVal) {
+    showToast("❌ Date and Time are required!"); return;
   }
 
   try {
     const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await updateDoc(doc(getFirestore(), 'rides', rideId), { seats: seatsNum, seatPrice: priceNum });
-    showToast("✅ Trip updated!");
-  } catch(e) { showToast("❌ Error: " + e.message); }
+    await updateDoc(doc(getFirestore(), 'rides', rideId), { 
+      seats: seatsNum, 
+      seatPrice: priceNum,
+      date: dateVal,
+      time: timeVal,
+      updatedAt: Date.now()
+    });
+    
+    document.getElementById('editTripModal').style.display = 'none';
+    showToast("✅ Trip details updated successfully!");
+  } catch(e) { 
+    showToast("❌ Error: " + e.message); 
+  }
 };
+
 
 async function sendDriverReOffer(requestId, newPrice) {
   try {
@@ -4332,6 +4527,13 @@ window.geocode = async function(query) {
   }
   return [21.4588, 80.1961]; // Default fallback coordinates (Gondia/Central)
 };
+
+// ==========================================
+// 🚨 MISSING FUNCTIONS FIX (पेस्ट करें)
+// ==========================================
+
+// 1. Missing safeNumber Fix (इससे Find Ride का एरर हटेगा)
+function safeNumber(v) { return Number(v) || 0; }
 
 
 </script>
