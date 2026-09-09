@@ -2951,7 +2951,7 @@ window.findAvailableRides = async function() {
           
           <div style="display: flex; gap: 8px;">
             <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">✅ Book Now</button>
-            ${currentRadarMode === 'intercity' ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="counterRequest('${r.id}')">🔄 Offer Fare</button>` : ''}
+            ${!isLocalMode ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="counterRequest('${r.id}')">🔄 Offer Fare</button>` : ''}
           </div>
         </div>`);
 
