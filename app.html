@@ -1787,6 +1787,10 @@ let postPickupMarker, postDropMarker;
 let rideRoutePolyline = null, parcelRoutePolyline = null;
 let routePolylines = [], returnPolylines = [];
 let searchDebounceTimers = {};
+// 🔑 LocationIQ API Setup
+const LOCATIONIQ_API_KEY = "pk.10fcbc3966ee1a09d6e30ae53f2c7c33";
+const localMemoryCache = {}; // सर्च को फास्ट करने के लिए
+
 let selectedVehicleType = "Car", selectedVehicleSeats = 3;
 let activePinCallback = null, currentSubTab = 'active';
 let selectedBagCount = 0, selectedSeatCount = 1;
@@ -1920,17 +1924,26 @@ function triggerAutoGPSClick(inputId, marker, mapInst, clearBtnId) {
   }, () => showToast("GPS Denied"), { enableHighAccuracy: true });
 }
 
-// 📍 2. मैप पर पिन ड्रॉप करने या GPS के लिए क्लीन नाम
+// 📍 2. मैप पर पिन ड्रॉप करने या GPS के लिए (LocationIQ)
 async function reverseGeocode(lat, lng) {
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
+    const url = `https://api.locationiq.com/v1/reverse?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&accept-language=en&format=json`;
+    const res = await fetch(url);
     const d = await res.json();
     return formatCleanAddress(d.display_name) || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-  } catch(e) { return `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
+  } catch(e) {
+    // अगर LocationIQ डाउन हो, तो बैकअप के तौर पर पुराना Nominatim यूज़ करें
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`);
+      const d = await res.json();
+      return formatCleanAddress(d.display_name) || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    } catch(err) { return `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
+  }
 }
 
 
-// 🔍 3. सर्च बॉक्स के सजेशन (Suggestions) को क्लीन करना
+
+// 🔍 3. सर्च बॉक्स सजेशन (LocationIQ Autocomplete)
 function handleSearchLocation(inputId, boxId, clearBtnId, marker, tabType) {
   const q = document.getElementById(inputId).value.trim();
   const box = document.getElementById(boxId);
@@ -1941,20 +1954,32 @@ function handleSearchLocation(inputId, boxId, clearBtnId, marker, tabType) {
   clearTimeout(searchDebounceTimers[inputId]);
   searchDebounceTimers[inputId] = setTimeout(async () => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&limit=4&q=${encodeURIComponent(q)}`);
+      const url = `https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(q)}&countrycodes=in&accept-language=en&limit=4&format=json`;
+      const res = await fetch(url);
       const data = await res.json();
       box.style.display = data.length ? 'block' : 'none';
       box.innerHTML = data.map(item => {
-        // यहाँ क्लीनर यूज़ हो रहा है
         const cleanName = formatCleanAddress(item.display_name);
         return `
         <div class="suggestion-item" onclick="selectLocation('${inputId}','${boxId}','${escape(cleanName)}',${item.lat},${item.lon},'${clearBtnId}')">
           📍 ${cleanName}
         </div>
       `}).join('');
-    } catch(e){}
+    } catch(e) {
+      // Fallback
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&limit=4&q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        box.style.display = data.length ? 'block' : 'none';
+        box.innerHTML = data.map(item => {
+          const cleanName = formatCleanAddress(item.display_name);
+          return `<div class="suggestion-item" onclick="selectLocation('${inputId}','${boxId}','${escape(cleanName)}',${item.lat},${item.lon},'${clearBtnId}')">📍 ${cleanName}</div>`
+        }).join('');
+      } catch(err) {}
+    }
   }, 350);
 }
+
 
 
 function selectLocation(inputId, boxId, name, lat, lon, clearBtnId) {
@@ -2488,100 +2513,6 @@ async function submitRatingReview() {
   document.getElementById("ratingModal").style.display = "none";
 }
 
-async function publishPostTrip() {
-  const user = window.getCurrentUser ? window.getCurrentUser() : null;
-  if (!user) return showToast("Please login first!");
-
-  const from = document.getElementById('pFrom').value.trim(), to = document.getElementById('pTo').value.trim();
-  const price = Number(document.getElementById('pPrice').value) || 150;
-  const seats = Number(document.getElementById('pSeats').value) || 3;
-  const veh = document.getElementById('pVehicle').value;
-  const vehNo = document.getElementById('pVehicleNo').value;
-  const hasReturn = document.getElementById('pHasReturnTrip').checked;
-  const returnTime = document.getElementById('pReturnTime').value;
-
-  if (!from || !to) return showToast("❌ Enter Start and Destination points!");
-const pickupSpot = document.getElementById('pPickupSpot')?.value.trim() || '';
-
-  try {
-    const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await addDoc(collection(window.db, "rides"), {
-      from, to, seatPrice: price, seats, vehicle: veh, carNumber: vehNo,
-      driverUid: user.uid, driverName: user.displayName, driverPhone: user.phone || '9823100000',
-      status: "Active", hasReturn, returnTime: hasReturn ? returnTime : null,
-      date: new Date().toISOString().split('T')[0],     time: "Today", created: Date.now(), pickupSpot,
-    
-    });
-    showToast("✅ Trip Published & Live on Corridor!");
-    showPage('activity', document.querySelectorAll('.nav-item')[3]);
-  } catch(e) { showToast(e.message); }
-}
-
-function findAvailableRides() {
-  const from = document.getElementById('rFrom').value.trim(), to = document.getElementById('rTo').value.trim();
-  if (!from || !to) return showToast("❌ Enter Pickup and Destination!");
-  const allRides = window.getRides ? window.getRides() : [];
-  const matches = allRides.filter(r => r.status === 'Active');
-  document.getElementById('rideResultsList').innerHTML = matches.length ? matches.map(r => `
-    <div class="request" style="margin-top:8px;">
-      <div class="card-top-row"><span class="role-pill driver">${esc(r.vehicle)}</span><span style="font-weight:800;color:var(--primary);">₹${r.seatPrice}/seat</span></div>
-      <div style="font-size:12px;font-weight:700;">${cleanLocation(r.from)} ➔ ${cleanLocation(r.to)}</div>
-      <div style="font-size:11px;color:#64748b;margin:4px 0;">Driver: <b>${esc(r.driverName)}</b> • ${r.seats} Seats Available</div>
-      <button class="uber-cta-btn" style="padding:8px;font-size:12px;" onclick="bookRideRequest('${r.id}', ${r.seatPrice}, '${esc(r.driverUid)}', '${esc(r.driverName)}', '${esc(r.driverPhone)}', '${esc(r.from)}', '${esc(r.to)}')">Book Seat Now</button>
-    </div>
-  `).join('') : '<div style="font-size:11.5px;color:#64748b;padding:10px;text-align:center;">No direct rides matching. Showing corridor results.</div>';
-}
-
-async function bookRideRequest(rideId, price, dUid, dName, dPhone, from, to) {
-  const user = window.getCurrentUser ? window.getCurrentUser() : null;
-  if (!user) return showToast("Please login to book!");
-  try {
-    const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await addDoc(collection(window.db, "requests"), {
-      rideId, type: "passenger", currentPrice: price, status: "Pending",
-      passengerUid: user.uid, passengerName: user.displayName, passengerPhone: user.phone || '9823100000',
-      driverUid: dUid, driverName: dName, driverPhone: dPhone, from, to, created: Date.now()
-    });
-    showToast("✅ Booking Request Sent to Driver!");
-    showPage('activity', document.querySelectorAll('.nav-item')[3]);
-  } catch(e) { showToast(e.message); }
-}
-
-function findParcelTransporters() {
-  const from = document.getElementById('xFrom').value.trim(), to = document.getElementById('xTo').value.trim();
-  const rName = document.getElementById('xRecName').value.trim(), rPhone = document.getElementById('xRecPhone').value.trim();
-  if (!from || !to) return showToast("❌ Enter Pickup and Delivery locations!");
-  if (!rName || rPhone.length !== 10) return showToast("❌ Enter Receiver Name & 10-digit Phone!");
-
-  const allRides = window.getRides ? window.getRides() : [];
-  const matches = allRides.filter(r => r.status === 'Active');
-  document.getElementById('parcelResultsList').innerHTML = matches.length ? matches.map(r => `
-    <div class="request" style="margin-top:8px;">
-      <div class="card-top-row"><span class="role-pill parcel">📦 Parcel Space</span><span style="font-weight:800;color:var(--primary);">₹100</span></div>
-      <div style="font-size:12px;font-weight:700;">${cleanLocation(r.from)} ➔ ${cleanLocation(r.to)}</div>
-      <div style="font-size:11px;color:#64748b;margin:4px 0;">Transporter: <b>${esc(r.driverName)}</b> (${esc(r.vehicle)})</div>
-      <button class="uber-cta-btn" style="padding:8px;font-size:12px;" onclick="bookParcelRequest('${r.id}', 100, '${esc(r.driverUid)}', '${esc(r.driverName)}', '${esc(r.driverPhone)}', '${esc(r.from)}', '${esc(r.to)}', '${esc(rName)}', '${esc(rPhone)}')">Send with this Captain</button>
-    </div>
-  `).join('') : '<div style="font-size:11.5px;color:#64748b;padding:10px;text-align:center;">No direct transporters right now.</div>';
-}
-
-async function bookParcelRequest(rideId, price, dUid, dName, dPhone, from, to, recName, recPhone) {
-  const user = window.getCurrentUser ? window.getCurrentUser() : null;
-  if (!user) return showToast("Please login to send parcel!");
-  try {
-    const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    await addDoc(collection(window.db, "requests"), {
-      rideId, type: "parcel", slab: document.getElementById('xSlab').value,
-      currentPrice: price, status: "Pending", paymentSettlement: document.getElementById('xParcelPayMode').value,
-      passengerUid: user.uid, passengerName: user.displayName, passengerPhone: user.phone || '9823100000',
-      receiverName: recName, receiverPhone: recPhone,
-      driverUid: dUid, driverName: dName, driverPhone: dPhone, from, to, created: Date.now()
-    });
-    showToast("📦 Parcel Request Sent!");
-    showPage('activity', document.querySelectorAll('.nav-item')[3]);
-  } catch(e) { showToast(e.message); }
-}
-
 function switchAdminTab(tab, btn) {
   document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -2785,116 +2716,7 @@ window.adminRejectVehicle = async function(vehicleId, userUid) {
   } catch(e) { showToast("Error: " + e.message); }
 };
 
-// 🟢 SMART FIND RIDES ENGINE (WITH BACKUP TEXT MATCH)
-window.findAvailableRides = async function() {
-  const from = document.getElementById("rFrom").value.trim();
-  const to = document.getElementById("rTo").value.trim();
-  const dateTime = document.getElementById("rDateTimeCombined").value;
-  const date = dateTime ? dateTime.split("T")[0] : "";
-  const ladiesOnly = document.getElementById("rLadiesOnly").checked;
-  const vehicle = window.selectedVehicleType || ""; 
-  const seatsNeed = window.selectedVehicleSeats || 1; 
-  const user = window.getCurrentUser();
-  const box = document.getElementById("rideResultsList");
-
-  const isLocalMode = document.getElementById("rideRadarToggleBadge").classList.contains("local-mode");
-  const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
-
-  if (!from || !to) return showToast("❌ Please enter Pickup and Drop locations!"); 
-  box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Corridor Radar...</div>`;
-
-  try {
-    const pFromCoord = await geocode(from);
-    const pToCoord = await geocode(to);
-    const pPickupPt = turf.point([pFromCoord[1], pFromCoord[0]]);
-    const pDropPt = turf.point([pToCoord[1], pToCoord[0]]);
-    const todayStr = new Date().toISOString().split('T')[0];
-    const isToday = (!date || date === todayStr);
-
-    const allRides = window.getRides().filter(r => {
-      if (user && r.driverUid === user.uid) return false;
-      if (r.status !== "Active") return false;
-      if (!r.passenger || safeNumber(r.seats) < seatsNeed) return false;
-      if (vehicle && r.vehicle !== vehicle) return false;
-      if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
-      if (isToday) { if (r.date && r.date !== todayStr) return false; } 
-      else { if (date && r.date !== date) return false; }
-      return true;
-    });
-
-    const matched = [];
-    const searchFromText = from.toLowerCase().split(',')[0].trim();
-    const searchToText = to.toLowerCase().split(',')[0].trim();
-
-    allRides.forEach(trip => {
-      let geom = trip.geometry;
-      if (typeof geom === "string") { try { geom = JSON.parse(geom); } catch(e) { geom = null; } }
-      
-      let isMatch = false;
-      let travelKm = 10;
-      let fare = trip.seatPrice || trip.fare || 150;
-
-      // 1. Radar Spatial Match (Turf.js)
-      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-        const line = turf.lineString(geom.coordinates);
-        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
-        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
-        const np1 = turf.nearestPointOnLine(line, pPickupPt);
-        const np2 = turf.nearestPointOnLine(line, pDropPt);
-        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
-          isMatch = true;
-          travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-          fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
-        }
-      } 
-      
-      // 2. TEXT FALLBACK MATCH (अगर मैप की लाइन फेल हो गई हो, तो सिर्फ नाम पढ़कर मिलाओ)
-      if (!isMatch) {
-         const tripFrom = (trip.from || "").toLowerCase();
-         const tripTo = (trip.to || "").toLowerCase();
-         if (tripFrom.includes(searchFromText) || searchFromText.includes(tripFrom.split(',')[0])) {
-            if (tripTo.includes(searchToText) || searchToText.includes(tripTo.split(',')[0])) {
-               isMatch = true;
-            }
-         }
-      }
-
-      if (isMatch) matched.push({ ...trip, travelKm, fare });
-    });
-
-    const rideCardsArr = matched.map(r => `
-      <div class="card" style="margin-bottom:12px; border: 1.5px solid var(--border-light); border-radius:18px;">
-        <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
-          <div class="dv-info">
-            <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary);">
-            <div>
-              <div class="dv-name">${esc(r.driverName || r.name || 'Driver')} ⭐ ${((window.getUsers ? window.getUsers() : []).find(u => u.uid === r.driverUid)?.avgRating) || 'New'}</div>
-              <div class="dv-sub">${esc(r.carModel || r.vehicle)} (${esc(r.carNumber || '')})</div>
-            </div>
-          </div>
-          <div class="fare-tag" style="color:var(--success); font-size:18px;">₹${r.fare}/seat</div>
-        </div>
-        <div class="route-timeline">
-          <div class="route-node">${esc(cleanLocation(r.from))}</div>
-          <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
-        </div>
-        <div class="chips-scroller" style="margin-bottom:10px;">
-          <span class="role-pill driver">📅 ${esc(r.date)} • ⏰ ${esc(r.time)}</span>
-          <span class="role-pill passenger">💺 ${esc(r.seats)} Seats Left</span>
-          <span class="role-pill parcel">✅ Verified Route</span>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">✅ Book Now</button>
-        </div>
-      </div>`);
-
-    const matchingRideAds = getMatchingAds(from, to);
-    if (matched.length || matchingRideAds.length) { box.innerHTML = injectAdsIntoResults(rideCardsArr, from, to); } 
-    else { box.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; background:#fff; border-radius:18px; border:1px solid #e2e8f0;"><div style="font-size:36px; margin-bottom:10px;">🚗</div><h3 style="margin:0 0 6px; color:#1e293b;">No Rides Found</h3><p style="font-size:12px; margin:0;">No active trips found on this route right now.</p></div>`; }
-  } catch(e) { box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; }
-};
-
-// 📦 SMART PARCEL TRANSPORTERS ENGINE (WITH BACKUP TEXT MATCH)
+// 📦 SMART PARCEL TRANSPORTERS ENGINE (BUG-FREE FOR APP.HTML)
 window.findParcelTransporters = async function() {
   const from = document.getElementById('xFrom').value.trim();
   const to = document.getElementById('xTo').value.trim();
@@ -2908,17 +2730,16 @@ window.findParcelTransporters = async function() {
 
   const user = window.getCurrentUser ? window.getCurrentUser() : null;
   const isLocalMode = document.getElementById("rideRadarToggleBadge")?.classList.contains("local-mode");
-  const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
+  const maxCorridorKm = isLocalMode ? 2.0 : 10.0; // रेंज 10 KM
+
   box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Logistics Corridor...</div>`;
 
   try {
-        // सीधे पार्सल मैप के पिन की असली लोकेशन (Lat/Lng) उठाओ
     const p1 = parcelPickupMarker.getLatLng();
     const p2 = parcelDropMarker.getLatLng();
-    
     const pPickupPt = turf.point([p1.lng, p1.lat]);
     const pDropPt = turf.point([p2.lng, p2.lat]);
-
+    
     const allRides = window.getRides ? window.getRides() : [];
 
     const candidates = allRides.filter(r => {
@@ -2928,12 +2749,12 @@ window.findParcelTransporters = async function() {
       if (slab === 'bag') return Boolean(r.typeBag && Number(r.bagPrice) > 0);
       if (slab === 'cargo') return Boolean(r.typeCargo && Number(r.cargoPrice) > 0);
       if (slab === 'full_vehicle') return Boolean(Number(r.fullVehiclePrice) > 0);
-      return false;
+      return true;
     });
 
     const matched = [];
-    const searchFromText = from.toLowerCase().split(',')[0].trim();
-    const searchToText = to.toLowerCase().split(',')[0].trim();
+    const searchFromText = from.toLowerCase().split(',')[0].split(' ')[0].trim();
+    const searchToText = to.toLowerCase().split(',')[0].split(' ')[0].trim();
 
     candidates.forEach(r => {
       let geom = typeof r.geometry === 'string' ? (() => { try { return JSON.parse(r.geometry); } catch(e){ return null; } })() : r.geometry;
@@ -2941,24 +2762,24 @@ window.findParcelTransporters = async function() {
 
       // 1. Radar Spatial Match
       if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-        const line = turf.lineString(geom.coordinates);
-        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
-        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
-        const np1 = turf.nearestPointOnLine(line, pPickupPt);
-        const np2 = turf.nearestPointOnLine(line, pDropPt);
-        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
-          isMatch = true;
-        }
+        try {
+          const line = turf.lineString(geom.coordinates);
+          const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+          const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+          const np1 = turf.nearestPointOnLine(line, pPickupPt);
+          const np2 = turf.nearestPointOnLine(line, pDropPt);
+          if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+            isMatch = true;
+          }
+        } catch(e) {}
       }
       
-      // 2. TEXT FALLBACK MATCH
+      // 2. UNIVERSAL TEXT MATCH
       if (!isMatch) {
          const tripFrom = (r.from || "").toLowerCase();
          const tripTo = (r.to || "").toLowerCase();
-         if (tripFrom.includes(searchFromText) || searchFromText.includes(tripFrom.split(',')[0])) {
-            if (tripTo.includes(searchToText) || searchToText.includes(tripTo.split(',')[0])) {
-               isMatch = true;
-            }
+         if (tripFrom.includes(searchFromText) && tripTo.includes(searchToText)) {
+            isMatch = true;
          }
       }
 
@@ -2998,6 +2819,7 @@ window.findParcelTransporters = async function() {
   } catch(e) { box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; }
 };
 
+
 // ==========================================
 // 🟢 SMART FIND RIDES ENGINE (MODERN UI INTEGRATION)
 // ==========================================
@@ -3013,9 +2835,10 @@ window.findAvailableRides = async function() {
   
   // Filters
   const ladiesOnly = document.getElementById("rLadiesOnly").checked;
-  // व्हीकल फ़िल्टर और सीट्स (ग्लोबल वैरिएबल्स जो मोडल से सेट होते हैं)
+  // 🛡️ FIX: पहले यहाँ galti se 'selectedVehicleSeats' (Post Trip वाला, default 3) पढ़ा जा रहा था।
+  // Search के लिए असल में 'selectedSeatCount' (seats-selector modal वाला, default 1) चाहिए था।
   const vehicle = window.selectedVehicleType || ""; 
-  const seatsNeed = window.selectedVehicleSeats || 1; 
+  const seatsNeed = typeof selectedSeatCount !== 'undefined' ? selectedSeatCount : 1; 
   
   const user = window.getCurrentUser();
   const box = document.getElementById("rideResultsList"); // नया रिज़ल्ट बॉक्स
@@ -3041,7 +2864,6 @@ window.findAvailableRides = async function() {
     
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const isToday = (!date || date === todayStr);
 
     // 3. स्मार्ट डेटाबेस फ़िल्टरिंग
     const allRides = window.getRides().filter(r => {
@@ -3050,19 +2872,16 @@ window.findAvailableRides = async function() {
       if (!r.passenger || safeNumber(r.seats) < seatsNeed) return false;
       if (vehicle && r.vehicle !== vehicle) return false;
       if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
-
-      // टाइम विंडो (±2 Hours)
-      if (isToday) {
-        if (r.date && r.date !== todayStr) return false;
-      } else {
-        if (date && r.date !== date) return false;
-      }
+      if (date && r.date && r.date !== date) return false; // तारीख दी हो तो match होनी चाहिए
       return true;
     });
 
     const matched = [];
+    // पते का सिर्फ पहला शब्द उठाना (जैसे "Gondia City, Gondiya" → "gondia") — ज़्यादा lenient fallback के लिए
+    const searchFromText = from.toLowerCase().split(',')[0].split(' ')[0].trim();
+    const searchToText = to.toLowerCase().split(',')[0].split(' ')[0].trim();
 
-    // 4. Turf.js Spatial Route Matching
+    // 4. Turf.js Spatial Route Matching (+ Text Fallback अगर geometry ना मिले)
     allRides.forEach(trip => {
       let geom = trip.geometry;
       if (typeof geom === "string") {
@@ -3070,22 +2889,37 @@ window.findAvailableRides = async function() {
       }
 
       let isMatch = false;
+      let travelKm = 10;
+      let fare = trip.seatPrice || trip.fare || 150;
 
       if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-        const line = turf.lineString(geom.coordinates);
-        const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
-        const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
-        const np1 = turf.nearestPointOnLine(line, pPickupPt);
-        const np2 = turf.nearestPointOnLine(line, pDropPt);
+        try {
+          const line = turf.lineString(geom.coordinates);
+          const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
+          const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
+          const np1 = turf.nearestPointOnLine(line, pPickupPt);
+          const np2 = turf.nearestPointOnLine(line, pDropPt);
 
-        // पिकअप और ड्रॉप दोनों कॉरिडोर के अंदर हों और सही दिशा में हों
-        if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+          // पिकअप और ड्रॉप दोनों कॉरिडोर के अंदर हों और सही दिशा में हों
+          if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+            isMatch = true;
+            travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
+            fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+          }
+        } catch(e) {}
+      }
+
+      // 🛡️ FALLBACK: geometry ना मिले (OSRM fetch race-condition जैसी वजहों से) तो सिर्फ नाम से मिलाओ,
+      // वरना ऐसी trips हमेशा के लिए search में invisible रह जाती थीं
+      if (!isMatch) {
+        const tripFrom = (trip.from || "").toLowerCase();
+        const tripTo = (trip.to || "").toLowerCase();
+        if (tripFrom.includes(searchFromText) && tripTo.includes(searchToText)) {
           isMatch = true;
-          let travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-          const fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
-          matched.push({ ...trip, travelKm, fare });
         }
       }
+
+      if (isMatch) matched.push({ ...trip, travelKm, fare });
     });
 
     // 5. मॉडर्न UI कार्ड्स रेंडर करना
@@ -3116,10 +2950,8 @@ window.findAvailableRides = async function() {
           </div>
           
           <div style="display: flex; gap: 8px;">
-            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">
-              ✅ Book Now
-                      ${currentRadarMode === 'intercity' ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="counterRequest('${r.id}')">🔄 Offer Fare</button>` : ''}
-
+            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">✅ Book Now</button>
+            ${currentRadarMode === 'intercity' ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="counterRequest('${r.id}')">🔄 Offer Fare</button>` : ''}
           </div>
         </div>`);
 
@@ -3221,11 +3053,26 @@ window.publishPostTrip = async function() {
 
   // टेक्स्ट से दुबारा कन्वर्ट करने के बजाय, सीधा स्क्रीन पर बनी हुई लाइन उठा लो
   const selIdx = Number(document.getElementById('pSelectedRouteIndex').value) || 0;
+
+  // 🛡️ CRITICAL FIX: fetchOSRMRealRoutes() background में fire-and-forget चलता है।
+  // अगर user जल्दी Publish दबा दे तो route geometry अभी तैयार नहीं हुई होती — और उसके बिना
+  // ride SEARCH में कभी नहीं दिखती, भले ही "My Posted Trip" में दिखे। इसलिए publish से पहले
+  // route को actively (await करके) दोबारा fetch करना।
+  if (!(typeof fetchedDriverRoutes !== 'undefined' && fetchedDriverRoutes.length > selIdx)) {
+    showToast("⏳ Route abhi ready nahi thi, dobara calculate ho raha hai...");
+    try { await fetchOSRMRealRoutes(); } catch(e) { /* नीचे फिर से check होगा */ }
+  }
+
   if (typeof fetchedDriverRoutes !== 'undefined' && fetchedDriverRoutes.length > selIdx) {
       const route = fetchedDriverRoutes[selIdx];
       geometryStr = JSON.stringify(route.geometry);
       routeDistanceKm = Number((route.distance / 1000).toFixed(1));
       routeDurationMin = Math.round(route.duration / 60);
+  } else {
+    // Route अभी भी ना मिले (जैसे OSRM server down/network issue) — trip post ना होने दो,
+    // वरना वो हमेशा के लिए search में invisible रह जाएगी
+    showToast("❌ Route calculate nahi ho paayi (network/OSRM issue). Thodi der baad dobara try karo.");
+    return;
   }
 
   // 5. Firebase डेटा स्ट्रक्चर (परफेक्ट वाला)
@@ -4603,20 +4450,39 @@ async function sendDriverReOffer(requestId, newPrice) {
   }
 }
 
+// 🌍 4. Geocode: नाम को Lat/Lng में बदलना (LocationIQ)
 window.geocode = async function(query) {
   if (!query) return [21.4588, 80.1961];
+  const clean = query.trim().toLowerCase();
+  
+  // अगर पहले से सर्च किया है, तो Cache से दे दो (Super Fast)
+  if(localMemoryCache[clean]) return localMemoryCache[clean];
+
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}&limit=1`;
+    const url = `https://api.locationiq.com/v1/search?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&countrycodes=in&accept-language=en&format=json&limit=1`;
     const res = await fetch(url);
     const data = await res.json();
     if (data && data.length > 0) {
-      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      localMemoryCache[clean] = coords;
+      return coords;
     }
   } catch (e) {
-    console.warn("Geocode error:", e);
+      // Fallback
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&accept-language=en&q=${encodeURIComponent(query)}&limit=1`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          localMemoryCache[clean] = coords;
+          return coords;
+        }
+      } catch(err){}
   }
-  return [21.4588, 80.1961]; // Default fallback coordinates (Gondia/Central)
+  return [21.4588, 80.1961]; // Default fallback
 };
+
 
 // ==========================================
 // 🚨 MISSING FUNCTIONS FIX (पेस्ट करें)
