@@ -1200,6 +1200,56 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
 
       initDataListeners();
       showToast(`👋 Welcome back, ${currentUser.displayName.split(' ')[0]}!`);
+
+      // 🌟 STEP 3: चेक करें कि क्या कोई WhatsApp से आया हुआ पेंडिंग ट्रिप है?
+      setTimeout(() => {
+        const pendingTripId = localStorage.getItem('safarShare_pendingTripId');
+        if (pendingTripId) {
+          localStorage.removeItem('safarShare_pendingTripId'); // एक बार यूज़ होने के बाद हटा दें
+          
+          // सीधे Rides टैब पर ले जाएं
+          if (window.showPage) showPage('rides', document.querySelectorAll('.nav-item')[0]);
+          
+          // डेटा लोड होने का थोड़ा इंतज़ार करके उस ट्रिप को कार्ड में दिखाएं
+          setTimeout(() => {
+            const rides = window.getRides ? window.getRides() : [];
+            const targetTrip = rides.find(r => r.id === pendingTripId);
+            
+            if (targetTrip) {
+              const fromInput = document.getElementById('rFrom');
+              const toInput = document.getElementById('rTo');
+              if (fromInput) fromInput.value = targetTrip.from;
+              if (toInput) toInput.value = targetTrip.to;
+              
+              const box = document.getElementById("rideResultsList");
+              if (box) {
+                box.innerHTML = `
+                  <div style="background:#f0fdf4; border:2px solid #00a884; border-radius:18px; padding:14px; margin-bottom:12px;">
+                    <div style="font-size:11px; font-weight:800; color:#00a884; margin-bottom:6px;">✨ DIRECT LINKED TRIP FROM WHATSAPP</div>
+                    <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
+                      <div class="dv-info">
+                        <img src="${esc(targetTrip.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary);">
+                        <div>
+                          <div class="dv-name">${esc(targetTrip.driverName || 'Driver')}</div>
+                          <div class="dv-sub">${esc(targetTrip.carModel || targetTrip.vehicle)} (${esc(targetTrip.carNumber || '')})</div>
+                        </div>
+                      </div>
+                      <div class="fare-tag" style="color:var(--success); font-size:18px;">₹${targetTrip.seatPrice || 150}/seat</div>
+                    </div>
+                    <div class="route-timeline">
+                      <div class="route-node">${esc(cleanLocation(targetTrip.from))}</div>
+                      <div class="route-node drop">${esc(cleanLocation(targetTrip.to))}</div>
+                    </div>
+                    <button class="uber-cta-btn" style="width:100%; margin-top:8px;" onclick="openBookingPaymentModal('${targetTrip.id}', ${targetTrip.seatPrice || 150}, 10)">✅ Book This Trip Now</button>
+                  </div>
+                `;
+              }
+              showToast("🎯 Trip loaded successfully!");
+            }
+          }, 1000);
+        }
+      }, 1000);
+
     } else {
       currentUser = null;
       isCurrentUserAdmin = false;
@@ -1896,6 +1946,17 @@ function formatCleanAddress(displayName) {
 
 // पुरानी cleanLocation फंक्शन को इससे रिप्लेस करें:
 function cleanLocation(name) { return formatCleanAddress(name); }
+// 🕒 नया 12-Hour Time Formatter यहाँ जोड़ें
+function format12Hour(timeStr) {
+  if (!timeStr || !timeStr.includes(':')) return timeStr || '';
+  let [hours, minutes] = timeStr.split(':');
+  hours = parseInt(hours, 10);
+  if (isNaN(hours)) return timeStr;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+}
 
 function showToast(msg) {
   const c = document.getElementById("toast-container");
@@ -3965,15 +4026,21 @@ window.sendChatMessage = async function() {
   }
 };
 
-// Enter बटन दबाने पर मैसेज सेंड करना
+// Enter बटन दबाने पर मैसेज सेंड करना & WhatsApp लिंक रीडर
 document.addEventListener("DOMContentLoaded", function(){
   // 1. डेट ऑटो-फिल
   const d = new Date().toISOString().split('T')[0];
   ["pDate", "fDate", "xDate"].forEach(id => { const el = document.getElementById(id); if(el) el.value = d; });
 
-  // 👇 2. WhatsApp से आने वाले लिंक को पढ़कर ट्रैकिंग खोलने का सही कोड (cloud.html के लिए)
+  // 2. 🌟 WhatsApp शेयर लिंक से आने वाले tripId को localStorage में सेव करना (ताकि लॉगिन के बाद भी याद रहे)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tripIdFromUrl = urlParams.get('tripId');
+  if (tripIdFromUrl) {
+    localStorage.setItem('safarShare_pendingTripId', tripIdFromUrl);
+  }
+
+  // 3. 👇 WhatsApp से आने वाले trackRideId को पढ़कर लाइव ट्रैकिंग खोलने का कोड
   setTimeout(() => {
-    const urlParams = new URLSearchParams(window.location.search);
     const trackRideId = urlParams.get('trackRideId');
     if (trackRideId && window.getCurrentUser && window.getCurrentUser()) {
        
@@ -3993,6 +4060,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }, 2500);
 });
+
 
 
 
@@ -4339,20 +4407,22 @@ window.shareLiveTripOnWhatsApp = async function(reqId) {
 };
 
 window.shareOnWhatsApp = function(r) {
-  const appLink = "https://gauravkhobragade37.github.io/safarshare-app/app.html";
+  // 🌟 यहाँ ट्रिप की ID (?tripId=...) जोड़ दी गई है ताकि सीधा उस ट्रिप पर खुले
+  const appLink = `https://gauravkhobragade37.github.io/safarshare-app/app.html?tripId=${r.id}`;
   
+  // ⏰ 12-घंटे वाला फॉर्मेट यहाँ इस्तेमाल किया गया है
+  const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || '');
+
   let text = `🚗 *SafarShare Trip Update!*\n`;
   text += `📍 *From:* ${cleanLocation(r.from)}\n`;
   text += `🎯 *To:* ${cleanLocation(r.to)}\n`;
-  text += `📅 *Date:* ${r.date} • ⏰ *Time:* ${r.time}\n`;
+  text += `📅 *Date:* ${r.date} • ⏰ *Time:* ${formattedTime}\n`;
   text += `🚘 *Vehicle:* ${r.vehicle || r.carModel || 'N/A'}\n\n`;
 
-  // अगर ट्रिप में पैसेंजर सीट्स अवेलेबल हैं
   if (r.passenger && r.seats > 0) {
     text += `💺 *Passenger Seats:* ${r.seats} Left | ₹${r.seatPrice || r.fare || 0}/seat\n`;
   }
 
-  // अगर ट्रिप में पार्सल एक्सेप्ट किया जा रहा है
   if (r.parcel) {
     text += `📦 *Accepting Parcels / Luggage:*\n`;
     if (r.typeDoc) text += `  📄 Document: ₹${r.docPrice}\n`;
@@ -4361,10 +4431,11 @@ window.shareOnWhatsApp = function(r) {
     if (r.fullVehiclePrice) text += `  🚛 Full Space: ₹${r.fullVehiclePrice}\n`;
   }
 
-  text += `\n👉 *Book directly here:*\n${appLink}`;
+  text += `\n👉 *Book Seat or Send Parcel directly here:*\n${appLink}`;
   
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 };
+
 
 
 // ट्रिप एडिट मोडल खोलना और पहले से डेटा भरना (Pre-fill)
