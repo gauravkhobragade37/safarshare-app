@@ -1896,8 +1896,17 @@ function showToast(msg) {
   t.className = "toast";
   t.innerHTML = `<span>${esc(msg)}</span>`;
   c.appendChild(t);
+  
+  // 🔊 ऑडियो प्ले करने का कमांड
+  const audio = document.getElementById('alertSound');
+  if (audio) {
+    audio.currentTime = 0; // ताकि बार-बार आने पर आवाज़ शुरू से बजे
+    audio.play().catch(e => console.log("Audio play blocked by browser policy"));
+  }
+
   setTimeout(() => t.remove(), 3200);
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
   const defaultLat = 21.4588, defaultLng = 80.1961;
@@ -2327,14 +2336,23 @@ function initSheetDrag(e, sheetId, gpsFabId) {
     sheet.style.transition = 'none'; sheet.style.height = `${newHeight}px`;
     if (gpsFab) gpsFab.style.bottom = `${newHeight + 14}px`;
   }
-  function onPointerUp() {
+    function onPointerUp() {
     window.removeEventListener('pointermove', onPointerMove); window.removeEventListener('pointerup', onPointerUp);
     sheet.style.transition = 'height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)';
     const ratio = sheet.offsetHeight / vh;
     if (ratio < 0.32) setSheetSnap(sheetId, 'collapsed', gpsFabId);
     else if (ratio > 0.68) setSheetSnap(sheetId, 'expanded', gpsFabId);
     else setSheetSnap(sheetId, 'half', gpsFabId);
+    
+    // 🚀 NEW FIX: Sheet के स्नैप होते ही मैप को रीसाइज़ करो ताकि Grey Tiles ना दिखें
+    setTimeout(() => {
+      if (typeof rideMap !== 'undefined') rideMap.invalidateSize();
+      if (typeof parcelMap !== 'undefined') parcelMap.invalidateSize();
+      if (typeof postMap !== 'undefined') postMap.invalidateSize();
+    }, 280); // एनीमेशन खत्म होने का इंतज़ार
   }
+
+  
   window.addEventListener('pointermove', onPointerMove); window.addEventListener('pointerup', onPointerUp);
 }
 
