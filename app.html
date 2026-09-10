@@ -1437,19 +1437,23 @@ window.renderAdminTripsManagement = function() {
   const filtered = currentAdminFilter === 'all' || !currentAdminFilter ? rides : rides.filter(r => r.status === currentAdminFilter);
   if (!filtered.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No trips found for this filter.</div>"; return; }
 
-  container.innerHTML = filtered.map(r => `
-    <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
-        <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
+  container.innerHTML = filtered.map(r => {
+    const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || 'N/A');
+    return `
+      <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
+          <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">
+          Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
+          📅 Date: ${esc(r.date || 'N/A')} • ⏰ Time: ${esc(formattedTime)}
+        </div>
       </div>
-      <div style="font-size:11px; color:#64748b; margin-top:4px;">
-        Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
-        📅 Date: ${esc(r.date || 'N/A')} • ⏰ Time: ${esc(r.time || 'N/A')}
-      </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 };
+
 
 // Admin Trip Details Modal & Force Cancel
 window.openAdminTripDetails = function(rideId) {
@@ -3043,10 +3047,12 @@ window.publishPostTrip = async function() {
   if (dateTime) {
     [date, time] = dateTime.split("T");
   } else {
-    // अगर यूज़र ने टाइम नहीं चुना तो डिफ़ॉल्ट 'Now' मान लेंगे
+    // अगर यूज़र ने टाइम नहीं चुना तो सही लोकल टाइम (HH:mm) सेट करें
     const n = new Date();
     date = n.toISOString().split("T")[0];
-    time = n.toTimeString().split("T")[1].substring(0,5);
+    const hrs = String(n.getHours()).padStart(2, '0');
+    const mins = String(n.getMinutes()).padStart(2, '0');
+    time = `${hrs}:${mins}`;
   }
 
   // 2. व्हीकल, सीट्स और प्राइस (Fleet Modal और UI से)
@@ -3459,7 +3465,7 @@ function generateTripCardHtml(r) {
   const tripReqs = allReqs.filter(q => q.rideId === r.id);
   const hasActiveBooking = tripReqs.some(q => ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
   const showEditBtn = (r.status === 'Active' && !hasActiveBooking);
-
+const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || '');
   return `
     <div class="card">
       <div class="card-top-row">
