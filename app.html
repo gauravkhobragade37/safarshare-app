@@ -3490,7 +3490,7 @@ function generateRequestCardHtml(q, user) {
     `;
   }
 
-  const canChat = ['Confirmed', 'In-Transit', 'Completed'].includes(q.status);
+  const canChat = ['Confirmed', 'In-Transit'].includes(q.status);
 
   // 📦 Parcel होने पर Driver को receiver का नाम/नंबर भी दिखाना ज़रूरी है (delivery के लिए)
   const receiverInfoHtml = (isDriver && !isPassenger && q.recName) ? `
