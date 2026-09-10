@@ -2859,23 +2859,20 @@ window.findParcelTransporters = async function() {
 
 
 // ==========================================
-// 🟢 SMART FIND RIDES ENGINE (MODERN UI INTEGRATION)
+// 🟢 SMART FIND RIDES ENGINE (POWERFUL MERGED VERSION)
 // ==========================================
 window.findAvailableRides = async function() {
-  // 1. नए UI (app.html) से इनपुट्स पढ़ना
   const from = document.getElementById("rFrom").value.trim();
   const to = document.getElementById("rTo").value.trim();
   
-  // DateTime Combined से Date और Time अलग करना
   const dateTime = document.getElementById("rDateTimeCombined").value;
   const date = dateTime ? dateTime.split("T")[0] : "";
   const time = dateTime ? dateTime.split("T")[1] : "";
   
-  // Filters
   const ladiesOnly = document.getElementById("rLadiesOnly").checked;
   const seatsNeed = typeof selectedSeatCount !== 'undefined' ? selectedSeatCount : 1; 
   
-  // 🌟 FIX 1: Vehicle Filter को सुरक्षित तरीके से UI से पढ़ना (ताकि कोई कार मिस न हो)
+  // Vehicle Filter
   const filterText = document.getElementById('lblVehicleFilter').textContent;
   let vehicle = "";
   if(filterText.includes("Bike")) vehicle = "Bike";
@@ -2884,9 +2881,8 @@ window.findAvailableRides = async function() {
   else if(filterText.includes("Pickup")) vehicle = "Pickup/Truck";
 
   const user = window.getCurrentUser();
-  const box = document.getElementById("rideResultsList"); // नया रिज़ल्ट बॉक्स
+  const box = document.getElementById("rideResultsList");
 
-  // कॉरिडोर मोड (डिफ़ॉल्ट 10 KM या रडार टॉगल के हिसाब से)
   const isLocalMode = document.getElementById("rideRadarToggleBadge").classList.contains("local-mode");
   const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
 
@@ -2898,36 +2894,31 @@ window.findAvailableRides = async function() {
   box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Corridor Radar...</div>`;  
 
   try {
-    // टेक्स्ट को इग्नोर करो, सीधे मैप के पिन की असली लोकेशन (Lat/Lng) उठाओ
     const p1 = ridePickupMarker.getLatLng();
     const p2 = rideDropMarker.getLatLng();
     
     const pPickupPt = turf.point([p1.lng, p1.lat]);
     const pDropPt = turf.point([p2.lng, p2.lat]);
-    
-    const todayStr = new Date().toISOString().split('T')[0];
 
-    // 3. स्मार्ट डेटाबेस फ़िल्टरिंग
+    // 1. Database Filtering (0-Seats & Vehicle Guards)
     const allRides = window.getRides().filter(r => {
-      if (user && r.driverUid === user.uid) return false; // खुद की ट्रिप नहीं दिखेगी
+      if (user && r.driverUid === user.uid) return false; 
       if (r.status !== "Active") return false;
       
-      // 🌟 FIX 2: अगर ड्राइवर ने 0 सीट्स डाली हैं (Parcel Only), तो ट्रिप पैसेंजर को नहीं दिखेगी!
       const availableSeats = Number(r.seats) || 0;
       if (r.passenger === false || availableSeats < seatsNeed) return false; 
       
       if (vehicle && r.vehicle !== vehicle && r.carModel !== vehicle) return false;
       if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
-      if (date && r.date && r.date !== date) return false; // तारीख दी हो तो match होनी चाहिए
+      if (date && r.date && r.date !== date) return false; 
       return true;
     });
 
     const matched = [];
-    // पते का सिर्फ पहला शब्द उठाना (जैसे "Gondia City, Gondiya" → "gondia") — ज़्यादा lenient fallback के लिए
     const searchFromText = from.toLowerCase().split(',')[0].split(' ')[0].trim();
     const searchToText = to.toLowerCase().split(',')[0].split(' ')[0].trim();
 
-    // 4. Turf.js Spatial Route Matching (+ Text Fallback अगर geometry ना मिले)
+    // 2. Spatial Corridor Matching + Dynamic Fare Calculation + Text Fallback
     allRides.forEach(trip => {
       let geom = trip.geometry;
       if (typeof geom === "string") {
@@ -2946,16 +2937,22 @@ window.findAvailableRides = async function() {
           const np1 = turf.nearestPointOnLine(line, pPickupPt);
           const np2 = turf.nearestPointOnLine(line, pDropPt);
 
-          // पिकअप और ड्रॉप दोनों कॉरिडोर के अंदर हों और सही दिशा में हों
           if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
             isMatch = true;
             travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-            fare = trip.seatPrice ? trip.seatPrice : Math.max(20, Math.round((travelKm * (trip.ratePerKm || 1.5)) / 5) * 5);
+            
+            // 🌟 Dynamic Fare Logic
+            if (trip.seatPrice && trip.routeDistanceKm) {
+               let perKmRate = trip.seatPrice / trip.routeDistanceKm;
+               fare = Math.max(30, Math.round((travelKm * perKmRate) / 5) * 5);
+            } else {
+               fare = trip.seatPrice ? trip.seatPrice : Math.max(30, Math.round((travelKm * 1.5) / 5) * 5);
+            }
           }
         } catch(e) {}
       }
 
-      // 🛡️ FALLBACK: geometry ना मिले (OSRM fetch race-condition जैसी वजहों से) तो सिर्फ नाम से मिलाओ
+      // Fallback Text Matching (अगर ज्योमेट्री मैच न हो तो नाम से मैच करे)
       if (!isMatch) {
         const tripFrom = (trip.from || "").toLowerCase();
         const tripTo = (trip.to || "").toLowerCase();
@@ -2967,8 +2964,12 @@ window.findAvailableRides = async function() {
       if (isMatch) matched.push({ ...trip, travelKm, fare });
     });
 
-    // 5. कार्ड्स रेंडर करना
-    const rideCardsArr = matched.map(r => `
+    // 3. Render Cards with Optional Pickup Landmark & 12-Hour Time Format
+    const rideCardsArr = matched.map(r => {
+      const landmarkHtml = r.pickupSpot ? `<div style="font-size:11.5px; color:#0d9488; font-weight:700; margin-top:2px;">📍 Pickup Spot: ${esc(r.pickupSpot)}</div>` : '';
+      const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || '');
+
+      return `
         <div class="card" style="margin-bottom:12px; border: 1.5px solid var(--border-light); border-radius:18px;">
           <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
             <div class="dv-info">
@@ -2982,23 +2983,27 @@ window.findAvailableRides = async function() {
           </div>
           
           <div class="route-timeline">
-            <div class="route-node">${esc(cleanLocation(r.from))}</div>
+            <div class="route-node">
+              ${esc(cleanLocation(r.from))}
+              ${landmarkHtml}
+            </div>
             <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
           </div>
           
           <div class="chips-scroller" style="margin-bottom:10px;">
-            <span class="role-pill driver">📅 ${esc(r.date)} • ⏰ ${esc(r.time)}</span>
+            <span class="role-pill driver">📅 ${esc(r.date)} • ⏰ ${formattedTime}</span>
             <span class="role-pill passenger">💺 ${esc(r.seats)} Seats Left</span>
             <span class="role-pill parcel">✅ ${maxCorridorKm}km Radar</span>
             ${r.isLadiesOnly ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">🌸 Women Driven</span>' : ''}
-            ${r.isFamilyOnBoard ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">👨‍👩‍👧 Family Safe</span>' : ''}
+            ${r.isFamilyOnBoard ? '<span class="role-pill" style="background:#fdf2f8; color:#f472b6;">👨‍👩‍👧 Family Safe</span>' : ''}
           </div>
           
           <div style="display: flex; gap: 8px;">
             <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">✅ Book Now</button>
             ${!isLocalMode ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="passengerOfferFare('${r.id}', '${r.fare || 0}', '${r.travelKm || 0}')">🔄 Offer Fare</button>` : ''}
           </div>
-        </div>`);
+        </div>`;
+    });
 
     const matchingRideAds = window.getMatchingAds ? window.getMatchingAds(from, to) : [];
     if (matched.length || matchingRideAds.length) {
@@ -3010,8 +3015,11 @@ window.findAvailableRides = async function() {
         <p style="font-size:12px; margin:0;">We couldn't find any active trips within the ${maxCorridorKm}km corridor right now.</p>
       </div>`;
     }
-  } catch(e) { box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; }
+  } catch(e) { 
+    box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; 
+  }
 };
+
 
 // ==========================================
 // 🚗 SMART POST TRIP ENGINE (MODERN UI INTEGRATION)
@@ -4639,152 +4647,6 @@ window.sendChatMessage = async function() {
     input.value = ""; input.focus();
   } catch(e) { showToast("❌ Error sending message: " + e.message); }
 };
-
-
-// 🚗 2. SMART RIDE SEARCH FIX (0-Seats & Vehicle Filter)
-window.findAvailableRides = async function() {
-  const from = document.getElementById("rFrom").value.trim();
-  const to = document.getElementById("rTo").value.trim();
-  const dateTime = document.getElementById("rDateTimeCombined").value;
-  const date = dateTime ? dateTime.split("T")[0] : "";
-  
-  const ladiesOnly = document.getElementById("rLadiesOnly").checked;
-  const seatsNeed = typeof selectedSeatCount !== 'undefined' ? selectedSeatCount : 1; 
-  
-  // 🌟 Vehicle Filter फिक्स
-  const filterText = document.getElementById('lblVehicleFilter').textContent;
-  let vehicle = "";
-  if(filterText.includes("Bike")) vehicle = "Bike";
-  else if(filterText.includes("Auto")) vehicle = "Auto";
-  else if(filterText.includes("Car")) vehicle = "Car";
-  else if(filterText.includes("Pickup")) vehicle = "Pickup/Truck";
-
-  const user = window.getCurrentUser();
-  const box = document.getElementById("rideResultsList");
-
-  const isLocalMode = document.getElementById("rideRadarToggleBadge").classList.contains("local-mode");
-  const maxCorridorKm = isLocalMode ? 2.0 : 10.0;
-
-  if (!from || !to) { showToast("❌ Please enter Pickup and Drop locations!"); return; }
-  
-  box.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary);">⏳ Scanning ${maxCorridorKm} KM Corridor Radar...</div>`;  
-
-  try {
-    const p1 = ridePickupMarker.getLatLng();
-    const p2 = rideDropMarker.getLatLng();
-    const pPickupPt = turf.point([p1.lng, p1.lat]);
-    const pDropPt = turf.point([p2.lng, p2.lat]);
-
-    const allRides = window.getRides().filter(r => {
-      if (user && r.driverUid === user.uid) return false; 
-      if (r.status !== "Active") return false;
-      
-      // 🌟 0-Seats (Parcel Only) गार्ड
-      const availableSeats = Number(r.seats) || 0;
-      if (r.passenger === false || availableSeats < seatsNeed) return false; 
-      
-      if (vehicle && r.vehicle !== vehicle && r.carModel !== vehicle) return false;
-      if (ladiesOnly && !(r.isLadiesOnly || r.isFamilyOnBoard)) return false;
-      if (date && r.date && r.date !== date) return false; 
-      return true;
-    });
-
-    const matched = [];
-    const searchFromText = from.toLowerCase().split(',')[0].split(' ')[0].trim();
-    const searchToText = to.toLowerCase().split(',')[0].split(' ')[0].trim();
-
-    allRides.forEach(trip => {
-      let geom = typeof trip.geometry === "string" ? (() => { try { return JSON.parse(trip.geometry); } catch(e){ return null; } })() : trip.geometry;
-      let isMatch = false;
-      let travelKm = 10;
-      let fare = trip.seatPrice || trip.fare || 150;
-
-      if (geom && geom.coordinates && geom.coordinates.length >= 2) {
-        try {
-          const line = turf.lineString(geom.coordinates);
-          const dist1 = turf.pointToLineDistance(pPickupPt, line, { units: 'kilometers' });
-          const dist2 = turf.pointToLineDistance(pDropPt, line, { units: 'kilometers' });
-          const np1 = turf.nearestPointOnLine(line, pPickupPt);
-          const np2 = turf.nearestPointOnLine(line, pDropPt);
-
-                    if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
-            isMatch = true;
-            // 1. पैसेंजर कितने KM सफर कर रहा है?
-            travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
-            
-            // 🌟 2. DYNAMIC FARE CALCULATION (असली उबर/ब्ला-ब्ला कार लॉजिक)
-            if (trip.seatPrice && trip.routeDistanceKm) {
-               // ड्राइवर का Per-KM रेट निकालें (e.g., ₹300 / 150KM = ₹2/KM)
-               let perKmRate = trip.seatPrice / trip.routeDistanceKm;
-               
-               // पैसेंजर के सफर (travelKm) के हिसाब से पैसे निकालें (e.g., 50KM * ₹2 = ₹100)
-               // (Math.round(... / 5) * 5 का मतलब है कि किराया ₹45, ₹50 जैसे राउंड-फिगर में आए)
-               fare = Math.max(30, Math.round((travelKm * perKmRate) / 5) * 5);
-            } else {
-               // अगर रूट का डेटा नहीं है, तो डिफ़ॉल्ट लॉजिक
-               fare = trip.seatPrice ? trip.seatPrice : Math.max(30, Math.round((travelKm * 1.5) / 5) * 5);
-            }
-          
-          }
-        } catch(e) {}
-      }
-
-      if (!isMatch) {
-        const tripFrom = (trip.from || "").toLowerCase();
-        const tripTo = (trip.to || "").toLowerCase();
-        if (tripFrom.includes(searchFromText) && tripTo.includes(searchToText)) {
-          isMatch = true;
-        }
-      }
-
-      if (isMatch) matched.push({ ...trip, travelKm, fare });
-    });
-
-    const rideCardsArr = matched.map(r => `
-        <div class="card" style="margin-bottom:12px; border: 1.5px solid var(--border-light); border-radius:18px;">
-          <div class="driver-veh-row" style="background:transparent; padding:0; margin-bottom:10px;">
-            <div class="dv-info">
-              <img src="${esc(r.driverDp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png')}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary);">
-              <div>
-                <div class="dv-name">${esc(r.driverName || r.name || 'Driver')} ⭐ ${((window.getUsers ? window.getUsers() : []).find(u => u.uid === r.driverUid)?.avgRating) || 'New'}</div>
-                <div class="dv-sub">${esc(r.carModel || r.vehicle)} (${esc(r.carNumber || '')})</div>
-              </div>
-            </div>
-            <div class="fare-tag" style="color:var(--success); font-size:18px;">₹${r.fare}/seat</div>
-          </div>
-          
-          <div class="route-timeline">
-            <div class="route-node">${esc(cleanLocation(r.from))}</div>
-            <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
-          </div>
-          
-          <div class="chips-scroller" style="margin-bottom:10px;">
-            <span class="role-pill driver">📅 ${esc(r.date)} • ⏰ ${esc(r.time)}</span>
-            <span class="role-pill passenger">💺 ${esc(r.seats)} Seats Left</span>
-            <span class="role-pill parcel">✅ ${maxCorridorKm}km Radar</span>
-            ${r.isLadiesOnly ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">🌸 Women Driven</span>' : ''}
-            ${r.isFamilyOnBoard ? '<span class="role-pill" style="background:#fdf2f8; color:#db2777;">👨‍👩‍👧 Family Safe</span>' : ''}
-          </div>
-          
-          <div style="display: flex; gap: 8px;">
-            <button class="uber-cta-btn" style="flex: 2; padding: 10px; font-size: 13px; margin-top:0;" onclick="openBookingPaymentModal('${r.id}', ${r.fare}, ${r.travelKm})">✅ Book Now</button>
-            ${!isLocalMode ? `<button class="act-btn orange" style="flex: 1; padding: 10px; font-size: 13px; justify-content: center; border: none;" onclick="passengerOfferFare('${r.id}', '${r.fare || 0}', '${r.travelKm || 0}')">🔄 Offer Fare</button>` : ''}
-          </div>
-        </div>`);
-
-    const matchingRideAds = window.getMatchingAds ? window.getMatchingAds(from, to) : [];
-    if (matched.length || matchingRideAds.length) {
-      box.innerHTML = window.injectAdsIntoResults ? window.injectAdsIntoResults(rideCardsArr, from, to) : rideCardsArr.join('');
-    } else {
-      box.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; background:#fff; border-radius:18px; border:1px solid #e2e8f0;">
-        <div style="font-size:36px; margin-bottom:10px;">🚗</div>
-        <h3 style="margin:0 0 6px; color:#1e293b;">No Rides Found</h3>
-        <p style="font-size:12px; margin:0;">We couldn't find any active trips within the ${maxCorridorKm}km corridor right now.</p>
-      </div>`;
-    }
-  } catch(e) { box.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center;">Error: ${e.message}</div>`; }
-};
-
 
 
 </script>
