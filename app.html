@@ -1261,6 +1261,13 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
   window.syncDriverLiveTracking = syncDriverLiveTracking;
 
   function initDataListeners() {
+    // 🚗 सबसे ज़रूरी: Rides (Posted Trips) का रियल-टाइम लिसनर
+    onSnapshot(collection(db, 'rides'), snap => {
+      ALL_RIDES = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (window.renderActivityFeed) window.renderActivityFeed();
+      updateAdminMetrics();
+      if (window.renderAdminTripsManagement) window.renderAdminTripsManagement();
+    });
         onSnapshot(collection(db, 'requests'), snap => { 
       // 🌟 Q5 FIX: बैकग्राउंड चैट नोटिफिकेशन (Global Toast)
       snap.docChanges().forEach(change => {
