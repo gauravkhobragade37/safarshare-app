@@ -27,3 +27,10 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+// 🛡️ FIX: Ignore Firebase / Firestore network requests in Service Worker cache to prevent TypeError
+self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+  if (url.includes('firestore.googleapis.com') || url.includes('firebase') || url.includes('googleapis.com')) {
+    return; // इन्हें सर्विस वर्कर बाईपास कर देगा और कोई क्रैश नहीं होगा
+  }
+});
