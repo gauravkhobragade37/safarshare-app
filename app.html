@@ -2901,7 +2901,7 @@ window.findAvailableRides = async function() {
     const pDropPt = turf.point([p2.lng, p2.lat]);
 
     // 1. Database Filtering (0-Seats & Vehicle Guards)
-    const allRides = window.getRides().filter(r => {
+  const allRides = window.getRides().filter(r => {
       if (user && r.driverUid === user.uid) return false; 
       if (r.status !== "Active") return false;
       
@@ -2938,6 +2938,15 @@ window.findAvailableRides = async function() {
           const np2 = turf.nearestPointOnLine(line, pDropPt);
 
           if (dist1 <= maxCorridorKm && dist2 <= maxCorridorKm && np1.properties.location <= np2.properties.location) {
+           // 🌟 SMART WAYPOINT & IN-TRANSIT LOCKDOWN:
+              // यदि ट्रिप पहले ही शुरू (In-Transit) हो चुकी है, तो चेक करें कि पैसेंजर का 
+              // पिकअप पॉइंट रूट पर बहुत पीछे (जहाँ से ड्राइवर निकल चुका है) तो नहीं है।
+              if (trip.tripStarted) {
+                 // यदि बोर्डिंग पॉइंट रूट के शुरुआती हिस्से (जैसे 5 किलोमीटर के दायरे) में है, तो इसे ब्लॉक करें
+                 if (np1.properties.location < 5) {
+                    return; // पीछे छूटे हुए शहर से बुकिंग नहीं दिखेगी
+                 }
+              }
             isMatch = true;
             travelKm = Math.max(1, Math.round(np2.properties.location - np1.properties.location));
             
@@ -3417,6 +3426,30 @@ window.renderActivityFeed = function() {
     </div>`;
     return;
   }
+  // 🕒 STEP 1: AUTO-EXPIRY CHECK (यहाँ पेस्ट करें)
+  const allTripsForAutoExpire = window.getRides ? window.getRides() : [];
+  const allReqsForCheck = window.getRequests ? window.getRequests() : [];
+  const nowTime = Date.now();
+
+  allTripsForAutoExpire.forEach(async (trip) => {
+    if (trip.status === 'Active' && trip.date && trip.time) {
+      const tripDateTime = new Date(`${trip.date}T${trip.time}`).getTime();
+      if (!isNaN(tripDateTime) && nowTime > (tripDateTime + 2 * 60 * 60 * 1000)) {
+        const hasBookings = allReqsForCheck.some(q => q.rideId === trip.id && ['Accepted', 'Confirmed', 'In-Transit'].includes(q.status));
+        if (!hasBookings) {
+          try {
+            const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+            await updateDoc(doc(window.db, "rides", trip.id), {
+              status: "Cancelled",
+              cancelReason: "Auto-expired: Time elapsed with zero bookings",
+              cancelledAt: nowTime
+            });
+          } catch(e) {}
+        }
+      }
+    }
+  });
+  
 
   // डेटाबेस से अपनी रिक्वेस्ट्स और ट्रिप्स फ़िल्टर करना
   const allReqs = window.getRequests().filter(x => x.passengerUid === user.uid || x.driverUid === user.uid);
@@ -3797,7 +3830,13 @@ window.verifyStartOtp = function(qid, expectedFromUi) {
       startedAt: Date.now(), 
       startedBy: window.getCurrentUser().uid
     });
-    
+      // 2. 🌟 ️ट्रिप (Ride) डॉक्यूमेंट पर 'tripStarted: true' फ्लैग सेट करना (In-Transit Lockdown)
+    if (qData.rideId) {
+      await updateDoc(doc(db, 'rides', qData.rideId), {
+        tripStarted: true,
+        updatedAt: Date.now()
+      });
+    }
     closePinModal();
     showToast('🚗 Start PIN verified! Ride is now In-Transit.');
   });
@@ -4010,35 +4049,6 @@ window.closeChat = function() {
   currentChatRequestId = null;
 };
 
-window.sendChatMessage = async function() {
-  const input = document.getElementById("chatInputText");
-  const text = input ? input.value.trim() : "";
-  const u = window.getCurrentUser();
-
-  if (!text || !currentChatRequestId || !u) return;
-
-  // 🔒 Re-check lifecycle status before allowing send (in case status changed mid-chat)
-  const reqData = (window.getRequests ? window.getRequests() : []).find(r => r.id === currentChatRequestId);
-  if (reqData && ['Completed', 'Cancelled', 'Rejected'].includes(reqData.status)) {
-    showToast("🔒 This chat is closed.");
-    return;
-  }
-
-  try {
-    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
-    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
-      text: text, 
-      senderUid: u.uid, 
-      senderName: u.displayName || "User", 
-      createdAt: Date.now()
-    });
-    input.value = ""; 
-    input.focus();
-  } catch(e) { 
-    showToast("❌ Error sending message: " + e.message); 
-  }
-};
 
 // Enter बटन दबाने पर मैसेज सेंड करना & WhatsApp लिंक रीडर
 document.addEventListener("DOMContentLoaded", function(){
