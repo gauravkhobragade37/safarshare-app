@@ -399,6 +399,35 @@ button.wa-btn, .act-btn.wa { background: #25D366; color: #ffffff; border-color: 
 
 #toast-container { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 6px; width: 90%; max-width: 380px; pointer-events: none; }
 .toast { background: var(--text-main); color: white; padding: 10px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: space-between; pointer-events: auto; border-left: 4px solid var(--primary); }
+
+/* TRIP PROGRESS BAR STYLES */
+.trip-progress-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 10px; margin: 6px 0; }
+.trip-progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+.trip-progress-bar-track { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+.trip-progress-bar-fill { height: 100%; background: var(--primary); border-radius: 10px; transition: width 0.3s ease; }
+
+/* WHATSAPP LIVE BUTTON STYLE */
+button.wa-btn {
+  background: #25D366 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 800;
+  width: 100%;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+  font-family: inherit;
+  font-size: 12.5px;
+}
+button.wa-btn:active {
+  transform: scale(0.98);
+}
+
 </style>
 </head>
 
@@ -1741,7 +1770,7 @@ window.refreshAdminLiveMap = function() {
 
   try {
     const { getFirestore, collection, addDoc, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();
+    const db = getFirestore();  
     
     // 1. मैसेज सेव करना
     await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
@@ -1758,12 +1787,7 @@ window.refreshAdminLiveMap = function() {
 };
 
   window.closeChat = () => { document.getElementById("chatModal").style.display = "none"; if(chatUnsubscribe) chatUnsubscribe(); };
-  window.sendChatMessage = async function() {
-    const text = document.getElementById("chatInputText").value.trim();
-    if (!text || !currentChatRequestId) return;
-    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), { text, senderUid: currentUser.uid, createdAt: Date.now() });
-    document.getElementById("chatInputText").value = "";
-  };
+  
 
   window.renderGarageList = function() {
   const box = document.getElementById("profileGarageList");
@@ -3517,6 +3541,16 @@ const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time
         <div class="route-node">${esc(cleanLocation(r.from))}</div>
         <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
       </div>
+        <!-- TRIP PROGRESS BAR -->
+      <div class="trip-progress-container">
+        <div class="trip-progress-info">
+          <span>🚀 ${progress.statusText}</span>
+          <span>${progress.progressPercent}%</span>
+        </div>
+        <div class="trip-progress-bar-track">
+          <div class="trip-progress-bar-fill" style="width: ${progress.progressPercent}%"></div>
+        </div>
+      </div>
       <div class="small" style="color:#64748b; margin-bottom:10px;">📅 ${r.date} • ⏰ ${r.time} | 🚘 ${r.vehicle} ${r.seats ? '• 💺 ' + r.seats + ' seats left' : ''}</div>
       <div class="action-buttons-group">
         ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#25D366; color:white; padding:10px; font-size:12px; border:none; margin-top:0;" onclick='shareOnWhatsApp(${JSON.stringify(r).replace(/'/g, "&apos;")})'>💬 Share on WhatsApp</button>` : ''}
@@ -3581,7 +3615,8 @@ function generateRequestCardHtml(q, user) {
     
     actionBtns = `
       <a href="tel:${esc(otherPhone)}" class="act-btn" style="background:#0ea5e9; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; text-align:center; flex:1;">📞 Call ${esc(otherName)}</a>
-      ${isDriver ? `<a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(cleanLocation(navTargetOrigin))}&destination=${encodeURIComponent(cleanLocation(navTargetDest))}" target="_blank" class="act-btn" style="background:#4285F4; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; text-align:center; flex:1;">${navLabel}</a>` : ''}
+      ${isDriver ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${navDest}" target="_blank" class="act-btn" style="background:#4285F4; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; flex:1; text-align:center;">🧭 Navigate Route</a>
+` : ''}
     `;
   }
   // 5. Completed Trips (सिर्फ रेटिंग या सक्सेस मैसेज)
@@ -4123,21 +4158,27 @@ window.reportRequestPrompt = function(qid, targetUid, targetName) {
 // ==========================================
 // 🆘 EMERGENCY SOS (was completely absent — dials nowhere, reports nowhere)
 // ==========================================
-window.triggerSOS = function(qid) {
-  const q = (window.getRequests ? window.getRequests() : []).find(r => r.id === qid);
-  const user = window.getCurrentUser ? window.getCurrentUser() : null;
-  const liveLoc = (q && q.rideId && window.getAllLiveLocations) ? window.getAllLiveLocations()[q.rideId] : null;
-
-  const routeText = q ? `${cleanLocation(q.from)} → ${cleanLocation(q.to)}` : 'Unknown route';
-  const locText = liveLoc ? ` | Last known GPS: ${liveLoc.lat}, ${liveLoc.lng}` : ' | GPS not available';
-
-  // 1. Admin ko turant report bhejna (audit trail ke liye)
-  window.submitReport('🚨 SOS EMERGENCY', null, null, qid, `Emergency SOS triggered on trip ${routeText}${locText}`);
-
-  showToast("🚨 SOS Alert sent to Admin. Connecting to Emergency Services...");
-
-  // 2. National emergency number dial karna
-  setTimeout(() => { window.location.href = "tel:112"; }, 600);
+window.triggerSOS = async function(qid) {
+  const req = (window.getRequests ? window.getRequests() : []).find(r => r.id === qid);
+  const user = window.getCurrentUser();
+  const routeText = req ? `${cleanLocation(req.from)} → ${cleanLocation(req.to)}` : 'Unknown route';
+  const roleInfo = req ? (req.driverUid === user?.uid ? 'Driver' : 'Passenger/Sender') : 'User';
+  
+  try {
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await addDoc(collection(getFirestore(), "reports"), {
+      type: '🚨 SOS EMERGENCY',
+      reporterUid: user ? user.uid : null,
+      reporterName: user ? (user.displayName || 'Anonymous') : 'Anonymous',
+      userName: user ? `${user.displayName} (${roleInfo})` : 'Anonymous',
+      requestId: qid,
+      reason: `SOS Triggered on route: ${routeText}. Contact User: ${user ? user.phone || 'N/A' : 'N/A'}, Driver: ${req ? req.driverPhone || 'N/A' : 'N/A'}`,
+      status: 'open',
+      createdAt: Date.now()
+    });
+    showToast("🚨 SOS Alert logged to Admin. Connecting 112...");
+    setTimeout(() => { window.location.href = "tel:112"; }, 500);
+  } catch(e) { showToast("Error sending SOS: " + e.message); }
 };
 
 
@@ -4462,6 +4503,7 @@ window.shareOnWhatsApp = function(r) {
 
 
 
+
 // ट्रिप एडिट मोडल खोलना और पहले से डेटा भरना (Pre-fill)
 window.openEditTripModal = function(rideId) {
   const ride = (window.getRides ? window.getRides() : []).find(r => r.id === rideId);
@@ -4637,7 +4679,7 @@ window.sendChatMessage = async function() {
 
   const reqData = (window.getRequests ? window.getRequests() : []).find(r => r.id === currentChatRequestId);
   if (reqData && ['Completed', 'Cancelled', 'Rejected'].includes(reqData.status)) {
-    showToast("🔒 This chat is closed.");
+    showToast("🔒 This chat is closed — the trip is finished or cancelled.");
     return;
   }
 
@@ -4645,18 +4687,88 @@ window.sendChatMessage = async function() {
     const { getFirestore, collection, addDoc, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
     const db = getFirestore();
     
+    // 1. सब-कलेक्शन में नया मैसेज जोड़ना
     await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
-      text: text, senderUid: u.uid, senderName: u.displayName || "User", createdAt: Date.now()
+      text: text, 
+      senderUid: u.uid, 
+      senderName: u.displayName || "User", 
+      createdAt: Date.now()
     });
     
-    // 🌟 लास्ट मैसेज अपडेट (Global Notification के लिए)
+    // 2. रिक्वेस्ट डॉक्यूमेंट में last message अपडेट करना (ताकि दूसरे यूज़र को नोटिफिकेशन मिल सके)
     await updateDoc(doc(db, "requests", currentChatRequestId), { 
-       lastMsgText: text, lastMsgTime: Date.now(), lastMsgSender: u.uid, lastMsgSenderName: u.displayName || "User" 
+       lastMsgText: text, 
+       lastMsgTime: Date.now(), 
+       lastMsgSender: u.uid, 
+       lastMsgSenderName: u.displayName || "User" 
     });
 
-    input.value = ""; input.focus();
-  } catch(e) { showToast("❌ Error sending message: " + e.message); }
+    input.value = ""; 
+    input.focus();
+  } catch(e) { 
+    showToast("❌ Error sending message: " + e.message); 
+  }
 };
+
+// 🕒 ETA & Trip Progress Calculation Engine
+function formatDurationMinutes(minutes) {
+  const mins = Math.max(1, Math.round(minutes));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function calculateETA(dateStr, timeStr, durationMinutes, distanceKm) {
+  let duration = durationMinutes && durationMinutes > 0 ? durationMinutes : 0;
+  if (!duration && distanceKm && distanceKm > 0) {
+    duration = Math.max(15, Math.round((distanceKm / 50) * 60) + 10);
+  }
+  if (!duration) duration = 60;
+
+  const validDateStr = dateStr && dateStr.length >= 10 ? dateStr : new Date().toISOString().split('T')[0];
+  const validTimeStr = timeStr && timeStr.includes(':') ? timeStr : '12:00';
+  const [depHours, depMins] = validTimeStr.split(':').map(n => parseInt(n, 10) || 0);
+
+  const depDate = new Date(`${validDateStr}T${String(depHours).padStart(2, '0')}:${String(depMins).padStart(2, '0')}:00`);
+  const arrDate = new Date(depDate.getTime() + duration * 60 * 1000);
+
+  let arrHours = arrDate.getHours();
+  const arrMinutes = String(arrDate.getMinutes()).padStart(2, '0');
+  const arrAmpm = arrHours >= 12 ? 'PM' : 'AM';
+  arrHours = arrHours % 12;
+  arrHours = arrHours ? arrHours : 12;
+  const arrivalTime12 = `${String(arrHours).padStart(2, '0')}:${arrMinutes} ${arrAmpm}`;
+  const durationFormatted = formatDurationMinutes(duration);
+
+  return { arrivalTime12, durationMinutes: duration, durationFormatted };
+}
+
+function getTripProgress(dateStr, timeStr, durationMinutes, distanceKm, tripStarted, startedAt) {
+  const eta = calculateETA(dateStr, timeStr, durationMinutes, distanceKm);
+  const now = Date.now();
+  const [depHours, depMins] = (timeStr || '12:00').split(':').map(n => parseInt(n, 10) || 0);
+  const depDate = new Date(`${dateStr || new Date().toISOString().split('T')[0]}T${String(depHours).padStart(2, '0')}:${String(depMins).padStart(2, '0')}:00`);
+  const depTimeMs = startedAt || depDate.getTime();
+  const totalDurationMs = eta.durationMinutes * 60 * 1000;
+  const arrTimeMs = depTimeMs + totalDurationMs;
+  let progressPercent = 0;
+  let statusText = 'Scheduled';
+
+  if (tripStarted || (now >= depTimeMs && now <= arrTimeMs)) {
+    const elapsedMs = Math.max(0, now - depTimeMs);
+    progressPercent = Math.min(95, Math.max(5, Math.round((elapsedMs / totalDurationMs) * 100)));
+    statusText = progressPercent < 25 ? 'Departed & In-Transit' : progressPercent < 80 ? 'Cruising Highway Corridor' : 'Approaching Destination';
+  } else if (now > arrTimeMs) {
+    progressPercent = 100;
+    statusText = 'Trip Completed';
+  } else {
+    progressPercent = 0;
+    statusText = 'Scheduled Departure';
+  }
+  return { progressPercent, statusText };
+}
 
 
 </script>
