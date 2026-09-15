@@ -1468,11 +1468,20 @@ window.renderAdminTripsManagement = function() {
 
   container.innerHTML = filtered.map(r => {
     const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || 'N/A');
+    
+    // 🌟 नया लॉजिक: Admin को In-Transit बैज दिखाना
+    let displayStatus = r.status;
+    let badgeClass = r.status === 'Completed' ? 'driver' : (r.status === 'Cancelled' ? 'parcel' : 'primary');
+    if (r.status === 'Active' && r.tripStarted) {
+        displayStatus = 'In-Transit';
+        badgeClass = 'green'; 
+    }
+
     return `
       <div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer;" onclick="openAdminTripDetails('${r.id}')">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <b>${esc(cleanLocation(r.from))} ➔ ${esc(cleanLocation(r.to))}</b>
-          <span class="role-pill ${r.status==='Completed'?'driver':(r.status==='Cancelled'?'parcel':'primary')}">${esc(r.status)}</span>
+          <span class="role-pill ${badgeClass}">${esc(displayStatus)}</span>
         </div>
         <div style="font-size:11px; color:#64748b; margin-top:4px;">
           Driver: ${esc(r.driverName || 'N/A')} | Vehicle: ${esc(r.vehicle || 'N/A')} (${esc(r.carNumber || 'N/A')})<br>
@@ -1482,6 +1491,7 @@ window.renderAdminTripsManagement = function() {
     `;
   }).join("");
 };
+
 
 
 // Admin Trip Details Modal & Force Cancel
@@ -1683,15 +1693,29 @@ window.renderAdminReports = function() {
   const container = document.getElementById("adminReportsContainer");
   if (!container) return;
   const reports = window.getAllReports ? window.getAllReports() : [];
-  if (!reports.length) { container.innerHTML = "<div style='font-size:12px; color:#64748b;'>No reports.</div>"; return; }
+  
+  if (!reports.length) { 
+    container.innerHTML = "<div style='font-size:12px; color:#64748b; text-align:center; padding:10px;'>No reports found.</div>"; 
+    return; 
+  }
 
   container.innerHTML = reports.map(rep => `
     <div class="card" style="border-left:4px solid var(--danger); background:#fff5f5; padding:10px; margin-bottom:8px;">
-      <b>🚨 ${esc(rep.type || 'Alert')}</b>
-      <div style="font-size:11px; color:#64748b;">User: ${esc(rep.userName)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+         <b style="color:var(--danger); font-size:13px;">${esc(rep.type || 'Alert')}</b>
+         <span style="font-size:10px; color:#94a3b8;">📅 ${new Date(rep.createdAt).toLocaleString('en-IN')}</span>
+      </div>
+      <div style="font-size:11.5px; color:#1e293b; margin-top:6px;">
+        User: <b>${esc(rep.userName || rep.reporterName || 'Unknown')}</b>
+      </div>
+      
+      <!-- 📋 डिटेल्स बॉक्स -->
+      <div style="font-size:11.5px; color:#1e293b; margin-top:6px; line-height:1.6; background:#fff; padding:8px; border-radius:8px; border:1px solid #fecaca; white-space:pre-wrap;">${esc(rep.reason || 'No trip details found for this old report.')}</div>
+      
     </div>
   `).join("");
 };
+
 
 window.refreshAdminLiveMap = function() {
   if (!window.adminLiveMapInstance) return;
@@ -1755,40 +1779,7 @@ window.refreshAdminLiveMap = function() {
     }
   }
 
-  window.sendChatMessage = async function() {
-  const input = document.getElementById("chatInputText");
-  const text = input ? input.value.trim() : "";
-  const u = window.getCurrentUser();
-
-  if (!text || !currentChatRequestId || !u) return;
-
-  const reqData = (window.getRequests ? window.getRequests() : []).find(r => r.id === currentChatRequestId);
-  if (reqData && ['Completed', 'Cancelled', 'Rejected'].includes(reqData.status)) {
-    showToast("🔒 This chat is closed.");
-    return;
-  }
-
-  try {
-    const { getFirestore, collection, addDoc, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const db = getFirestore();  
-    
-    // 1. मैसेज सेव करना
-    await addDoc(collection(db, "requests", currentChatRequestId, "messages"), {
-      text: text, senderUid: u.uid, senderName: u.displayName || "User", createdAt: Date.now()
-    });
-    
-    // 🌟 Q5 FIX: रिक्वेस्ट में 'last message' अपडेट करना ताकि दूसरे के फोन में लाल नोटिफिकेशन आ जाए!
-    await updateDoc(doc(db, "requests", currentChatRequestId), { 
-       lastMsgText: text, lastMsgTime: Date.now(), lastMsgSender: u.uid, lastMsgSenderName: u.displayName || "User" 
-    });
-
-    input.value = ""; input.focus();
-  } catch(e) { showToast("❌ Error sending message: " + e.message); }
-};
-
-  window.closeChat = () => { document.getElementById("chatModal").style.display = "none"; if(chatUnsubscribe) chatUnsubscribe(); };
   
-
   window.renderGarageList = function() {
   const box = document.getElementById("profileGarageList");
   if (!box || !currentUser) return;
@@ -1918,6 +1909,12 @@ window.showPage = function(pageId, btnEl) {
   // जो बटन क्लिक हुआ है उसे एक्टिव कलर (नीला) करना
   if (btnEl) btnEl.classList.add('active');
 
+  // 🔴 NEW LOGIC: Red Dot हटाना (जब यूज़र Activity टैब पर क्लिक करे)
+  if (pageId === 'activity') {
+      const dot = document.querySelector('.notif-dot');
+      if (dot) dot.remove();
+  }
+
   // मैप का साइज फिक्स करना (ताकि मैप आधा न दिखे)
   setTimeout(() => {
     try {
@@ -1986,22 +1983,30 @@ function format12Hour(timeStr) {
   return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
 }
 
-function showToast(msg) {
+window.showToast = function(msg) {
   const c = document.getElementById("toast-container");
   const t = document.createElement("div");
   t.className = "toast";
   t.innerHTML = `<span>${esc(msg)}</span>`;
   c.appendChild(t);
   
-  // 🔊 ऑडियो प्ले करने का कमांड
+  // 🔊 Ola/Uber Notification Sound Play
   const audio = document.getElementById('alertSound');
   if (audio) {
-    audio.currentTime = 0; // ताकि बार-बार आने पर आवाज़ शुरू से बजे
-    audio.play().catch(e => console.log("Audio play blocked by browser policy"));
+    audio.currentTime = 0; 
+    audio.play().catch(e => console.log("Audio play blocked by browser"));
   }
 
-  setTimeout(() => t.remove(), 3200);
-}
+  // 🔴 Red Dot on Activity Tab (सिर्फ मैसेज या बुकिंग पर दिखेगा)
+  if (msg.includes('💬') || msg.includes('✅') || msg.includes('🚀') || msg.includes('📦')) {
+    const actTab = document.querySelectorAll('.nav-item')[3]; // Activity Tab Index 3 है
+    if (actTab && !actTab.querySelector('.notif-dot')) {
+       actTab.innerHTML += `<div class="notif-dot" style="position:absolute; top:8px; right:20px; width:10px; height:10px; background:#d9363e; border-radius:50%; border:2px solid #fff;"></div>`;
+    }
+  }
+
+  setTimeout(() => t.remove(), 3500);
+};
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -3088,13 +3093,18 @@ window.publishPostTrip = async function() {
   if (dateTime) {
     [date, time] = dateTime.split("T");
   } else {
-    // अगर यूज़र ने टाइम नहीं चुना तो सही लोकल टाइम (HH:mm) सेट करें
+    
     const n = new Date();
-    date = n.toISOString().split("T")[0];
+    const yyyy = n.getFullYear();
+    const mm = String(n.getMonth() + 1).padStart(2, '0');
+    const dd = String(n.getDate()).padStart(2, '0');
+    date = `${yyyy}-${mm}-${dd}`; // एकदम सही आज की डेट
+    
     const hrs = String(n.getHours()).padStart(2, '0');
     const mins = String(n.getMinutes()).padStart(2, '0');
     time = `${hrs}:${mins}`;
   }
+
 
   // 2. व्हीकल, सीट्स और प्राइस (Fleet Modal और UI से)
   const vehicleType = document.getElementById("pVehicle").value || "Car";
@@ -3450,7 +3460,7 @@ window.renderActivityFeed = function() {
     </div>`;
     return;
   }
-  // 🕒 STEP 1: AUTO-EXPIRY CHECK (यहाँ पेस्ट करें)
+  // 🕒 STEP 1: AUTO-EXPIRY CHECK
   const allTripsForAutoExpire = window.getRides ? window.getRides() : [];
   const allReqsForCheck = window.getRequests ? window.getRequests() : [];
   const nowTime = Date.now();
@@ -3491,8 +3501,8 @@ window.renderActivityFeed = function() {
   let feedHtml = "";
 
   if (currentActivityTab === 'pending') {
-    // Pending Tab: पेंडिंग और काउंटर ऑफर वाली रिक्वेस्ट्स
-    const pendingReqs = allReqs.filter(q => ['Pending', 'Counter Offered'].includes(q.status));
+    // 🌟 FIX 1: यहाँ 'Countered_By_Driver' जोड़ दिया गया है ताकि ड्राइवर का काउंटर-ऑफर पैसेंजर को दिखे!
+    const pendingReqs = allReqs.filter(q => ['Pending', 'Counter Offered', 'Countered_By_Driver', 'Counter_Requested'].includes(q.status));
     if (!pendingReqs.length) feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No pending requests.</div>`;
     else feedHtml = pendingReqs.map(q => generateRequestCardHtml(q, user)).join('');
   } 
@@ -3509,9 +3519,9 @@ window.renderActivityFeed = function() {
     }
   } 
   else if (currentActivityTab === 'history') {
-    // History Tab: पूरी हो चुकी या कैंसल हुई ट्रिप्स
+    // History Tab: पूरी हो चुकी या कैंसल हुई ट्रिप्स (🌟 FIX 2: Rejected भी जोड़ दिया गया है)
     const historyTrips = allTrips.filter(r => ['Completed', 'Cancelled'].includes(r.status));
-    const historyReqs = allReqs.filter(q => ['Completed', 'Cancelled', 'Paid'].includes(q.status));
+    const historyReqs = allReqs.filter(q => ['Completed', 'Cancelled', 'Paid', 'Rejected'].includes(q.status));
     
     if (!historyTrips.length && !historyReqs.length) {
       feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No history available.</div>`;
@@ -3524,13 +3534,20 @@ window.renderActivityFeed = function() {
   box.innerHTML = feedHtml;
 };
 
+
 // 3. मॉडर्न UI वाले ट्रिप कार्ड जेनरेट करना (My Posted Trips)
 function generateTripCardHtml(r) {
   const allReqs = window.getRequests ? window.getRequests() : [];
   const tripReqs = allReqs.filter(q => q.rideId === r.id);
   const hasActiveBooking = tripReqs.some(q => ["Accepted", "Confirmed", "In-Transit"].includes(q.status));
   const showEditBtn = (r.status === 'Active' && !hasActiveBooking);
-const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || '');
+  const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || '');
+
+  // 🌟 MAIN FIX: यहाँ progress कैलकुलेट किया गया है ताकि कोड क्रैश न हो!
+  const progress = (typeof getTripProgress === 'function') 
+    ? getTripProgress(r.date, r.time, r.routeDurationMin, r.routeDistanceKm, r.tripStarted, r.startedAt) 
+    : { progressPercent: 0, statusText: 'Scheduled' };
+
   return `
     <div class="card">
       <div class="card-top-row">
@@ -3541,7 +3558,8 @@ const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time
         <div class="route-node">${esc(cleanLocation(r.from))}</div>
         <div class="route-node drop">${esc(cleanLocation(r.to))}</div>
       </div>
-        <!-- TRIP PROGRESS BAR -->
+      
+      <!-- TRIP PROGRESS BAR -->
       <div class="trip-progress-container">
         <div class="trip-progress-info">
           <span>🚀 ${progress.statusText}</span>
@@ -3551,16 +3569,18 @@ const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time
           <div class="trip-progress-bar-fill" style="width: ${progress.progressPercent}%"></div>
         </div>
       </div>
-      <div class="small" style="color:#64748b; margin-bottom:10px;">📅 ${r.date} • ⏰ ${r.time} | 🚘 ${r.vehicle} ${r.seats ? '• 💺 ' + r.seats + ' seats left' : ''}</div>
+
+      <div class="small" style="color:#64748b; margin-bottom:10px;">📅 ${r.date} • ⏰ ${formattedTime} | 🚘 ${r.vehicle} ${r.seats ? '• 💺 ' + r.seats + ' seats left' : ''}</div>
+      
       <div class="action-buttons-group">
         ${r.status === 'Active' ? `<button class="uber-cta-btn" style="background:#25D366; color:white; padding:10px; font-size:12px; border:none; margin-top:0;" onclick='shareOnWhatsApp(${JSON.stringify(r).replace(/'/g, "&apos;")})'>💬 Share on WhatsApp</button>` : ''}
-
         ${showEditBtn ? `<button class="secondary" style="padding:7px 11px; font-size:11px;" onclick="openEditTripModal('${r.id}')">✏️ Edit Trip</button>` : ''}
         ${r.status === 'Active' ? `<button class="red" onclick="cancelTrip('${r.id}')">🚫 Cancel Trip</button>` : ''}
       </div>
     </div>
   `;
 }
+
 
 
 // 4. मॉडर्न UI वाले रिक्वेस्ट कार्ड जेनरेट करना (Bookings)
@@ -3607,16 +3627,14 @@ function generateRequestCardHtml(q, user) {
   else if (q.status === 'Cancelled' || q.status === 'Rejected') {
     actionBtns = `<div style="font-size:11.5px; color:var(--danger);">${q.cancelReason ? 'Reason: ' + esc(q.cancelReason) : 'This booking was cancelled.'}</div>`;
   }
-         // 4. Confirmed / In-Transit (Call + Navigate)
+  // 4. Confirmed / In-Transit (Call + Navigate)
   else if (q.status === 'Confirmed' || q.status === 'In-Transit') {
-    const navTargetOrigin = q.from; 
     const navTargetDest = q.status === 'In-Transit' ? q.to : (q.pickupSpot || q.from);
     const navLabel = q.status === 'In-Transit' ? '🧭 Navigate to Drop' : '🧭 Navigate to Pickup';
     
     actionBtns = `
       <a href="tel:${esc(otherPhone)}" class="act-btn" style="background:#0ea5e9; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; text-align:center; flex:1;">📞 Call ${esc(otherName)}</a>
-      ${isDriver ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${navDest}" target="_blank" class="act-btn" style="background:#4285F4; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; flex:1; text-align:center;">🧭 Navigate Route</a>
-` : ''}
+      ${isDriver ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(cleanLocation(navTargetDest))}" target="_blank" class="act-btn" style="background:#4285F4; color:#fff; text-decoration:none; padding:8px 12px; border-radius:8px; font-size:12px; flex:1; text-align:center;">${navLabel}</a>` : ''}
     `;
   }
   // 5. Completed Trips (सिर्फ रेटिंग या सक्सेस मैसेज)
@@ -3658,8 +3676,6 @@ function generateRequestCardHtml(q, user) {
     `;
   }
 
-  const canChat = ['Confirmed', 'In-Transit'].includes(q.status);
-
   // 📦 Parcel होने पर Driver को receiver का नाम/नंबर भी दिखाना ज़रूरी है (delivery के लिए)
   const receiverInfoHtml = (isDriver && !isPassenger && q.recName) ? `
       <div class="small" style="color:#0f766e; background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:6px 8px; margin-bottom:8px;">
@@ -3682,7 +3698,7 @@ function generateRequestCardHtml(q, user) {
       ${receiverInfoHtml}
 
       <div class="small" style="color:#64748b; margin-bottom:8px;">
-        👤 <b>${esc(otherName)}</b>${canChat ? ` • 📞 ${esc(otherPhone)}` : ` • 📞 🔒 unlocks after booking is confirmed`}<br>
+        👤 <b>${esc(otherName)}</b>${['Confirmed', 'In-Transit', 'Completed'].includes(q.status) ? ` • 📞 ${esc(otherPhone)}` : ` • 📞 🔒 unlocks after booking is confirmed`}<br>
         💰 <b>Fare/Price:</b> ₹${q.currentPrice || q.price || q.fare || 0} (${esc(q.paymentMode || 'Cash / Direct')})
       </div>
 
@@ -3694,7 +3710,8 @@ function generateRequestCardHtml(q, user) {
         ${activeActions}
       </div>
 
-      ${canChat ? `
+      <!-- 🌟 FIX: Chat & Report buttons ONLY visible if Active (Confirmed/In-Transit) -->
+      ${['Confirmed', 'In-Transit'].includes(q.status) ? `
       <div style="display:flex; gap:6px; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
         <button class="act-btn" style="flex:1; justify-content:center;" onclick="openChat('${q.id}', '${esc(otherPhone)}')">💬 Chat</button>
         <button class="act-btn" style="justify-content:center; color:#94a3b8;" onclick="reportRequestPrompt('${q.id}', '${esc(otherUid||'')}', '${esc(otherName)}')">⚠️ Report</button>
@@ -3702,6 +3719,7 @@ function generateRequestCardHtml(q, user) {
     </div>
   `;
 }
+
 
 
 // ==========================================
@@ -4159,21 +4177,26 @@ window.reportRequestPrompt = function(qid, targetUid, targetName) {
 // 🆘 EMERGENCY SOS (was completely absent — dials nowhere, reports nowhere)
 // ==========================================
 window.triggerSOS = async function(qid) {
-  const req = (window.getRequests ? window.getRequests() : []).find(r => r.id === qid);
+  const req = window.getRequests ? window.getRequests().find(r => r.id === qid) : null;
   const user = window.getCurrentUser();
-  const routeText = req ? `${cleanLocation(req.from)} → ${cleanLocation(req.to)}` : 'Unknown route';
+  const routeText = req ? `${cleanLocation(req.from)} ➔ ${cleanLocation(req.to)}` : 'Unknown route';
   const roleInfo = req ? (req.driverUid === user?.uid ? 'Driver' : 'Passenger/Sender') : 'User';
   
+  // 📍 यहाँ हम पूरी डिटेल्स को एक बॉक्स में सजा रहे हैं
+  const details = req 
+    ? `📍 Route: ${routeText}\n👤 Reporter: ${user?.displayName || 'Unknown'} (${roleInfo})\n📞 User Phone: ${user?.phone || 'N/A'}\n🚘 Driver Phone: ${req.driverPhone || 'N/A'}\n🆔 Trip ID: ${qid}` 
+    : 'Emergency Triggered without trip context.';
+
   try {
     const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
     await addDoc(collection(getFirestore(), "reports"), {
-      type: '🚨 SOS EMERGENCY',
-      reporterUid: user ? user.uid : null,
-      reporterName: user ? (user.displayName || 'Anonymous') : 'Anonymous',
-      userName: user ? `${user.displayName} (${roleInfo})` : 'Anonymous',
+      type: '🚨 SOS EMERGENCY', 
+      reporterUid: user ? user.uid : null, 
+      reporterName: user ? user.displayName : 'Anonymous',
+      userName: user ? `${user.displayName} (${roleInfo})` : 'Anonymous', 
       requestId: qid,
-      reason: `SOS Triggered on route: ${routeText}. Contact User: ${user ? user.phone || 'N/A' : 'N/A'}, Driver: ${req ? req.driverPhone || 'N/A' : 'N/A'}`,
-      status: 'open',
+      reason: details,
+      status: 'open', 
       createdAt: Date.now()
     });
     showToast("🚨 SOS Alert logged to Admin. Connecting 112...");
