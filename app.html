@@ -3518,35 +3518,36 @@ window.renderActivityFeed = function() {
       feedHtml += activeReqs.map(q => generateRequestCardHtml(q, user)).join('');
     }
   } 
-  else if (currentActivityTab === 'history') {
-    // History Tab: पूरी हो चुकी या कैंसल हुई ट्रिप्स (🌟 FIX 2: Rejected भी जोड़ दिया गया है)
+    else if (currentActivityTab === 'history') {
+    // History Tab: पूरी हो चुकी या कैंसल हुई ट्रिप्स 
     const historyTrips = allTrips.filter(r => ['Completed', 'Cancelled'].includes(r.status));
     const historyReqs = allReqs.filter(q => ['Completed', 'Cancelled', 'Paid', 'Rejected'].includes(q.status) && q.passengerUid === user.uid);
 
-    
     if (!historyTrips.length && !historyReqs.length) {
       feedHtml = `<div style="text-align:center; padding:20px; color:#64748b;">No history available.</div>`;
-    feedHtml += historyTrips.map(r => {
-  let html = generateTripCardHtml(r);
-  const tripBookings = allReqs.filter(q => q.rideId === r.id && ['Completed', 'Cancelled', 'Paid', 'Rejected'].includes(q.status));
-  
-  if(tripBookings.length > 0) {
-    html += `<div class="bg-slate-100 border border-slate-200 rounded-b-2xl p-3 shadow-sm mx-2" style="margin-top: -12px; padding-top: 18px;">
-              <div class="text-[10px] font-bold text-slate-500 mb-2">📋 Bookings on this trip:</div>`;
-    tripBookings.forEach(q => {
-      const icon = q.type === 'passenger' ? '👤 Seat' : '📦 Parcel';
-      const name = q.type === 'passenger' ? q.passengerName : (q.recName || q.passengerName);
-      html += `<div class="bg-white p-2 rounded-xl border border-slate-200 mb-1.5 text-xs flex justify-between items-center">
-                 <span class="font-bold text-slate-800">${icon} - ${name}</span>
-                 <span class="font-black text-emerald-600">₹${q.currentPrice}</span>
-               </div>`;
-    });
-    html += `</div>`;
-  }
-  return html;
-}).join('');
-
-      feedHtml += historyTrips.map(r => generateTripCardHtml(r)).join('');
+    } else {
+      
+      // 1. मुख्य ट्रिप कार्ड और उसके नीचे जुड़ा हुआ बुकिंग बॉक्स
+      feedHtml += historyTrips.map(r => {
+        let html = generateTripCardHtml(r);
+        const tripBookings = allReqs.filter(q => q.rideId === r.id && ['Completed', 'Cancelled', 'Paid', 'Rejected'].includes(q.status));
+        
+        if(tripBookings.length > 0) {
+          html += `<div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:0 0 16px 16px; padding:18px 12px 12px; margin: -16px 8px 12px 8px; box-shadow:inset 0 4px 6px -4px rgba(0,0,0,0.1);">
+                    <div style="font-size:10px; font-weight:800; color:#64748b; margin-bottom:8px;">📋 BOOKINGS ON THIS TRIP:</div>`;
+          tripBookings.forEach(q => {
+            const icon = q.type === 'passenger' ? '👤 Seat' : '📦 Parcel';
+            const name = q.type === 'passenger' ? q.passengerName : (q.recName || q.passengerName || 'User');
+            html += `<div style="background:#fff; padding:8px 10px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; font-size:11.5px;">
+                       <span style="font-weight:700; color:#1e293b;">${icon} - ${name}</span>
+                       <span style="font-weight:800; color:#059669;">₹${q.currentPrice}</span>
+                     </div>`;
+          });
+          html += `</div>`;
+        }
+        return html;
+      }).join('');
+      // 2. खुद की रिक्वेस्ट (पैसेंजर/पार्सल के तौर पर) जनरेट करना
       feedHtml += historyReqs.map(q => generateRequestCardHtml(q, user)).join('');
     }
   }
