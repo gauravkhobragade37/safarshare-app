@@ -3544,9 +3544,10 @@ function generateTripCardHtml(r) {
   const formattedTime = (typeof format12Hour === 'function') ? format12Hour(r.time) : (r.time || '');
 
   // 🌟 MAIN FIX: यहाँ progress कैलकुलेट किया गया है ताकि कोड क्रैश न हो!
-  const progress = (typeof getTripProgress === 'function') 
-    ? getTripProgress(r.date, r.time, r.routeDurationMin, r.routeDistanceKm, r.tripStarted, r.startedAt) 
+    const progress = (typeof getTripProgress === 'function') 
+    ? getTripProgress(r.date, r.time, r.routeDurationMin, r.routeDistanceKm, r.tripStarted, r.startedAt, r.status) 
     : { progressPercent: 0, statusText: 'Scheduled' };
+
 
   return `
     <div class="card">
@@ -4478,21 +4479,14 @@ window.shareLiveTripOnWhatsApp = async function(reqId) {
   const req = (window.getRequests ? window.getRequests() : []).find(r => r.id === reqId);
   if (!req) return;
 
-  let locationLine = '';
-  try {
-    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-    const snap = await getDoc(doc(getFirestore(), 'live_locations', req.rideId));
-    if (snap.exists()) {
-      const d = snap.data();
-      if (Number.isFinite(Number(d.lat)) && Number.isFinite(Number(d.lng))) {
-        locationLine = `\n📍 *Live Location Right Now:*\nhttps://www.google.com/maps?q=${d.lat},${d.lng}\n`;
-      }
-    }
-  } catch(e) { /* location optional, trip details ke saath bhi bhej denge */ }
+  // 🌟 FIX: Google Maps का स्टैटिक लिंक हटाकर सीधा आपकी ऐप का लाइव ट्रैकिंग लिंक डाल दिया है
+  const appTrackingLink = `https://gauravkhobragade37.github.io/safarshare-app/app.html?trackRideId=${req.rideId}`;
 
-  const text = `🚗 *My SafarShare Trip is Live!*\n📍 From: ${cleanLocation(req.from)}\n🎯 To: ${cleanLocation(req.to)}\n👤 Driver: ${req.driverName || 'N/A'} • 📞 ${req.driverPhone || 'N/A'}${locationLine}\n_Sharing so you know I'm safe on the way._`;
+  const text = `🚗 *My SafarShare Trip is LIVE!*\n\n📍 *From:* ${cleanLocation(req.from)}\n🎯 *To:* ${cleanLocation(req.to)}\n👤 *Driver:* ${req.driverName || 'N/A'} • 📞 ${req.driverPhone || 'N/A'}\n\n📍 *Track my live location in real-time here:*\n${appTrackingLink}\n\n_Sharing this for safety with family!_`;
+  
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 };
+
 
 window.shareOnWhatsApp = function(r) {
   // 🌟 यहाँ ट्रिप की ID (?tripId=...) जोड़ दी गई है ताकि सीधा उस ट्रिप पर खुले
@@ -4768,7 +4762,11 @@ function calculateETA(dateStr, timeStr, durationMinutes, distanceKm) {
   return { arrivalTime12, durationMinutes: duration, durationFormatted };
 }
 
-function getTripProgress(dateStr, timeStr, durationMinutes, distanceKm, tripStarted, startedAt) {
+function getTripProgress(dateStr, timeStr, durationMinutes, distanceKm, tripStarted, startedAt, status) {
+  // 🌟 FIX: अगर ट्रिप कैंसल या पूरी हो चुकी है, तो टाइम कैलकुलेशन छोड़कर सीधा 100% या 0% दिखाएं
+  if (status === 'Completed') return { progressPercent: 100, statusText: 'Trip Completed 🎉' };
+  if (status === 'Cancelled') return { progressPercent: 0, statusText: 'Trip Cancelled 🚫' };
+
   const eta = calculateETA(dateStr, timeStr, durationMinutes, distanceKm);
   const now = Date.now();
   const [depHours, depMins] = (timeStr || '12:00').split(':').map(n => parseInt(n, 10) || 0);
@@ -4776,6 +4774,7 @@ function getTripProgress(dateStr, timeStr, durationMinutes, distanceKm, tripStar
   const depTimeMs = startedAt || depDate.getTime();
   const totalDurationMs = eta.durationMinutes * 60 * 1000;
   const arrTimeMs = depTimeMs + totalDurationMs;
+  
   let progressPercent = 0;
   let statusText = 'Scheduled';
 
@@ -4785,13 +4784,14 @@ function getTripProgress(dateStr, timeStr, durationMinutes, distanceKm, tripStar
     statusText = progressPercent < 25 ? 'Departed & In-Transit' : progressPercent < 80 ? 'Cruising Highway Corridor' : 'Approaching Destination';
   } else if (now > arrTimeMs) {
     progressPercent = 100;
-    statusText = 'Trip Completed';
+    statusText = 'Trip Completed 🎉';
   } else {
     progressPercent = 0;
     statusText = 'Scheduled Departure';
   }
   return { progressPercent, statusText };
 }
+
 
 
 </script>
