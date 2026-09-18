@@ -706,6 +706,34 @@ button.wa-btn:active {
     </div>
     <div id="activityFeedList"></div>
   </section>
+  
+<!-- 🌍 FAMILY LIVE TRACKING OVERLAY (NO LOGIN REQUIRED) -->
+<div id="familyTrackingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; background:#f8fafc; flex-direction:column;">
+  <div style="background:var(--primary); color:#fff; padding:16px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:10;">
+    <div style="font-size:26px;">🚗</div>
+    <div>
+      <div style="font-size:16px; font-weight:800;">Live Trip Tracking</div>
+      <div style="font-size:11px; opacity:0.9;">SafarShare Secure Radar</div>
+    </div>
+  </div>
+  <div id="familyLiveMap" style="flex:1; width:100%; background:#e2e8f0; z-index:1;"></div>
+  <div style="background:#fff; padding:20px; border-radius:24px 24px 0 0; margin-top:-20px; z-index:10; box-shadow:0 -4px 20px rgba(0,0,0,0.12);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div>
+        <div id="famDriverName" style="font-size:16px; font-weight:800; color:#1e293b;">Loading...</div>
+        <div id="famVehicle" style="font-size:12px; color:#64748b; font-weight:600; margin-top:2px;">Connecting to GPS...</div>
+      </div>
+      <div id="famGpsStatus" style="background:#fef3c7; color:#d97706; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:800;">
+        ⏳ Connecting
+      </div>
+    </div>
+    <div style="background:#f1f5f9; padding:12px; border-radius:12px; font-size:12px; font-weight:700; color:#334155; margin-bottom:14px; border:1px solid #e2e8f0;">
+      📍 <span id="famRouteText">Route loading...</span>
+    </div>
+    <button class="uber-cta-btn" style="width:100%; background:#10b981; border:none;" onclick="window.location.href='https://gauravkhobragade37.github.io/safarshare-app/app.html'">Open SafarShare App</button>
+  </div>
+</div>
+
 
   <!-- 5. 👤 PROFILE & 👑 MASTER ADMIN TAB -->
   <section id="profile" class="page scroll-page">
@@ -3532,19 +3560,20 @@ window.renderActivityFeed = function() {
         let html = generateTripCardHtml(r);
         const tripBookings = allReqs.filter(q => q.rideId === r.id && ['Completed', 'Cancelled', 'Paid', 'Rejected'].includes(q.status));
         
-        if(tripBookings.length > 0) {
-          html += `<div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:0 0 16px 16px; padding:18px 12px 12px; margin: -16px 8px 12px 8px; box-shadow:inset 0 4px 6px -4px rgba(0,0,0,0.1);">
-                    <div style="font-size:10px; font-weight:800; color:#64748b; margin-bottom:8px;">📋 BOOKINGS ON THIS TRIP:</div>`;
+                if(tripBookings.length > 0) {
+          html += `<div style="margin: -6px 14px 12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-top:none; border-radius:0 0 16px 16px; padding:14px 12px 8px 12px;">
+                    <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:8px; letter-spacing:0.5px;">↳ BOOKINGS:</div>`;
           tripBookings.forEach(q => {
             const icon = q.type === 'passenger' ? '👤 Seat' : '📦 Parcel';
             const name = q.type === 'passenger' ? q.passengerName : (q.recName || q.passengerName || 'User');
-            html += `<div style="background:#fff; padding:8px 10px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; font-size:11.5px;">
-                       <span style="font-weight:700; color:#1e293b;">${icon} - ${name}</span>
-                       <span style="font-weight:800; color:#059669;">₹${q.currentPrice}</span>
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:6px;">
+                       <span style="font-weight:700; color:#334155;">${icon} - ${name}</span>
+                       <span style="font-weight:800; color:var(--success);">₹${q.currentPrice}</span>
                      </div>`;
           });
           html += `</div>`;
         }
+
         return html;
       }).join('');
       // 2. खुद की रिक्वेस्ट (पैसेंजर/पार्सल के तौर पर) जनरेट करना
@@ -4138,26 +4167,65 @@ document.addEventListener("DOMContentLoaded", function(){
     localStorage.setItem('safarShare_pendingTripId', tripIdFromUrl);
   }
 
-  // 3. 👇 WhatsApp से आने वाले trackRideId को पढ़कर लाइव ट्रैकिंग खोलने का कोड
-  setTimeout(() => {
-    const trackRideId = urlParams.get('trackRideId');
-    if (trackRideId && window.getCurrentUser && window.getCurrentUser()) {
-       
-       // 1. सीधे Activity टैब और Active सब-टैब खोलो
-       if(window.showPage) showPage('activity', document.querySelectorAll('.nav-item')[3]);
-       if(window.switchActivityTab) switchActivityTab('active');
-       
-       // 2. 1.5 सेकंड रुककर उस ट्रिप का लाइव ट्रैकिंग बॉक्स खोल दो
-       setTimeout(() => {
-         const reqs = window.getRequests ? window.getRequests() : [];
-         const myReq = reqs.find(r => r.rideId === trackRideId && ['Confirmed', 'In-Transit'].includes(r.status));
-         if (myReq) {
-             if(window.toggleLiveTrackingBox) window.toggleLiveTrackingBox(myReq.id);
-             showToast("📍 Live Tracking Started!");
-         }
-       }, 1500);
-    }
-  }, 2500);
+// 3. 👇 WhatsApp फैमिली लाइव ट्रैकिंग (बिना लॉगिन के)
+setTimeout(() => {
+  const trackRideId = urlParams.get('trackRideId');
+  if (trackRideId) {
+     // 1. सीधे फुल-स्क्रीन ट्रैकिंग स्क्रीन दिखाएं (लॉगिन की कोई ज़रूरत नहीं)
+     document.getElementById('familyTrackingOverlay').style.display = 'flex';
+     
+     // 2. ट्रैकिंग चालू करें
+     import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then(async ({ getFirestore, doc, getDoc, onSnapshot }) => {
+        const db = getFirestore();
+        try {
+          const rideSnap = await getDoc(doc(db, 'rides', trackRideId));
+          if (!rideSnap.exists()) {
+             document.getElementById('famDriverName').textContent = "Trip Finished/Cancelled";
+             document.getElementById('famGpsStatus').textContent = "🚫 Error"; return;
+          }
+          const ride = rideSnap.data();
+          document.getElementById('famDriverName').textContent = `Driver: ${ride.driverName || 'Unknown'}`;
+          document.getElementById('famVehicle').textContent = `${ride.vehicle} (${ride.carNumber || ''})`;
+          document.getElementById('famRouteText').textContent = `${cleanLocation(ride.from)} ➔ ${cleanLocation(ride.to)}`;
+
+          // मैप लोड करना
+          const map = L.map('familyLiveMap', { zoomControl: false }).setView([21.4588, 80.1961], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+          // रूट (नीली लाइन) बनाना
+          let geom = typeof ride.geometry === 'string' ? JSON.parse(ride.geometry) : ride.geometry;
+          if (geom && geom.coordinates) {
+            const latlngs = geom.coordinates.map(c => [c[1], c[0]]);
+            L.polyline(latlngs, { color: '#4285F4', weight: 5, opacity: 0.8 }).addTo(map);
+            L.marker(latlngs[latlngs.length - 1], { icon: L.divIcon({ html: '🏁', className: '', iconSize: [24,24] }) }).addTo(map);
+            map.fitBounds(latlngs, { padding: [30, 30] });
+          }
+
+          // लाइव कार मार्कर और लिसनर
+          const carIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3));">🚗</div>', className: '', iconSize: [32,32], iconAnchor:[16,16] });
+          let carMarker = null;
+
+          onSnapshot(doc(db, 'live_locations', trackRideId), snap => {
+            const stsBox = document.getElementById('famGpsStatus');
+            if (!snap.exists()) { stsBox.style.background = '#fef3c7'; stsBox.style.color = '#d97706'; stsBox.textContent = '⏳ Waiting for GPS'; return; }
+            const d = snap.data();
+            if (d.status === 'offline') { stsBox.style.background = '#fef2f2'; stsBox.style.color = '#dc2626'; stsBox.textContent = '🔴 Offline'; return; }
+            
+            if (Number.isFinite(d.lat) && Number.isFinite(d.lng)) {
+               const pos = [d.lat, d.lng];
+               if (!carMarker) carMarker = L.marker(pos, {icon: carIcon}).addTo(map);
+               else carMarker.setLatLng(pos);
+               map.setView(pos, 15, { animate: true });
+
+               const ageSecs = Math.round((Date.now() - (d.updatedAt || Date.now())) / 1000);
+               if (ageSecs <= 20) { stsBox.style.background = '#dcfce7'; stsBox.style.color = '#16a34a'; stsBox.textContent = '🟢 Live Now'; } 
+               else { stsBox.style.background = '#fef3c7'; stsBox.style.color = '#d97706'; stsBox.textContent = `🟠 Delayed ${ageSecs}s`; }
+            }
+          });
+        } catch(e) { console.error(e); }
+     });
+  }
+}, 500); // बिना लॉगिन का इंतज़ार किए तुरंत चालू होगा
 });
 
 
